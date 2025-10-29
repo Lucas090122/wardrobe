@@ -24,27 +24,27 @@ fun ItemDetailScreen(
     onEdit: () -> Unit
 ) {
     val data by vm.itemFlow(itemId).collectAsState(initial = null)
-    var showConfirm by remember { mutableStateOf(false) } // 👈 提到屏幕作用域
+    var showConfirm by remember { mutableStateOf(false) } // Hoisted to screen scope
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("衣物详情") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("返回") } },
+                title = { Text("Item Details") },
+                navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
                 actions = {
-                    TextButton(onClick = onEdit) { Text("编辑") }
-                    TextButton(onClick = { showConfirm = true }) { Text("删除") } // 👈 按钮在此
+                    TextButton(onClick = onEdit) { Text("Edit") }
+                    TextButton(onClick = { showConfirm = true }) { Text("Delete") } // The button is here
                 }
             )
         }
     ) { padding ->
         if (data == null) {
-            Box(Modifier.padding(padding).fillMaxSize()) { Text("加载中…") }
+            Box(Modifier.padding(padding).fillMaxSize()) { Text("Loading...") }
         } else {
             val item = data!!.item
             val tags = data!!.tags
 
-            // 屏幕高度，用来限制图片的最大高度（比如不超过 60%）
+            // Screen height, used to limit the maximum height of the image (e.g., not exceeding 60%)
             val screenH = LocalConfiguration.current.screenHeightDp.dp
             val maxImageH = screenH * 0.6f
 
@@ -63,7 +63,7 @@ fun ItemDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                // 按比例自适应，但不超过屏幕高度的 60%
+                                // Adapt to the aspect ratio, but do not exceed 60% of the screen height
                                 .heightIn(max = maxImageH),
                             contentScale = ContentScale.Fit,
                             onSuccess = { success ->
@@ -88,7 +88,7 @@ fun ItemDetailScreen(
 
                 if (tags.isNotEmpty()) {
                     item {
-                        Text("标签", style = MaterialTheme.typography.titleMedium)
+                        Text("Tags", style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(8.dp))
                         TagChips(
                             tags = tags,
@@ -102,21 +102,21 @@ fun ItemDetailScreen(
         }
     }
 
-    // 👇 弹窗放在 Scaffold 外层（同一 Composable 内）
+    // Place the dialog outside the Scaffold (within the same Composable)
     if (showConfirm) {
         AlertDialog(
             onDismissRequest = { showConfirm = false },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这件衣服吗？此操作不可恢复。") },
+            title = { Text("Confirm Deletion") },
+            text = { Text("Are you sure you want to delete this item? This action cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = {
                     vm.deleteItem(itemId)
                     showConfirm = false
-                    onBack() // 返回首页
-                }) { Text("删除") }
+                    onBack() // Go back to home
+                }) { Text("Delete") }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirm = false }) { Text("取消") }
+                TextButton(onClick = { showConfirm = false }) { Text("Cancel") }
             }
         )
     }

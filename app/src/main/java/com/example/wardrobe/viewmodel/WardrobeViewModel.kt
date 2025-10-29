@@ -45,7 +45,7 @@ class WardrobeViewModel(private val repo: WardrobeRepository) : ViewModel() {
     init {
         // Ensure some default tags exist the first time
         viewModelScope.launch {
-            repo.ensureDefaultTags(listOf("春秋", "夏装", "冬装", "帽子", "上衣", "裤子", "鞋子", "连体"))
+            repo.ensureDefaultTags(listOf("Spring/Autumn", "Summer", "Winter", "Hat", "Top", "Pants", "Shoes", "Jumpsuit"))
         }
     }
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- 允许共享 app 私有目录 /files/images/ 下的文件给系统相机写入 -->
+    <!-- Allow sharing files under the app's private directory /files/images/ for the system camera to write to -->
     <files-path name="images" path="images/" />
 </paths>

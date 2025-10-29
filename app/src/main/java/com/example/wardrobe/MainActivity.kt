@@ -13,7 +13,6 @@ import com.example.wardrobe.ui.HomeScreen
 import com.example.wardrobe.ui.ItemDetailScreen
 import com.example.wardrobe.viewmodel.WardrobeViewModel
 import com.example.wardrobe.ui.theme.WardrobeTheme
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableLongStateOf
 import android.widget.Toast
@@ -43,21 +42,21 @@ class MainActivity : ComponentActivity() {
                 androidx.activity.compose.BackHandler(enabled = true) {
                     when (route) {
                         "edit" -> {
-                            // 如果是编辑已有 → 回详情，否则回首页
+                            // If editing an existing item -> go back to detail, otherwise go back to home
                             route = if (currentId != null) "detail" else "home"
                         }
                         "detail" -> {
                             route = "home"
                         }
                         else -> {
-                            // 首页：双击返回退出
+                            // Home: double-press back to exit
                             val now = System.currentTimeMillis()
                             if (now - lastBackTime < 2000) {
-                                // 两秒内第二次按 → 退出
+                                // Second press within two seconds -> exit
                                 finish()
                             } else {
                                 lastBackTime = now
-                                Toast.makeText(context, "再按一次返回退出应用", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -74,7 +73,7 @@ class MainActivity : ComponentActivity() {
                             onToggleTag = vm::toggleTag,
                             onQueryChange = vm::setQuery,
                             onAddClick = { currentId = null; route = "edit" },
-                            onItemClick = { id -> currentId = id; route = "detail" } // 现在先到详情
+                            onItemClick = { id -> currentId = id; route = "detail" } // For now, go to detail
                         )
                     }
                     "detail" -> ItemDetailScreen(

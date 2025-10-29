@@ -35,7 +35,7 @@ fun HomeScreen(
     onItemClick: (Long) -> Unit
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("小王的衣柜") }) },
+        topBar = { TopAppBar(title = { Text("Wardrobe") }) },
         floatingActionButton = { FloatingActionButton(onClick = onAddClick) { Text("+") } }
     ) { padding ->
         Column(Modifier.padding(padding).padding(16.dp)) {
@@ -44,7 +44,7 @@ fun HomeScreen(
                 onValueChange = onQueryChange,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("搜索描述…") }
+                placeholder = { Text("Search description...") }
             )
             Spacer(Modifier.height(8.dp))
 

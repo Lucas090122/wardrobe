@@ -39,10 +39,10 @@ fun TagChips(
 @Composable
 private fun TagChipsPreview() {
     val demoTags = listOf(
-        Tag(tagId = 1, name = "冬装"),
-        Tag(tagId = 2, name = "夏装"),
-        Tag(tagId = 3, name = "上衣"),
-        Tag(tagId = 4, name = "裤子")
+        Tag(tagId = 1, name = "Winter"),
+        Tag(tagId = 2, name = "Summer"),
+        Tag(tagId = 3, name = "Top"),
+        Tag(tagId = 4, name = "Pants")
     )
     TagChips(
         tags = demoTags,

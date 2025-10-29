@@ -1,20 +1,20 @@
 <resources>
-    <!-- 主色系（淡紫） -->
+    <!-- Primary color scheme (light purple) -->
     <color name="md_theme_light_primary">#C8A2C8</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>
     <color name="md_theme_light_primaryContainer">#F3E5F5</color>
     <color name="md_theme_light_onPrimaryContainer">#4A148C</color>
 
-    <!-- 次要颜色 -->
+    <!-- Secondary color -->
     <color name="md_theme_light_secondary">#B39DDB</color>
     <color name="md_theme_light_onSecondary">#FFFFFF</color>
 
-    <!-- 背景与表面 -->
+    <!-- Background and surface -->
     <color name="md_theme_light_background">#FFF9FF</color>
     <color name="md_theme_light_onBackground">#3A3A3A</color>
     <color name="md_theme_light_surface">#FFFFFF</color>
     <color name="md_theme_light_onSurface">#333333</color>
 
-    <!-- 其他 -->
+    <!-- Others -->
     <color name="md_theme_light_outline">#D1C4E9</color>
 </resources>
