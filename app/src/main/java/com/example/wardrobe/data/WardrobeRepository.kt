@@ -1,15 +1,29 @@
 package com.example.wardrobe.data
 
+import kotlinx.coroutines.flow.Flow
+
 class WardrobeRepository(private val dao: ClothesDao) {
+    // Member functions
+    fun getAllMembers(): Flow<List<Member>> = dao.getAllMembers()
+
+    fun getMember(memberId: Long): Flow<Member?> = dao.getMember(memberId)
+
+    suspend fun createMember(name: String): Long {
+        return dao.insertMember(Member(name = name))
+    }
+
+    // Tag functions
     fun observeTags() = dao.allTags()
 
-    fun observeItems(selectedTagIds: List<Long>, query: String?) =
-        if (selectedTagIds.isEmpty()) dao.itemsStream(query)
-        else dao.itemsByTagsStream(selectedTagIds, query)
+    // Item functions
+    fun observeItems(memberId: Long, selectedTagIds: List<Long>, query: String?) =
+        if (selectedTagIds.isEmpty()) dao.itemsStream(memberId, query)
+        else dao.itemsByTagsStream(memberId, selectedTagIds, query)
 
     fun observeItem(itemId: Long) = dao.itemWithTags(itemId)
 
     suspend fun saveItem(
+        memberId: Long, // Required owner
         itemId: Long?,
         description: String,
         imageUri: String?,
@@ -20,9 +34,15 @@ class WardrobeRepository(private val dao: ClothesDao) {
         else
             System.currentTimeMillis()
 
-        val id = dao.upsertItem(
-            ClothingItem(itemId ?: 0, description, imageUri, createdAt)
-        ).let { if (itemId != null && itemId != 0L) itemId else it }
+        val newClothingItem = ClothingItem(
+            itemId = itemId ?: 0,
+            ownerMemberId = memberId,
+            description = description,
+            imageUri = imageUri,
+            createdAt = createdAt
+        )
+
+        val id = dao.upsertItem(newClothingItem).let { if (itemId != null && itemId != 0L) itemId else it }
 
         dao.clearTagsForItem(id)
         dao.upsertCrossRefs(tagIds.map { ClothingTagCrossRef(id, it) })

@@ -5,6 +5,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ClothesDao {
+    // Member operations
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMember(member: Member): Long
+
+    @Query("SELECT * FROM Member ORDER BY name ASC")
+    fun getAllMembers(): Flow<List<Member>>
+
+    @Query("SELECT * FROM Member WHERE memberId = :memberId")
+    fun getMember(memberId: Long): Flow<Member?>
+
+    // Item operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: ClothingItem): Long
 
@@ -19,22 +30,23 @@ interface ClothesDao {
 
     @Transaction
     @Query(
-        "SELECT * FROM ClothingItem WHERE (:q IS NULL OR :q = '' OR description LIKE '%' || :q || '%') ORDER BY createdAt DESC"
+        "SELECT * FROM ClothingItem WHERE ownerMemberId = :memberId AND (:q IS NULL OR :q = '' OR description LIKE '%' || :q || '%') ORDER BY createdAt DESC"
     )
-    fun itemsStream(q: String?): Flow<List<ClothingItem>>
+    fun itemsStream(memberId: Long, q: String?): Flow<List<ClothingItem>>
 
     @Transaction
     @Query(
         """
         SELECT ClothingItem.* FROM ClothingItem
         INNER JOIN ClothingTagCrossRef ON ClothingItem.itemId = ClothingTagCrossRef.itemId
-        WHERE ClothingTagCrossRef.tagId IN (:tagIds)
+        WHERE ClothingItem.ownerMemberId = :memberId
+          AND ClothingTagCrossRef.tagId IN (:tagIds)
           AND (:q IS NULL OR :q = '' OR ClothingItem.description LIKE '%' || :q || '%')
         GROUP BY ClothingItem.itemId
         ORDER BY ClothingItem.createdAt DESC
         """
     )
-    fun itemsByTagsStream(tagIds: List<Long>, q: String?): Flow<List<ClothingItem>>
+    fun itemsByTagsStream(memberId: Long, tagIds: List<Long>, q: String?): Flow<List<ClothingItem>>
 
     @Transaction
     @Query("SELECT * FROM ClothingItem WHERE itemId = :itemId")

@@ -11,14 +11,31 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 
 @Entity
+data class Member(
+    @PrimaryKey(autoGenerate = true) val memberId: Long = 0,
+    @ColumnInfo(index = true) val name: String
+)
+
+@Entity
 data class Tag(
     @PrimaryKey(autoGenerate = true) val tagId: Long = 0,
     @ColumnInfo(index = true) val name: String
 )
 
-@Entity
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = Member::class,
+            parentColumns = ["memberId"],
+            childColumns = ["ownerMemberId"],
+            onDelete = CASCADE
+        )
+    ],
+    indices = [Index(value = ["ownerMemberId"])]
+)
 data class ClothingItem(
     @PrimaryKey(autoGenerate = true) val itemId: Long = 0,
+    val ownerMemberId: Long,
     val description: String,
     val imageUri: String?,
     val createdAt: Long = System.currentTimeMillis()
