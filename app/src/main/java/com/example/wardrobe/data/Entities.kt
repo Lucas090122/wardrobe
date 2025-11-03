@@ -13,7 +13,9 @@ import androidx.room.ForeignKey.Companion.CASCADE
 @Entity
 data class Member(
     @PrimaryKey(autoGenerate = true) val memberId: Long = 0,
-    @ColumnInfo(index = true) val name: String
+    @ColumnInfo(index = true) val name: String,
+    val gender: String,
+    val age: Int
 )
 
 @Entity

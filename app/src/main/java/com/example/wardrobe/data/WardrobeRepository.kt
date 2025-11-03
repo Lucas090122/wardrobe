@@ -8,8 +8,8 @@ class WardrobeRepository(private val dao: ClothesDao) {
 
     fun getMember(memberId: Long): Flow<Member?> = dao.getMember(memberId)
 
-    suspend fun createMember(name: String): Long {
-        return dao.insertMember(Member(name = name))
+    suspend fun createMember(name: String, gender: String, age: Int): Long {
+        return dao.insertMember(Member(name = name, gender = gender, age = age))
     }
 
     // Tag functions
