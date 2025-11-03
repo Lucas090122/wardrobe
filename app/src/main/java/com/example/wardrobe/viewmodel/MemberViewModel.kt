@@ -14,9 +14,9 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
     val members: StateFlow<List<Member>> = repo.getAllMembers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun createMember(name: String) {
+    fun createMember(name: String, gender: String, age: Int) {
         viewModelScope.launch {
-            repo.createMember(name)
+            repo.createMember(name, gender, age)
         }
     }
 }
