@@ -15,31 +15,42 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for Xiao Wang's Wardrobe
+ * ViewModel for a specific member's Wardrobe
  * - Holds UI state for Home (tags, selection, query, items)
  * - Provides save API used by Edit screen later
  */
 data class UiState(
+    val memberName: String = "",
     val tags: List<Tag> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
     val query: String = "",
     val items: List<ClothingItem> = emptyList()
 )
 
-class WardrobeViewModel(private val repo: WardrobeRepository) : ViewModel() {
+class WardrobeViewModel(
+    private val repo: WardrobeRepository,
+    private val memberId: Long
+) : ViewModel() {
     private val selectedTagIds = MutableStateFlow<Set<Long>>(emptySet())
     private val query = MutableStateFlow("")
 
     val uiState: StateFlow<UiState> = combine(
+        repo.getMember(memberId),
         repo.observeTags().map { it.distinctBy { t -> t.name } },
         selectedTagIds,
         query
-    ) { tags, sel, q -> Triple(tags, sel, q) }
-        .flatMapLatest { (tags, sel, q) ->
-            repo.observeItems(sel.toList(), q).map { items ->
-                UiState(tags = tags, selectedTagIds = sel, query = q, items = items)
-            }
+    ) { member, tags, sel, q ->
+        val clothingItemsFlow = repo.observeItems(memberId, sel.toList(), q)
+        clothingItemsFlow.map {
+            UiState(
+                memberName = member?.name ?: "",
+                tags = tags,
+                selectedTagIds = sel,
+                query = q,
+                items = it
+            )
         }
+    }.flatMapLatest { it }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
 
     init {
@@ -63,7 +74,7 @@ class WardrobeViewModel(private val repo: WardrobeRepository) : ViewModel() {
         imageUri: String?,
         tagIds: List<Long>
     ) = viewModelScope.launch {
-        repo.saveItem(itemId, description, imageUri, tagIds)
+        repo.saveItem(memberId, itemId, description, imageUri, tagIds)
     }
 
     fun itemFlow(itemId: Long) = repo.observeItem(itemId)
