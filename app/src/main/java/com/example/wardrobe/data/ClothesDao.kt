@@ -65,6 +65,12 @@ interface ClothesDao {
     @Query("SELECT * FROM Tag ORDER BY tagId ASC")
     fun allTags(): Flow<List<Tag>>
 
+    @Query("SELECT name FROM Tag")
+    suspend fun tagNamesOnce(): List<String>
+
+    @Query("SELECT * FROM Tag WHERE name = :name COLLATE NOCASE LIMIT 1")
+    suspend fun getTagByName(name: String): Tag?
+
     @Query("""
         SELECT t.tagId, t.name, COUNT(ci.itemId) as count
         FROM Tag t
@@ -74,12 +80,6 @@ interface ClothesDao {
         ORDER BY t.name ASC
     """)
     fun getTagsWithCounts(memberId: Long): Flow<List<TagWithCount>>
-
-    @Query("SELECT name FROM Tag")
-    suspend fun tagNamesOnce(): List<String>
-
-    @Query("SELECT * FROM Tag WHERE name = :name COLLATE NOCASE LIMIT 1")
-    suspend fun getTagByName(name: String): Tag?
 
     @Query("DELETE FROM ClothingItem WHERE itemId = :itemId")
     suspend fun deleteItemById(itemId: Long)

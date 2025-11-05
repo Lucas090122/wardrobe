@@ -82,6 +82,10 @@ class WardrobeViewModel(
         currentView.value = viewType
     }
 
+    suspend fun getOrCreateTag(name: String): Long {
+        return repo.getOrCreateTag(name)
+    }
+
     fun toggleTag(id: Long) {
         selectedTagIds.value = selectedTagIds.value.toMutableSet().also { set ->
             if (!set.add(id)) set.remove(id)
@@ -113,9 +117,5 @@ class WardrobeViewModel(
 
     fun deleteItem(itemId: Long) = viewModelScope.launch {
         repo.deleteItem(itemId)
-    }
-
-    suspend fun getOrCreateTag(name: String): Long {
-        return repo.getOrCreateTag(name)
     }
 }

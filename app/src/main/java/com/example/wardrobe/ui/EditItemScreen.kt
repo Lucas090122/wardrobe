@@ -27,9 +27,8 @@ import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.ui.components.TagChips
-import com.example.wardrobe.ui.components.TagUiModel
-import com.example.wardrobe.viewmodel.WardrobeViewModel
 import com.example.wardrobe.util.persistImageToAppStorage
+import com.example.wardrobe.viewmodel.WardrobeViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
@@ -131,50 +130,57 @@ fun EditItemScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Tag multiple selection
-            Spacer(Modifier.height(12.dp))
-            Text("Tags")
-            Spacer(Modifier.height(8.dp))
-                            TagChips(
-                                tags = allTags,
-                                selectedIds = selectedIds.toSet(),
-                                onToggle = { id ->
-                                    if (selectedIds.contains(id)) selectedIds.remove(id)
-                                    else selectedIds.add(id)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                showCount = false
-                            )
-            // Add new tag UI
-            Spacer(Modifier.height(16.dp))
-            var newTagName by remember { mutableStateOf("") }
-            val scope = rememberCoroutineScope()
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = newTagName,
-                    onValueChange = { newTagName = it },
-                    label = { Text("New Tag Name") },
-                    modifier = Modifier.weight(1f)
-                )
-                Button(onClick = {
-                    val name = newTagName.trim()
-                    if (name.isNotEmpty()) {
-                        scope.launch {
-                            val newId = vm.getOrCreateTag(name)
-                            if (newId > 0 && !selectedIds.contains(newId)) {
-                                selectedIds.add(newId)
-                            }
-                            newTagName = "" // Clear input
-                        }
-                    }
-                }) { Text("Add") }
-            }
+            TagsSection(vm = vm, ui = ui, selectedTagIds = selectedTagIds)
 
             StorageSection(vm, isStored, { isStored = it }, ui.locations, selectedLocationId) { selectedLocationId = it }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TagsSection(vm: WardrobeViewModel, ui: com.example.wardrobe.viewmodel.UiState, selectedTagIds: MutableList<Long>) {
+    var newTagName by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+
+    Column {
+        Text("Tags", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        TagChips(
+            tags = ui.tags,
+            selectedIds = selectedTagIds.toSet(),
+            onToggle = { id ->
+                if (selectedTagIds.contains(id)) selectedTagIds.remove(id)
+                else selectedTagIds.add(id)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            showCount = false
+        )
+        Spacer(Modifier.height(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = newTagName,
+                onValueChange = { newTagName = it },
+                label = { Text("New Tag Name") },
+                modifier = Modifier.weight(1f)
+            )
+            Button(onClick = {
+                val name = newTagName.trim()
+                if (name.isNotEmpty()) {
+                    scope.launch {
+                        val newId = vm.getOrCreateTag(name)
+                        if (newId > 0 && !selectedTagIds.contains(newId)) {
+                            selectedTagIds.add(newId)
+                        }
+                        newTagName = "" // Clear input
+                    }
+                }
+            }) { Text("Add") }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StorageSection(
     vm: WardrobeViewModel,

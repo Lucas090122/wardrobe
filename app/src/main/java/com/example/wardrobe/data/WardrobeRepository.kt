@@ -28,6 +28,14 @@ class WardrobeRepository(private val dao: ClothesDao) {
 
     fun observeTagsWithCounts(memberId: Long) = dao.getTagsWithCounts(memberId)
 
+    suspend fun getOrCreateTag(name: String): Long {
+        val sanitizedName = name.trim()
+        if (sanitizedName.isEmpty()) return 0L
+
+        val existing = dao.getTagByName(sanitizedName)
+        return existing?.tagId ?: dao.upsertTag(Tag(name = sanitizedName))
+    }
+
     // Item functions
     fun observeItems(memberId: Long, selectedTagIds: List<Long>, query: String?) =
         if (selectedTagIds.isEmpty()) dao.itemsStream(memberId, query)
@@ -70,14 +78,6 @@ class WardrobeRepository(private val dao: ClothesDao) {
         val existing = dao.tagNamesOnce().toSet()
         names.filter { it !in existing }
             .forEach { dao.upsertTag(Tag(name = it)) }
-    }
-
-    suspend fun getOrCreateTag(name: String): Long {
-        val sanitizedName = name.trim()
-        if (sanitizedName.isEmpty()) return 0L
-
-        val existing = dao.getTagByName(sanitizedName)
-        return existing?.tagId ?: dao.upsertTag(Tag(name = sanitizedName))
     }
 
     suspend fun deleteItem(itemId: Long) {
