@@ -1,16 +1,15 @@
 package com.example.wardrobe.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.wardrobe.ui.components.ClothingCard
@@ -43,7 +42,14 @@ fun HomeScreen(
                 onValueChange = vm::setQuery,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search description...") }
+                placeholder = { Text("Search description...") },
+                trailingIcon = {
+                    if (ui.query.isNotEmpty()) {
+                        IconButton(onClick = { vm.setQuery("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                        }
+                    }
+                }
             )
             Spacer(Modifier.height(8.dp))
 
@@ -62,12 +68,23 @@ fun HomeScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            TagChips(
-                tags = ui.tags,
-                selectedIds = ui.selectedTagIds,
-                onToggle = vm::toggleTag,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Filter by tags", modifier = Modifier.weight(1f))
+                    if (ui.selectedTagIds.isNotEmpty()) {
+                        TextButton(onClick = vm::clearTagSelection) {
+                            Text("Clear")
+                        }
+                    }
+                }
+                TagChips(
+                    tags = ui.tags,
+                    selectedIds = ui.selectedTagIds,
+                    onToggle = vm::toggleTag,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
 
             LazyColumn {

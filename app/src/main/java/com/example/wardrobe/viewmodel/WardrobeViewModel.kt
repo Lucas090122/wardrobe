@@ -72,12 +72,27 @@ class WardrobeViewModel(
     init {
         // Ensure some default tags exist the first time
         viewModelScope.launch {
-            repo.ensureDefaultTags(listOf("Spring/Autumn", "Summer", "Winter", "Hat", "Top", "Pants", "Shoes", "Jumpsuit"))
+            repo.ensureDefaultTags(
+                listOf(
+                    "Spring/Autumn",
+                    "Summer",
+                    "Winter",
+                    "Hat",
+                    "Top",
+                    "Pants",
+                    "Shoes",
+                    "Jumpsuit"
+                )
+            )
         }
     }
 
     fun setViewType(viewType: ViewType) {
         currentView.value = viewType
+    }
+
+    fun clearTagSelection() {
+        selectedTagIds.value = emptySet()
     }
 
     suspend fun getOrCreateTag(name: String): Long {
@@ -90,7 +105,9 @@ class WardrobeViewModel(
         }
     }
 
-    fun setQuery(q: String) { query.value = q }
+    fun setQuery(q: String) {
+        query.value = q
+    }
 
     fun addLocation(name: String) = viewModelScope.launch {
         repo.addLocation(name)
