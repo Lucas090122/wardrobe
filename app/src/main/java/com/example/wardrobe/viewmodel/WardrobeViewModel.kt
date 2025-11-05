@@ -3,8 +3,9 @@ package com.example.wardrobe.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.ClothingItem
-import com.example.wardrobe.data.Tag
+import com.example.wardrobe.data.TagWithCount
 import com.example.wardrobe.data.WardrobeRepository
+import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
  */
 data class UiState(
     val memberName: String = "",
-    val tags: List<Tag> = emptyList(),
+    val tags: List<TagUiModel> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
     val query: String = "",
     val items: List<ClothingItem> = emptyList()
@@ -36,15 +37,15 @@ class WardrobeViewModel(
 
     val uiState: StateFlow<UiState> = combine(
         repo.getMember(memberId),
-        repo.observeTags().map { it.distinctBy { t -> t.name } },
+        repo.observeTagsWithCounts(memberId),
         selectedTagIds,
         query
-    ) { member, tags, sel, q ->
+    ) { member, tagsWithCount, sel, q ->
         val clothingItemsFlow = repo.observeItems(memberId, sel.toList(), q)
         clothingItemsFlow.map {
             UiState(
                 memberName = member?.name ?: "",
-                tags = tags,
+                tags = tagsWithCount.map { TagUiModel(it.tagId, it.name, it.count) },
                 selectedTagIds = sel,
                 query = q,
                 items = it
@@ -81,5 +82,9 @@ class WardrobeViewModel(
 
     fun deleteItem(itemId: Long) = viewModelScope.launch {
         repo.deleteItem(itemId)
+    }
+
+    suspend fun getOrCreateTag(name: String): Long {
+        return repo.getOrCreateTag(name)
     }
 }
