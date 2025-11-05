@@ -22,7 +22,8 @@ fun TagChips(
     tags: List<TagUiModel>,
     selectedIds: Set<Long>,
     onToggle: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showCount: Boolean = true
 ) {
     FlowRow(
         modifier = modifier,
@@ -35,7 +36,7 @@ fun TagChips(
                 selected = selected,
                 onClick = { onToggle(tag.id) },
                 label = {
-                    val text = if (tag.count != null && tag.count > 0) {
+                    val text = if (showCount && tag.count != null && tag.count > 0) {
                         "${tag.name} (${tag.count})"
                     } else {
                         tag.name

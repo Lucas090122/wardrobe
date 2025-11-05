@@ -186,16 +186,16 @@ fun EditItemScreen(
             Spacer(Modifier.height(12.dp))
             Text("Tags")
             Spacer(Modifier.height(8.dp))
-            TagChips(
-                tags = allTags,
-                selectedIds = selectedIds.toSet(),
-                onToggle = { id ->
-                    if (selectedIds.contains(id)) selectedIds.remove(id)
-                    else selectedIds.add(id)
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
+                            TagChips(
+                                tags = allTags,
+                                selectedIds = selectedIds.toSet(),
+                                onToggle = { id ->
+                                    if (selectedIds.contains(id)) selectedIds.remove(id)
+                                    else selectedIds.add(id)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                showCount = false
+                            )
             // Add new tag UI
             Spacer(Modifier.height(16.dp))
             var newTagName by remember { mutableStateOf("") }
