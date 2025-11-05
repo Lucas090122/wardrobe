@@ -9,12 +9,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.wardrobe.data.Tag
+
+data class TagUiModel(
+    val id: Long,
+    val name: String,
+    val count: Int? = null
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagChips(
-    tags: List<Tag>,
+    tags: List<TagUiModel>,
     selectedIds: Set<Long>,
     onToggle: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -25,11 +30,18 @@ fun TagChips(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         tags.forEach { tag ->
-            val selected = tag.tagId in selectedIds
+            val selected = tag.id in selectedIds
             FilterChip(
                 selected = selected,
-                onClick = { onToggle(tag.tagId) },
-                label = { Text(tag.name) }
+                onClick = { onToggle(tag.id) },
+                label = {
+                    val text = if (tag.count != null && tag.count > 0) {
+                        "${tag.name} (${tag.count})"
+                    } else {
+                        tag.name
+                    }
+                    Text(text)
+                }
             )
         }
     }
@@ -39,10 +51,10 @@ fun TagChips(
 @Composable
 private fun TagChipsPreview() {
     val demoTags = listOf(
-        Tag(tagId = 1, name = "Winter"),
-        Tag(tagId = 2, name = "Summer"),
-        Tag(tagId = 3, name = "Top"),
-        Tag(tagId = 4, name = "Pants")
+        TagUiModel(id = 1, name = "Winter", count = 5),
+        TagUiModel(id = 2, name = "Summer", count = 0),
+        TagUiModel(id = 3, name = "Top", count = 12),
+        TagUiModel(id = 4, name = "Pants")
     )
     TagChips(
         tags = demoTags,

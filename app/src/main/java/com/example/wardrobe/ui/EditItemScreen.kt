@@ -17,8 +17,10 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.wardrobe.ui.components.TagChips
+import com.example.wardrobe.ui.components.TagUiModel
 import com.example.wardrobe.viewmodel.WardrobeViewModel
 import com.example.wardrobe.util.persistImageToAppStorage
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -181,19 +183,42 @@ fun EditItemScreen(
             )
 
             // Tag multiple selection
-            if (allTags.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                Text("Tags")
-                Spacer(Modifier.height(8.dp))
-                TagChips(
-                    tags = allTags,
-                    selectedIds = selectedIds.toSet(),
-                    onToggle = { id ->
-                        if (selectedIds.contains(id)) selectedIds.remove(id)
-                        else selectedIds.add(id)
-                    },
-                    modifier = Modifier.fillMaxWidth()
+            Spacer(Modifier.height(12.dp))
+            Text("Tags")
+            Spacer(Modifier.height(8.dp))
+            TagChips(
+                tags = allTags,
+                selectedIds = selectedIds.toSet(),
+                onToggle = { id ->
+                    if (selectedIds.contains(id)) selectedIds.remove(id)
+                    else selectedIds.add(id)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Add new tag UI
+            Spacer(Modifier.height(16.dp))
+            var newTagName by remember { mutableStateOf("") }
+            val scope = rememberCoroutineScope()
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = newTagName,
+                    onValueChange = { newTagName = it },
+                    label = { Text("New Tag Name") },
+                    modifier = Modifier.weight(1f)
                 )
+                Button(onClick = {
+                    val name = newTagName.trim()
+                    if (name.isNotEmpty()) {
+                        scope.launch {
+                            val newId = vm.getOrCreateTag(name)
+                            if (newId > 0 && !selectedIds.contains(newId)) {
+                                selectedIds.add(newId)
+                            }
+                            newTagName = "" // Clear input
+                        }
+                    }
+                }) { Text("Add") }
             }
         }
     }
