@@ -75,11 +75,11 @@ interface ClothesDao {
         SELECT t.tagId, t.name, COUNT(ci.itemId) as count
         FROM Tag t
         LEFT JOIN ClothingTagCrossRef ctc ON t.tagId = ctc.tagId
-        LEFT JOIN ClothingItem ci ON ctc.itemId = ci.itemId AND ci.ownerMemberId = :memberId
+        LEFT JOIN ClothingItem ci ON ctc.itemId = ci.itemId AND ci.ownerMemberId = :memberId AND ci.stored = :isStored
         GROUP BY t.tagId, t.name
         ORDER BY t.name ASC
     """)
-    fun getTagsWithCounts(memberId: Long): Flow<List<TagWithCount>>
+    fun getTagsWithCounts(memberId: Long, isStored: Boolean): Flow<List<TagWithCount>>
 
     @Query("DELETE FROM ClothingItem WHERE itemId = :itemId")
     suspend fun deleteItemById(itemId: Long)

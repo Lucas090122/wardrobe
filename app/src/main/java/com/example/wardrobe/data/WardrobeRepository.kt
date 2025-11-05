@@ -26,7 +26,7 @@ class WardrobeRepository(private val dao: ClothesDao) {
     // Tag functions
     fun observeTags() = dao.allTags()
 
-    fun observeTagsWithCounts(memberId: Long) = dao.getTagsWithCounts(memberId)
+    fun observeTagsWithCounts(memberId: Long, isStored: Boolean) = dao.getTagsWithCounts(memberId, isStored)
 
     suspend fun getOrCreateTag(name: String): Long {
         val sanitizedName = name.trim()

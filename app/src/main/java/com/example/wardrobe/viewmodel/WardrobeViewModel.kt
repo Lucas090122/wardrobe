@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
-import com.example.wardrobe.data.Tag
-import com.example.wardrobe.data.TagWithCount
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +11,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -48,11 +45,12 @@ class WardrobeViewModel(
         Triple(sel, q, view)
     }.flatMapLatest { (sel, q, view) ->
         val itemsFlow = repo.observeItems(memberId, sel.toList(), q)
+        val tagsFlow = repo.observeTagsWithCounts(memberId, view == ViewType.STORED)
 
         combine(
             itemsFlow,
             repo.getMember(memberId),
-            repo.observeTagsWithCounts(memberId),
+            tagsFlow,
             repo.observeLocations()
         ) { items, member, tagsWithCount, locations ->
             val filteredItems = items.filter { item ->
