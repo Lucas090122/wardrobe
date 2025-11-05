@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Tag
+import com.example.wardrobe.data.TagWithCount
 import com.example.wardrobe.data.WardrobeRepository
+import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +24,7 @@ enum class ViewType {
 
 data class UiState(
     val memberName: String = "",
-    val tags: List<Tag> = emptyList(),
+    val tags: List<TagUiModel> = emptyList(),
     val locations: List<Location> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
     val query: String = "",
@@ -46,18 +48,20 @@ class WardrobeViewModel(
         Triple(sel, q, view)
     }.flatMapLatest { (sel, q, view) ->
         val itemsFlow = repo.observeItems(memberId, sel.toList(), q)
+
         combine(
             itemsFlow,
             repo.getMember(memberId),
-            repo.observeTags().map { it.distinctBy { t -> t.name } },
+            repo.observeTagsWithCounts(memberId),
             repo.observeLocations()
-        ) { items, member, tags, locations ->
+        ) { items, member, tagsWithCount, locations ->
             val filteredItems = items.filter { item ->
                 if (view == ViewType.IN_USE) !item.stored else item.stored
             }
+
             UiState(
                 memberName = member?.name ?: "",
-                tags = tags,
+                tags = tagsWithCount.map { TagUiModel(it.tagId, it.name, it.count) },
                 locations = locations,
                 selectedTagIds = sel,
                 query = q,
@@ -109,5 +113,9 @@ class WardrobeViewModel(
 
     fun deleteItem(itemId: Long) = viewModelScope.launch {
         repo.deleteItem(itemId)
+    }
+
+    suspend fun getOrCreateTag(name: String): Long {
+        return repo.getOrCreateTag(name)
     }
 }

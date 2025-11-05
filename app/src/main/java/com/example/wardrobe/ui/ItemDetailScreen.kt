@@ -12,7 +12,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.wardrobe.ui.components.TagChips
+import com.example.wardrobe.ui.components.TagUiModel
 import com.example.wardrobe.viewmodel.WardrobeViewModel
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +85,11 @@ fun ItemDetailScreen(
                         Text("Tags", style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(8.dp))
                         TagChips(
-                            tags = tags,
+                            tags = tags.map { TagUiModel(id = it.tagId, name = it.name) },
                             selectedIds = tags.map { it.tagId }.toSet(),
                             onToggle = {},
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            showCount = false
                         )
                     }
                 }

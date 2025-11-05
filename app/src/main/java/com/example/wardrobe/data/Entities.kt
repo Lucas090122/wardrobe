@@ -93,3 +93,9 @@ data class ClothingWithTags(
     )
     val tags: List<Tag>
 )
+
+data class TagWithCount(
+    val tagId: Long,
+    val name: String,
+    val count: Int
+)
