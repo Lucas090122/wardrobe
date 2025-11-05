@@ -1,0 +1,101 @@
+#  Wardrobe – Smart Family Clothing Organizer
+
+###  Overview
+**Wardrobe** is a mobile application designed to help families manage and organize their clothes efficiently.  
+Users can create multiple members, upload or photograph clothing items, categorize them with tags, and track seasonal storage.  
+The app also supports weather-based outfit recommendations and localization for different languages.
+
+---
+
+##  Key Features
+
+-  **Multi-member support** – each family member has their own wardrobe.  
+-  **Add & edit clothes** – upload or take photos of clothing items.  
+-  **Global tag system** – reusable tags for quick filtering and organization.  
+-  **Weather integration** – suggest outfits based on local weather conditions.  
+-  **Seasonal organization** – mark and store clothes by season.  
+-  **Localization support** – automatic language selection based on system language.  
+-  **Drawer menu** – access app settings, dark mode, and member management.
+
+---
+
+##  Tech Stack
+
+| Category | Technology |
+|-----------|-------------|
+| **Frontend** | Kotlin, Jetpack Compose, Material 3 |
+| **Backend / Database** | Room / SQLite (local) |
+| **Architecture** | MVVM (Model–View–ViewModel) |
+| **Tools** | Android Studio, GitHub, Figma, Trello |
+| **APIs** | OpenWeatherMap API (weather integration), OpenAI API (AI outfit suggestion, optional) |
+
+---
+
+##  System Design
+
+### **ER Diagram**
+ ![33881762205021_ pic](https://github.com/user-attachments/assets/86a8961a-996f-4637-9bb5-93fd9eb57c74)
+#### **Entity Overview**
+- **Member** – stores user info such as name and ID.  
+- **ClothingItem** – represents a clothing record (description, image URI, created time).  
+- **Tag** – global shared tags (e.g., “Winter”, “Formal”, “Sports”).  
+- **Relationships:**  
+  - Each `Member` can own many `ClothingItem`s.  
+  - Each `ClothingItem` can have multiple `Tag`s.  
+  - Tags are shared globally among members.
+
+---
+
+##  Project Management
+
+### **Trello Board**
+[🔗 Trello Backlog & Sprint Plan](https://trello.com/b/ymbal9w5/backlog))
+
+Each sprint includes clear tasks and acceptance criteria following the Agile Scrum methodology.
+
+#### **Sprint 1 Focus**
+- Implement Member system  
+- CRUD for ClothingItem  
+- Tag linking  
+- ER diagram & database testing  
+
+---
+
+##  UI / UX Design
+
+### **Figma Prototype**
+[Figma Design Board](https://www.figma.com/design/PwMYy5MikBidqkola0tFQ3/Wardrobe?node-id=0-1&t=gcwxdkpzBlOvIgVo-1)
+
+- Based on **Material 3 Guidelines**  
+- Includes light/dark mode  
+- Responsive layouts tested on multiple screen sizes  
+
+---
+
+##  Team
+
+| Role | Member | Responsibilities |
+|------|---------|------------------|
+| Project Owner | *Wang Qingyun* | Sprint planning, coordination |
+| Scrum Master | *Jia Ke* | Member & Tag modules |
+| Developer | *Yang Yang* | Weather & AI integration |
+| Designer | *Hooda Himanshu* | Figma design, UI assets |
+
+---
+
+##  How to Run
+
+1. Clone the repository:  
+   ```bash
+   git clone https://github.com/Lucas090122/wardrobe.git
+   cd wardrobe
+2.	Open the project in Android Studio.
+3.	Sync Gradle and run on an emulator or physical device.
+4.	(Optional) Add your OpenWeather API key in local.properties or environment variables.
+
+---
+
+## License
+
+This project is developed for educational purposes at Metropolia University of Applied Sciences (ICT23-SW).
+© 2025 Wardrobe Team – All rights reserved.
