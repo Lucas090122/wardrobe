@@ -8,12 +8,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.wardrobe.viewmodel.WardrobeViewModel
 import com.example.wardrobe.ui.components.TagChips
-import kotlin.math.max
-import androidx.compose.ui.platform.LocalConfiguration
+import com.example.wardrobe.viewmodel.WardrobeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +22,8 @@ fun ItemDetailScreen(
     onBack: () -> Unit,
     onEdit: () -> Unit
 ) {
-    val data by vm.itemFlow(itemId).collectAsState(initial = null)
+    val itemData by vm.itemFlow(itemId).collectAsState(initial = null)
+    val uiState by vm.uiState.collectAsState()
     var showConfirm by remember { mutableStateOf(false) } // Hoisted to screen scope
 
     Scaffold(
@@ -33,45 +33,37 @@ fun ItemDetailScreen(
                 navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
                 actions = {
                     TextButton(onClick = onEdit) { Text("Edit") }
-                    TextButton(onClick = { showConfirm = true }) { Text("Delete") } // The button is here
+                    TextButton(onClick = { showConfirm = true }) { Text("Delete") }
                 }
             )
         }
     ) { padding ->
-        if (data == null) {
+        if (itemData == null) {
             Box(Modifier.padding(padding).fillMaxSize()) { Text("Loading...") }
         } else {
-            val item = data!!.item
-            val tags = data!!.tags
+            val item = itemData!!.item
+            val tags = itemData!!.tags
 
-            // Screen height, used to limit the maximum height of the image (e.g., not exceeding 60%)
             val screenH = LocalConfiguration.current.screenHeightDp.dp
             val maxImageH = screenH * 0.6f
 
             LazyColumn(
-                modifier = Modifier.padding(padding).padding(16.dp),
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
                     val uri = item.imageUri?.let { android.net.Uri.parse(it) }
                     if (uri != null) {
-                        var aspect by remember { mutableFloatStateOf(1.6f) }
-
                         AsyncImage(
                             model = uri,
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                // Adapt to the aspect ratio, but do not exceed 60% of the screen height
                                 .heightIn(max = maxImageH),
-                            contentScale = ContentScale.Fit,
-                            onSuccess = { success ->
-                                val d = success.result.drawable
-                                val w = max(1, d.intrinsicWidth)
-                                val h = max(1, d.intrinsicHeight)
-                                aspect = w.toFloat() / h
-                            }
+                            contentScale = ContentScale.Fit
                         )
                     }
                 }
@@ -98,11 +90,25 @@ fun ItemDetailScreen(
                         )
                     }
                 }
+
+                // Show storage location if applicable
+                if (item.stored) {
+                    item {
+                        val locationName = item.locationId?.let { locId ->
+                            uiState.locations.find { it.locationId == locId }?.name
+                        }
+                        val text = if (locationName != null) {
+                            "Stored in: $locationName"
+                        } else {
+                            "Stored (No location assigned)"
+                        }
+                        Text(text, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
             }
         }
     }
 
-    // Place the dialog outside the Scaffold (within the same Composable)
     if (showConfirm) {
         AlertDialog(
             onDismissRequest = { showConfirm = false },
