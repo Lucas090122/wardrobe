@@ -12,6 +12,17 @@ class WardrobeRepository(private val dao: ClothesDao) {
         return dao.insertMember(Member(name = name, gender = gender, age = age))
     }
 
+    // Location functions
+    fun observeLocations(): Flow<List<Location>> = dao.getAllLocations()
+
+    suspend fun addLocation(name: String): Long {
+        return dao.insertLocation(Location(name = name))
+    }
+
+    suspend fun deleteLocation(locationId: Long) {
+        dao.deleteLocation(locationId)
+    }
+
     // Tag functions
     fun observeTags() = dao.allTags()
 
@@ -29,7 +40,9 @@ class WardrobeRepository(private val dao: ClothesDao) {
         itemId: Long?,
         description: String,
         imageUri: String?,
-        tagIds: List<Long>
+        tagIds: List<Long>,
+        stored: Boolean,
+        locationId: Long?
     ): Long {
         val createdAt = if (itemId != null && itemId != 0L)
             dao.getCreatedAt(itemId) ?: System.currentTimeMillis()
@@ -41,6 +54,8 @@ class WardrobeRepository(private val dao: ClothesDao) {
             ownerMemberId = memberId,
             description = description,
             imageUri = imageUri,
+            stored = stored,
+            locationId = locationId,
             createdAt = createdAt
         )
 

@@ -7,13 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.wardrobe.ui.components.ClothingCard
 import com.example.wardrobe.ui.components.TagChips
+import com.example.wardrobe.viewmodel.ViewType
 import com.example.wardrobe.viewmodel.WardrobeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +37,7 @@ fun HomeScreen(
         topBar = { TopAppBar(title = { Text(title) }) },
         floatingActionButton = { FloatingActionButton(onClick = onAddClick) { Text("+") } }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp)) {
+        Column(Modifier.padding(padding).padding(horizontal = 16.dp)) {
             OutlinedTextField(
                 value = ui.query,
                 onValueChange = vm::setQuery,
@@ -50,6 +45,21 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Search description...") }
             )
+            Spacer(Modifier.height(8.dp))
+
+            TabRow(selectedTabIndex = ui.currentView.ordinal) {
+                Tab(
+                    selected = ui.currentView == ViewType.IN_USE,
+                    onClick = { vm.setViewType(ViewType.IN_USE) },
+                    text = { Text("In Use") }
+                )
+                Tab(
+                    selected = ui.currentView == ViewType.STORED,
+                    onClick = { vm.setViewType(ViewType.STORED) },
+                    text = { Text("Stored") }
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
 
             TagChips(

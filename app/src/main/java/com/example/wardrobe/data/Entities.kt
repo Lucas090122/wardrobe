@@ -9,6 +9,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
+import androidx.room.ForeignKey.Companion.SET_NULL
 
 @Entity
 data class Member(
@@ -24,6 +25,12 @@ data class Tag(
     @ColumnInfo(index = true) val name: String
 )
 
+@Entity
+data class Location(
+    @PrimaryKey(autoGenerate = true) val locationId: Long = 0,
+    @ColumnInfo(index = true) val name: String
+)
+
 @Entity(
     foreignKeys = [
         ForeignKey(
@@ -31,15 +38,23 @@ data class Tag(
             parentColumns = ["memberId"],
             childColumns = ["ownerMemberId"],
             onDelete = CASCADE
+        ),
+        ForeignKey(
+            entity = Location::class,
+            parentColumns = ["locationId"],
+            childColumns = ["locationId"],
+            onDelete = SET_NULL
         )
     ],
-    indices = [Index(value = ["ownerMemberId"])]
+    indices = [Index(value = ["ownerMemberId"]), Index(value = ["locationId"])]
 )
 data class ClothingItem(
     @PrimaryKey(autoGenerate = true) val itemId: Long = 0,
     val ownerMemberId: Long,
     val description: String,
     val imageUri: String?,
+    val stored: Boolean = false,
+    val locationId: Long? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
 

@@ -15,6 +15,16 @@ interface ClothesDao {
     @Query("SELECT * FROM Member WHERE memberId = :memberId")
     fun getMember(memberId: Long): Flow<Member?>
 
+    // Location operations
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLocation(location: Location): Long
+
+    @Query("SELECT * FROM Location ORDER BY name ASC")
+    fun getAllLocations(): Flow<List<Location>>
+
+    @Query("DELETE FROM Location WHERE locationId = :locationId")
+    suspend fun deleteLocation(locationId: Long)
+
     // Item operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: ClothingItem): Long
