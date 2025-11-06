@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -59,7 +58,7 @@ fun ItemDetailScreen(
                     }
                 },
                 actions = {
-                    // 分享按钮：截屏 + 分享
+                    // Share button
                     IconButton(onClick = {
                         scope.launch {
                             try {
@@ -68,7 +67,7 @@ fun ItemDetailScreen(
                                 val bitmap = imageBitmap.asAndroidBitmap()
                                 shareBitmap(context, bitmap)
                             } catch (e: Throwable) {
-                                // TODO: 这里可选加个 Toast 或 log
+                                e.printStackTrace()
                             }
                         }
                     }) {
