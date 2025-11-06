@@ -17,4 +17,23 @@
 
     <!-- Others -->
     <color name="md_theme_light_outline">#D1C4E9</color>
+
+    <!-- Primary color scheme (dark purple) -->
+    <color name="md_theme_dark_primary">#D1B3D1</color>
+    <color name="md_theme_dark_onPrimary">#2E003E</color>
+    <color name="md_theme_dark_primaryContainer">#4A148C</color>
+    <color name="md_theme_dark_onPrimaryContainer">#EFD9F7</color>
+
+    <!-- Secondary color -->
+    <color name="md_theme_dark_secondary">#C5A8E6</color>
+    <color name="md_theme_dark_onSecondary">#2E003E</color>
+
+    <!-- Background and surface -->
+    <color name="md_theme_dark_background">#121212</color>
+    <color name="md_theme_dark_onBackground">#E6E1E6</color>
+    <color name="md_theme_dark_surface">#1E1E1E</color>
+    <color name="md_theme_dark_onSurface">#EDEDED</color>
+
+    <!-- Others -->
+    <color name="md_theme_dark_outline">#7E57C2</color>
 </resources>
