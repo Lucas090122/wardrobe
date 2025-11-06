@@ -34,15 +34,19 @@ The app also supports weather-based outfit recommendations and localization for 
 ##  System Design
 
 ### **ER Diagram**
- ![33881762205021_ pic](https://github.com/user-attachments/assets/86a8961a-996f-4637-9bb5-93fd9eb57c74)
+ ![36031762378840_ pic](https://github.com/user-attachments/assets/81e303fb-dd55-486a-9936-1d07e76738da)
 #### **Entity Overview**
 - **Member** – stores user info such as name and ID.  
 - **ClothingItem** – represents a clothing record (description, image URI, created time).  
-- **Tag** – global shared tags (e.g., “Winter”, “Formal”, “Sports”).  
+- **Tag** – global shared tags (e.g., “Winter”, “Formal”, “Sports”).
+- **Location** – stores physical storage information, such as `locationId`, `name`, and `description` (e.g., “Main Wardrobe”, “Storage Box A”). 
 - **Relationships:**  
-  - Each `Member` can own many `ClothingItem`s.  
-  - Each `ClothingItem` can have multiple `Tag`s.  
-  - Tags are shared globally among members.
+  - Each **Member** can own multiple **ClothingItem** records.  
+  - Each **ClothingItem** can have multiple **Tag**s (many-to-many relationship).  
+  - Each **ClothingItem** belongs to exactly one **Location** (one-to-many relationship from `Location` to `ClothingItem`).  
+  - **Tag**s are globally shared across all members.  
+  - When a **Member** is deleted, all related **ClothingItem** entries are also removed (cascade delete).
+
 
 ---
 
