@@ -28,7 +28,7 @@ fun TagChips(
     FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         tags.forEach { tag ->
             val selected = tag.id in selectedIds

@@ -6,9 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,19 +30,31 @@ fun HomeScreen(
         "Wardrobe"
     }
 
+    // Local state for the text field to ensure immediate UI response.
+    var queryForTextField by remember { mutableStateOf(ui.query) }
+    // Sync local state when the ViewModel's state changes (e.g., initial load, or cleared externally).
+    LaunchedEffect(ui.query) {
+        if (queryForTextField != ui.query) {
+            queryForTextField = ui.query
+        }
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text(title) }) },
         floatingActionButton = { FloatingActionButton(onClick = onAddClick) { Text("+") } }
     ) { padding ->
         Column(Modifier.padding(padding).padding(horizontal = 16.dp)) {
             OutlinedTextField(
-                value = ui.query,
-                onValueChange = vm::setQuery,
+                value = queryForTextField, // Use local state for value
+                onValueChange = {
+                    queryForTextField = it // Update local state immediately
+                    vm.setQuery(it)      // Notify ViewModel to trigger search
+                },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Search description...") },
                 trailingIcon = {
-                    if (ui.query.isNotEmpty()) {
+                    if (queryForTextField.isNotEmpty()) {
                         IconButton(onClick = { vm.setQuery("") }) {
                             Icon(Icons.Default.Clear, contentDescription = "Clear search")
                         }
@@ -69,7 +79,10 @@ fun HomeScreen(
             Spacer(Modifier.height(8.dp))
 
             Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.height(40.dp), // Give the row a fixed height
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text("Filter by tags", modifier = Modifier.weight(1f))
                     if (ui.selectedTagIds.isNotEmpty()) {
                         TextButton(onClick = vm::clearTagSelection) {
