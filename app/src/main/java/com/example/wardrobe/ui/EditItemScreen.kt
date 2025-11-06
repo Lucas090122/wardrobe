@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -251,7 +252,10 @@ private fun ImageAndCameraSection(
     var aspect by remember { mutableStateOf(1.6f) }
 
     BoxWithConstraints(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     ) {
         val w = this.maxWidth
         val targetH = min(w / aspect, 360.dp)
@@ -260,7 +264,9 @@ private fun ImageAndCameraSection(
             AsyncImage(
                 model = imageUri,
                 contentDescription = null,
-                modifier = Modifier.width(w).height(targetH),
+                modifier = Modifier
+                    .width(w)
+                    .height(targetH),
                 contentScale = ContentScale.Fit,
                 onSuccess = { s ->
                     val d = s.result.drawable
@@ -269,7 +275,10 @@ private fun ImageAndCameraSection(
             )
         } else {
             Box(
-                Modifier.width(w).height(180.dp).background(Color(0x11FFFFFF)),
+                Modifier
+                    .width(w)
+                    .height(180.dp)
+                    .background(Color(0x11FFFFFF)),
                 contentAlignment = Alignment.Center
             ) { Text("Tap to select image") }
         }

@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- Allow sharing files under the app's private directory /files/images/ for the system camera to write to -->
-    <files-path name="images" path="images/" />
+    <cache-path name="shared_images" path="images/"/>
 </paths>
