@@ -67,6 +67,9 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     kapt("androidx.room:room-compiler:2.6.1")
 
+    // Capturable for taking screenshots of Composables
+    implementation("dev.shreyaspatil:capturable:3.0.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
