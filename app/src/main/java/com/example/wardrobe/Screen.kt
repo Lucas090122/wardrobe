@@ -16,10 +16,12 @@ sealed class Screen(
             dRoute = "home"
         )
 
-        object Member: DrawerScreen(
+        object Member : DrawerScreen(
             dTitle = "Member",
-            dRoute = "member",
-        )
+            dRoute = "member/{memberId}"
+        ) {
+            fun createRoute(memberId: Long) = "member/$memberId"
+        }
 
         object Statistics: DrawerScreen(
             dTitle = "Statistics",

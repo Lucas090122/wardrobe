@@ -99,7 +99,8 @@ fun MainView(
                         drawerState.close()
                     }
                 },
-                vm = vm
+                vm = vm,
+                controller,
             )
             LazyColumn (
             ) {

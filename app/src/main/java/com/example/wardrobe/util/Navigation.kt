@@ -7,9 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.wardrobe.Screen
+import com.example.wardrobe.WardrobeApp
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.Home
 import com.example.wardrobe.viewmodel.MainViewModel
@@ -35,8 +38,14 @@ fun Navigation(
                 vm
             )
         }
-        composable(Screen.DrawerScreen.Member.route){
-            Text("Members")
+        composable(route = Screen.DrawerScreen.Member.route,
+        arguments = listOf(navArgument("memberId") { type = NavType.LongType })
+        ) { backStackEntry ->
+        val memberId: Long = backStackEntry.arguments?.getLong("memberId") ?: return@composable
+        WardrobeApp(
+            memberId = memberId,
+            onExit = { navController.popBackStack() }
+        )
         }
         composable(Screen.DrawerScreen.Statistics.route) {
             Text("Stats")

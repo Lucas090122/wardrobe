@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.wardrobe.R
 import com.example.wardrobe.Screen
 import com.example.wardrobe.data.Member
@@ -91,8 +92,9 @@ fun ToggleDrawerItem(
 fun ExpandableDrawerItem(
     item: Screen.DrawerScreen,
     subItems: List<Member>,
-    onItemClicked: (Member) -> Unit,
+    onItemClicked: () -> Unit,
     vm: MemberViewModel,
+    controller: NavController
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showAddMemberDialog by remember { mutableStateOf(false) }
@@ -130,7 +132,10 @@ fun ExpandableDrawerItem(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onItemClicked(item) }
+                            .clickable {
+                                controller.navigate(Screen.DrawerScreen.Member.createRoute(item.memberId))
+                                onItemClicked()
+                            }
                             .padding(vertical = 8.dp)
                     )
                 }
