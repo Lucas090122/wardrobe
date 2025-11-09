@@ -19,6 +19,7 @@ import com.example.wardrobe.ui.theme.WardrobeTheme
 import androidx.activity.compose.BackHandler
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import com.example.wardrobe.ui.components.MainView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
         val db = AppDatabase.get(this)
         val repo = WardrobeRepository(db.clothesDao())
 
+
         val memberVmFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
@@ -34,11 +36,17 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
         setContent {
             WardrobeTheme {
-                var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+                //var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+                val memberViewModel: MemberViewModel = viewModel(factory = memberVmFactory)
+                MainView(
+                    repo = repo,
+                    vm = memberViewModel
+                    )
 
-                if (selectedMemberId == null) {
+                /*if (selectedMemberId == null) {
                     // This is the root screen, handle app exit here
                     var lastBackTime by remember { mutableLongStateOf(0L) }
                     val context = LocalContext.current
@@ -63,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     WardrobeApp(memberId = selectedMemberId!!) {
                         selectedMemberId = null // On back pressed from app, go back to member selection
                     }
-                }
+                }*/
             }
         }
     }

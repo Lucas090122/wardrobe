@@ -11,6 +11,11 @@ sealed class Screen(
         val dRoute: String,
     ): Screen(dTitle, dRoute){
 
+        object Home: DrawerScreen(
+            dTitle = "Home",
+            dRoute = "home"
+        )
+
         object Member: DrawerScreen(
             dTitle = "Member",
             dRoute = "member",
