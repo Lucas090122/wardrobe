@@ -1,7 +1,10 @@
 package com.example.wardrobe.viewmodel
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wardrobe.Screen
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.WardrobeRepository
@@ -33,6 +36,8 @@ class WardrobeViewModel(
     private val repo: WardrobeRepository,
     private val memberId: Long
 ) : ViewModel() {
+
+    private val _currentScreen : MutableState<Screen> = mutableStateOf(Screen.DrawerScreen.Member)
     private val selectedTagIds = MutableStateFlow<Set<Long>>(emptySet())
     private val query = MutableStateFlow("")
     private val currentView = MutableStateFlow(ViewType.IN_USE)
@@ -132,5 +137,12 @@ class WardrobeViewModel(
 
     fun deleteItem(itemId: Long) = viewModelScope.launch {
         repo.deleteItem(itemId)
+    }
+
+    val currentScreen: MutableState<Screen>
+        get() = _currentScreen
+
+    fun setCurrentScreen(screen: Screen){
+        _currentScreen.value = screen
     }
 }
