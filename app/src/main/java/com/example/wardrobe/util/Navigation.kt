@@ -18,6 +18,7 @@ import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.Home
 import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
+import com.example.wardrobe.ui.SettingsScreen
 
 
 @Composable
@@ -55,7 +56,7 @@ fun Navigation(
             Text("Stats")
         }
         composable(Screen.DrawerScreen.Settings.route) {
-            Text("Settings")
+            SettingsScreen(repo = repo)
         }
     }
 }

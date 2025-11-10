@@ -22,7 +22,6 @@ class SettingsRepository(private val context: Context) {
 
     val isAdminMode: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
-            // No type safety.
             preferences[Keys.IS_ADMIN_MODE] ?: false
         }
 
@@ -33,7 +32,9 @@ class SettingsRepository(private val context: Context) {
     }
 
     val adminPin: Flow<String?> = context.dataStore.data
-        .map { it[Keys.ADMIN_PIN] }
+        .map { preferences ->
+            preferences[Keys.ADMIN_PIN]
+        }
 
     suspend fun setAdminPin(pin: String) {
         context.dataStore.edit {
