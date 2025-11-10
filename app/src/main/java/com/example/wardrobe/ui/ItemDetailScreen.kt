@@ -3,6 +3,7 @@ package com.example.wardrobe.ui
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +32,7 @@ import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -112,7 +114,6 @@ fun ItemDetailScreen(
                     .padding(padding)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
-                    // 这一整块内容就是要被截成图的部分
                     .capturable(captureController),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -162,7 +163,7 @@ private fun ItemSharePoster(
     locationName: String?,
     ownerName: String?
 ) {
-    val imageUri = imageUriString?.let { android.net.Uri.parse(it) }
+    val imageUri = imageUriString?.toUri()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -170,7 +171,8 @@ private fun ItemSharePoster(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
