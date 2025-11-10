@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -212,30 +211,34 @@ private fun StorageSection(
                             onClick = { onLocationSelected(location.locationId) },
                             label = { Text(location.name) },
                             trailingIcon = {
-                                IconButton(onClick = { vm.deleteLocation(location.locationId) }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Delete location")
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Delete location",
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable { vm.deleteLocation(location.locationId) })
                             }
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = newLocationName,
-                onValueChange = { newLocationName = it },
-                label = { Text("New location name") },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    IconButton(
-                        onClick = { vm.addLocation(newLocationName); newLocationName = "" },
-                        enabled = newLocationName.isNotBlank()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add location")
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = newLocationName,
+                    onValueChange = { newLocationName = it },
+                    label = { Text("New Location Name") },
+                    modifier = Modifier.weight(1f)
+                )
+                Button(onClick = {
+                    val name = newLocationName.trim()
+                    if (name.isNotEmpty()) {
+                        vm.addLocation(name)
+                        newLocationName = "" // Clear input
                     }
-                }
-            )
+                }) { Text("Add") }
+            }
         }
     }
 }
