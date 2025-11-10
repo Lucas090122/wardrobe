@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.wardrobe.data.Member
+import com.example.wardrobe.ui.components.MainView
 import com.example.wardrobe.viewmodel.MemberViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +26,6 @@ fun MemberSelectionScreen(
     var showAddMemberDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Select a Member") }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -84,7 +84,7 @@ fun MemberCard(member: Member, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddMemberDialog(
+fun AddMemberDialog(
     onDismiss: () -> Unit,
     onSave: (Member) -> Unit
 ) {
