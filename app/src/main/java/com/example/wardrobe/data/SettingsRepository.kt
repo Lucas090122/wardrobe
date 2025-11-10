@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,6 +17,7 @@ class SettingsRepository(private val context: Context) {
 
     private object Keys {
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
+        val ADMIN_PIN = stringPreferencesKey("admin_pin")
     }
 
     val isAdminMode: Flow<Boolean> = context.dataStore.data
@@ -27,6 +29,15 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAdminMode(isAdmin: Boolean) {
         context.dataStore.edit {
             it[Keys.IS_ADMIN_MODE] = isAdmin
+        }
+    }
+
+    val adminPin: Flow<String?> = context.dataStore.data
+        .map { it[Keys.ADMIN_PIN] }
+
+    suspend fun setAdminPin(pin: String) {
+        context.dataStore.edit {
+            it[Keys.ADMIN_PIN] = pin
         }
     }
 }

@@ -18,11 +18,14 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +40,7 @@ import com.example.wardrobe.ScreensInDrawer
 import com.example.wardrobe.data.Theme
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.data.appBarColor
+import com.example.wardrobe.util.AdminModeDrawerItem
 import com.example.wardrobe.util.ExpandableDrawerItem
 import com.example.wardrobe.util.Navigation
 import com.example.wardrobe.util.SimpleDrawerItem
@@ -45,6 +49,16 @@ import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.setValue
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -57,10 +71,11 @@ fun MainView(
     onThemeChange: (Theme) -> Unit
 ){
     val members by vm.members.collectAsState()
-
+    val isAdminMode by repo.settings.isAdminMode.collectAsState(initial = false)
+    var showAdminPinDialog by remember { mutableStateOf(false) }
 
     val viewModel : MainViewModel = viewModel()
-
+    val savedPin by repo.settings.adminPin.collectAsState(initial = null)
 
     val controller: NavController = rememberNavController()
     val navBackStackEntry by controller.currentBackStackEntryAsState()
@@ -117,6 +132,19 @@ fun MainView(
                     }
                 }
             }
+
+            AdminModeDrawerItem(
+                isAdmin = isAdminMode,
+                onAdminChange = { enabled ->
+                    if (enabled) {
+                        showAdminPinDialog = true
+                    } else {
+                        scope.launch {
+                            repo.settings.setAdminMode(false)
+                        }
+                    }
+                }
+            )
 
             ToggleDrawerItem(currentTheme = theme) { newTheme ->
                 onThemeChange(newTheme)
@@ -188,6 +216,63 @@ fun MainView(
 
             }
         )
+
+        if (showAdminPinDialog) {
+            var pin by remember { mutableStateOf("") }
+            var pinError by remember { mutableStateOf<String?>(null) }
+
+            AlertDialog(
+                onDismissRequest = { showAdminPinDialog = false },
+                title = { Text(if (savedPin == null) "Set Admin PIN" else "Enter Admin PIN") },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = pin,
+                            onValueChange = { v ->
+                                pin = v.take(4)
+                                pinError = null
+                            },
+                            label = { Text("4-digit PIN") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                            visualTransformation = PasswordVisualTransformation()
+                        )
+                        if (pinError != null) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = pinError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        scope.launch {
+                            if (savedPin == null) {
+                                // First time setting PIN
+                                repo.settings.setAdminPin(pin)
+                                repo.settings.setAdminMode(true)
+                                showAdminPinDialog = false
+                            } else if (pin == savedPin) {
+                                // Correct PIN
+                                repo.settings.setAdminMode(true)
+                                showAdminPinDialog = false
+                            } else {
+                                pinError = "Wrong PIN"
+                            }
+                        }
+                    }) {
+                        Text("Enter")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAdminPinDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 

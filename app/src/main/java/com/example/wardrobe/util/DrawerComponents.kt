@@ -90,6 +90,32 @@ fun ToggleDrawerItem(
 }
 
 @Composable
+fun AdminModeDrawerItem(
+    isAdmin: Boolean,
+    onAdminChange: (Boolean) -> Unit
+){
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Admin Mode",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = isAdmin,
+            onCheckedChange = { checked ->
+                onAdminChange(checked)
+            },
+        )
+    }
+}
+
+@Composable
 fun ExpandableDrawerItem(
     item: Screen.DrawerScreen,
     subItems: List<Member>,
