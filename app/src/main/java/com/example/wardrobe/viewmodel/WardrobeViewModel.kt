@@ -6,6 +6,7 @@ import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.components.TagUiModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,18 @@ enum class ViewType {
     STORED
 }
 
+sealed class DialogEffect {
+    data object Hidden : DialogEffect()
+    sealed class DeleteLocation : DialogEffect() {
+        data class AdminConfirm(val locationId: Long, val itemCount: Int) : DeleteLocation()
+        data class PreventDelete(val itemCount: Int) : DeleteLocation()
+    }
+    sealed class DeleteTag : DialogEffect() {
+        data class AdminConfirm(val tagId: Long, val itemCount: Int) : DeleteTag()
+        data class PreventDelete(val itemCount: Int) : DeleteTag()
+    }
+}
+
 data class UiState(
     val memberName: String = "",
     val tags: List<TagUiModel> = emptyList(),
@@ -26,8 +39,20 @@ data class UiState(
     val selectedTagIds: Set<Long> = emptySet(),
     val query: String = "",
     val items: List<ClothingItem> = emptyList(),
-    val currentView: ViewType = ViewType.IN_USE
+    val currentView: ViewType = ViewType.IN_USE,
+    val isAdminMode: Boolean = false,
+    val dialogEffect: DialogEffect = DialogEffect.Hidden
 )
+
+private data class VmCoreState(
+    val sel: Set<Long>,
+    val q: String,
+    val view: ViewType,
+    val isAdmin: Boolean,
+    val dialogEffect: DialogEffect
+)
+
+private val DEFAULT_TAGS = setOf("Spring/Autumn", "Summer", "Winter", "Hat", "Top", "Pants", "Shoes", "Jumpsuit")
 
 class WardrobeViewModel(
     private val repo: WardrobeRepository,
@@ -36,16 +61,17 @@ class WardrobeViewModel(
     private val selectedTagIds = MutableStateFlow<Set<Long>>(emptySet())
     private val query = MutableStateFlow("")
     private val currentView = MutableStateFlow(ViewType.IN_USE)
+    private val dialogEffect = MutableStateFlow<DialogEffect>(DialogEffect.Hidden)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState> = combine(
-        selectedTagIds,
-        query,
-        currentView
-    ) { sel, q, view ->
-        Triple(sel, q, view)
-    }.flatMapLatest { (sel, q, view) ->
-        val itemsFlow = repo.observeItems(memberId, sel.toList(), q)
-        val tagsFlow = repo.observeTagsWithCounts(memberId, view == ViewType.STORED)
+        combine(selectedTagIds, query, currentView) { sel, q, view -> Triple(sel, q, view) },
+        combine(repo.settings.isAdminMode, dialogEffect) { isAdmin, effect -> isAdmin to effect }
+    ) { (sel, q, view), (isAdmin, effect) ->
+        VmCoreState(sel, q, view, isAdmin, effect)
+    }.flatMapLatest { state ->
+        val itemsFlow = repo.observeItems(memberId, state.sel.toList(), state.q)
+        val tagsFlow = repo.observeTagsWithCounts(memberId, state.view == ViewType.STORED)
 
         combine(
             itemsFlow,
@@ -54,17 +80,26 @@ class WardrobeViewModel(
             repo.observeLocations()
         ) { items, member, tagsWithCount, locations ->
             val filteredItems = items.filter { item ->
-                if (view == ViewType.IN_USE) !item.stored else item.stored
+                if (state.view == ViewType.IN_USE) !item.stored else item.stored
             }
 
             UiState(
                 memberName = member?.name ?: "",
-                tags = tagsWithCount.map { TagUiModel(it.tagId, it.name, it.count) },
+                tags = tagsWithCount.map { tag ->
+                    TagUiModel(
+                        id = tag.tagId,
+                        name = tag.name,
+                        count = tag.count,
+                        isDeletable = tag.name !in DEFAULT_TAGS
+                    )
+                },
                 locations = locations,
-                selectedTagIds = sel,
-                query = q,
+                selectedTagIds = state.sel,
+                query = state.q,
                 items = filteredItems,
-                currentView = view
+                currentView = state.view,
+                isAdminMode = state.isAdmin,
+                dialogEffect = state.dialogEffect
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
@@ -72,18 +107,7 @@ class WardrobeViewModel(
     init {
         // Ensure some default tags exist the first time
         viewModelScope.launch {
-            repo.ensureDefaultTags(
-                listOf(
-                    "Spring/Autumn",
-                    "Summer",
-                    "Winter",
-                    "Hat",
-                    "Top",
-                    "Pants",
-                    "Shoes",
-                    "Jumpsuit"
-                )
-            )
+            repo.ensureDefaultTags(DEFAULT_TAGS.toList())
         }
     }
 
@@ -114,7 +138,45 @@ class WardrobeViewModel(
     }
 
     fun deleteLocation(locationId: Long) = viewModelScope.launch {
+        val count = repo.getItemCountForLocation(locationId)
+        if (count == 0) {
+            repo.deleteLocation(locationId)
+            return@launch
+        }
+
+        if (uiState.value.isAdminMode) {
+            dialogEffect.value = DialogEffect.DeleteLocation.AdminConfirm(locationId, count)
+        } else {
+            dialogEffect.value = DialogEffect.DeleteLocation.PreventDelete(count)
+        }
+    }
+
+    fun forceDeleteLocation(locationId: Long) = viewModelScope.launch {
         repo.deleteLocation(locationId)
+        clearDialogEffect()
+    }
+
+    fun deleteTag(tagId: Long) = viewModelScope.launch {
+        val count = repo.getItemCountForTag(tagId)
+        if (count == 0) {
+            repo.deleteTag(tagId)
+            return@launch
+        }
+
+        if (uiState.value.isAdminMode) {
+            dialogEffect.value = DialogEffect.DeleteTag.AdminConfirm(tagId, count)
+        } else {
+            dialogEffect.value = DialogEffect.DeleteTag.PreventDelete(count)
+        }
+    }
+
+    fun forceDeleteTag(tagId: Long) = viewModelScope.launch {
+        repo.deleteTag(tagId)
+        clearDialogEffect()
+    }
+
+    fun clearDialogEffect() {
+        dialogEffect.value = DialogEffect.Hidden
     }
 
     fun saveItem(
@@ -132,5 +194,9 @@ class WardrobeViewModel(
 
     fun deleteItem(itemId: Long) = viewModelScope.launch {
         repo.deleteItem(itemId)
+    }
+
+    fun setAdminMode(isAdmin: Boolean) = viewModelScope.launch {
+        repo.settings.setAdminMode(isAdmin)
     }
 }

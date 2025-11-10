@@ -9,9 +9,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +22,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.core.content.FileProvider
@@ -28,6 +32,7 @@ import coil.compose.AsyncImage
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.util.persistImageToAppStorage
+import com.example.wardrobe.viewmodel.DialogEffect
 import com.example.wardrobe.viewmodel.WardrobeViewModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -50,6 +55,8 @@ fun EditItemScreen(
     val selectedTagIds = remember { mutableStateListOf<Long>() }
     var isStored by remember { mutableStateOf(false) }
     var selectedLocationId by remember { mutableStateOf<Long?>(null) }
+
+    var showSettingsDialog by remember { mutableStateOf(false) }
 
     // Pre-fill form
     LaunchedEffect(editing) {
@@ -93,6 +100,9 @@ fun EditItemScreen(
                 title = { Text(if (itemId == null) "Add Item" else "Edit Item") },
                 navigationIcon = { TextButton(onClick = onDone) { Text("Back") } },
                 actions = {
+                    IconButton(onClick = { showSettingsDialog = true }) {
+                        Icon(Icons.Default.Settings, "Settings")
+                    }
                     TextButton(onClick = {
                         val finalImageUri = imageUri?.let { uri ->
                             if (uri.scheme == "file") uri
@@ -135,6 +145,133 @@ fun EditItemScreen(
             StorageSection(vm, isStored, { isStored = it }, ui.locations, selectedLocationId) { selectedLocationId = it }
         }
     }
+
+    if (showSettingsDialog) {
+        SettingsDialog(vm, onDismiss = { showSettingsDialog = false })
+    }
+
+    HandleDialogEffects(vm, ui.dialogEffect)
+}
+
+@Composable
+private fun HandleDialogEffects(vm: WardrobeViewModel, effect: DialogEffect) {
+    when (effect) {
+        is DialogEffect.DeleteLocation.AdminConfirm -> {
+            AlertDialog(
+                onDismissRequest = { vm.clearDialogEffect() },
+                title = { Text("Confirm Deletion") },
+                text = { Text("Are you sure you want to delete this location? ${effect.itemCount} items will become unassigned.") },
+                confirmButton = {
+                    TextButton(onClick = { vm.forceDeleteLocation(effect.locationId) }) { Text("Delete") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("Cancel") }
+                }
+            )
+        }
+        is DialogEffect.DeleteLocation.PreventDelete -> {
+            AlertDialog(
+                onDismissRequest = { vm.clearDialogEffect() },
+                title = { Text("Action Not Allowed") },
+                text = { Text("This location is in use by ${effect.itemCount} items and cannot be deleted in Normal Mode.") },
+                confirmButton = {
+                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("OK") }
+                }
+            )
+        }
+        is DialogEffect.DeleteTag.AdminConfirm -> {
+            AlertDialog(
+                onDismissRequest = { vm.clearDialogEffect() },
+                title = { Text("Confirm Deletion") },
+                text = { Text("Are you sure you want to delete this tag? It is used by ${effect.itemCount} items.") },
+                confirmButton = {
+                    TextButton(onClick = { vm.forceDeleteTag(effect.tagId) }) { Text("Delete") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("Cancel") }
+                }
+            )
+        }
+        is DialogEffect.DeleteTag.PreventDelete -> {
+            AlertDialog(
+                onDismissRequest = { vm.clearDialogEffect() },
+                title = { Text("Action Not Allowed") },
+                text = { Text("This tag is in use by ${effect.itemCount} items and cannot be deleted in Normal Mode.") },
+                confirmButton = {
+                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("OK") }
+                }
+            )
+        }
+        else -> {}
+    }
+}
+
+@Composable
+private fun SettingsDialog(vm: WardrobeViewModel, onDismiss: () -> Unit) {
+    val ui by vm.uiState.collectAsState()
+    var showPinDialog by remember { mutableStateOf(false) }
+    var showAdminWarning by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Settings") },
+        text = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Administrator Mode", modifier = Modifier.weight(1f))
+                Switch(
+                    checked = ui.isAdminMode,
+                    onCheckedChange = {
+                        if (it) {
+                            showPinDialog = true
+                        } else {
+                            vm.setAdminMode(false)
+                        }
+                    }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+
+    if (showPinDialog) {
+        var pin by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showPinDialog = false },
+            title = { Text("Enter Admin PIN") },
+            text = {
+                OutlinedTextField(
+                    value = pin,
+                    onValueChange = { v -> pin = v.take(4) },
+                    label = { Text("4-digit PIN") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (pin == "1234") { // Hardcoded PIN
+                        vm.setAdminMode(true)
+                        showPinDialog = false
+                        showAdminWarning = true
+                    }
+                }) { Text("Enter") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPinDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showAdminWarning) {
+        AlertDialog(
+            onDismissRequest = { showAdminWarning = false },
+            title = { Text("Admin Mode Enabled") },
+            text = { Text("Dangerous operations are now allowed. This may result in data loss if not used carefully.") },
+            confirmButton = { TextButton(onClick = { showAdminWarning = false }) { Text("I Understand") } }
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -154,7 +291,8 @@ private fun TagsSection(vm: WardrobeViewModel, ui: com.example.wardrobe.viewmode
                 else selectedTagIds.add(id)
             },
             modifier = Modifier.fillMaxWidth(),
-            showCount = false
+            showCount = false,
+            onDelete = { vm.deleteTag(it) }
         )
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

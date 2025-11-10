@@ -2,7 +2,10 @@ package com.example.wardrobe.data
 
 import kotlinx.coroutines.flow.Flow
 
-class WardrobeRepository(private val dao: ClothesDao) {
+class WardrobeRepository(
+    private val dao: ClothesDao,
+    val settings: SettingsRepository
+) {
     // Member functions
     fun getAllMembers(): Flow<List<Member>> = dao.getAllMembers()
 
@@ -23,6 +26,10 @@ class WardrobeRepository(private val dao: ClothesDao) {
         dao.deleteLocation(locationId)
     }
 
+    suspend fun getItemCountForLocation(locationId: Long): Int {
+        return dao.getItemCountForLocation(locationId)
+    }
+
     // Tag functions
     fun observeTags() = dao.allTags()
 
@@ -34,6 +41,14 @@ class WardrobeRepository(private val dao: ClothesDao) {
 
         val existing = dao.getTagByName(sanitizedName)
         return existing?.tagId ?: dao.upsertTag(Tag(name = sanitizedName))
+    }
+
+    suspend fun deleteTag(tagId: Long) {
+        dao.deleteTag(tagId)
+    }
+
+    suspend fun getItemCountForTag(tagId: Long): Int {
+        return dao.getItemCountForTag(tagId)
     }
 
     // Item functions

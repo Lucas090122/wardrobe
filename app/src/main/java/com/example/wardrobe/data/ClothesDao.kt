@@ -25,12 +25,18 @@ interface ClothesDao {
     @Query("DELETE FROM Location WHERE locationId = :locationId")
     suspend fun deleteLocation(locationId: Long)
 
+    @Query("SELECT COUNT(itemId) FROM ClothingItem WHERE locationId = :locationId")
+    suspend fun getItemCountForLocation(locationId: Long): Int
+
     // Item operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: ClothingItem): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTag(tag: Tag): Long
+
+    @Query("DELETE FROM Tag WHERE tagId = :tagId")
+    suspend fun deleteTag(tagId: Long)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCrossRefs(refs: List<ClothingTagCrossRef>)
@@ -70,6 +76,9 @@ interface ClothesDao {
 
     @Query("SELECT * FROM Tag WHERE name = :name COLLATE NOCASE LIMIT 1")
     suspend fun getTagByName(name: String): Tag?
+
+    @Query("SELECT COUNT(itemId) FROM ClothingTagCrossRef WHERE tagId = :tagId")
+    suspend fun getItemCountForTag(tagId: Long): Int
 
     @Query("""
         SELECT t.tagId, t.name, COUNT(ci.itemId) as count

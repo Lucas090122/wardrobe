@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val db = AppDatabase.get(this)
-        val repo = WardrobeRepository(db.clothesDao())
+        val repo = WardrobeRepository(db.clothesDao(), db.settingsRepository)
 
         val memberVmFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -83,7 +83,8 @@ class WardrobeViewModelFactory(private val repo: WardrobeRepository, private val
 @Composable
 fun WardrobeApp(memberId: Long, onExit: () -> Unit) {
     val context = LocalContext.current
-    val repo = WardrobeRepository(AppDatabase.get(context).clothesDao())
+    val db = AppDatabase.get(context)
+    val repo = WardrobeRepository(db.clothesDao(), db.settingsRepository)
     val vmFactory = WardrobeViewModelFactory(repo, memberId)
     val vm: WardrobeViewModel = viewModel(key = memberId.toString(), factory = vmFactory)
 

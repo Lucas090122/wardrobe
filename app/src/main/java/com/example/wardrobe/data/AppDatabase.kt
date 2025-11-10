@@ -13,21 +13,33 @@ import androidx.room.RoomDatabase
 abstract class AppDatabase : RoomDatabase() {
     abstract fun clothesDao(): ClothesDao
 
+    // This will be initialized in the companion object
+    lateinit var settingsRepository: SettingsRepository
+        private set
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
         fun get(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                val instance = INSTANCE
+                if (instance != null) {
+                    return instance
+                }
+
+                val newInstance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wardrobe.db"
                 )
-                .fallbackToDestructiveMigration()
-                .build()
-                INSTANCE = instance
-                instance
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also {
+                        it.settingsRepository = SettingsRepository(context.applicationContext)
+                    }
+                INSTANCE = newInstance
+                newInstance
             }
         }
     }
