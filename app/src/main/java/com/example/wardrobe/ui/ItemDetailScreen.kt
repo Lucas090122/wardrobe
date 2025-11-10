@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.TagUiModel
@@ -32,7 +33,6 @@ import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
-import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -122,6 +122,7 @@ fun ItemDetailScreen(
                     createdText = createdText,
                     imageUriString = item.imageUri,
                     tags = tagModels,
+                    isStored = item.stored,
                     locationName = locationName,
                     ownerName = ownerName
                 )
@@ -160,6 +161,7 @@ private fun ItemSharePoster(
     createdText: String,
     imageUriString: String?,
     tags: List<TagUiModel>,
+    isStored: Boolean,
     locationName: String?,
     ownerName: String?
 ) {
@@ -219,11 +221,13 @@ private fun ItemSharePoster(
                 style = MaterialTheme.typography.titleLarge
             )
 
-            if (!locationName.isNullOrBlank()) {
-                Text(
-                    text = "Stored in: $locationName",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            if (isStored) {
+                val text = if (!locationName.isNullOrBlank()) {
+                    "Stored in: $locationName"
+                } else {
+                    "Stored in: Unprovided"
+                }
+                Text(text = text, style = MaterialTheme.typography.bodyMedium)
             }
 
             if (tags.isNotEmpty()) {

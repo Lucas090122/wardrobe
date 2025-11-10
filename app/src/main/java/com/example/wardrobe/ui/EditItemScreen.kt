@@ -208,7 +208,10 @@ private fun StorageSection(
                     locations.forEach { location ->
                         InputChip(
                             selected = location.locationId == selectedLocationId,
-                            onClick = { onLocationSelected(location.locationId) },
+                            onClick = {
+                                val newSelection = if (location.locationId == selectedLocationId) null else location.locationId
+                                onLocationSelected(newSelection)
+                            },
                             label = { Text(location.name) },
                             trailingIcon = {
                                 Icon(
@@ -228,7 +231,7 @@ private fun StorageSection(
                 OutlinedTextField(
                     value = newLocationName,
                     onValueChange = { newLocationName = it },
-                    label = { Text("New Location Name") },
+                    label = { Text("New location name") },
                     modifier = Modifier.weight(1f)
                 )
                 Button(onClick = {
