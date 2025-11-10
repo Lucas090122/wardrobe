@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- For sharing captured bitmaps -->
     <cache-path name="shared_images" path="images/"/>
+    <!-- For taking photos with the camera -->
+    <files-path name="new_pictures" path="images/"/>
 </paths>
