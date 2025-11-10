@@ -12,14 +12,15 @@ import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.EditItemScreen
 import com.example.wardrobe.ui.HomeScreen
 import com.example.wardrobe.ui.ItemDetailScreen
-import com.example.wardrobe.ui.MemberSelectionScreen
 import com.example.wardrobe.viewmodel.MemberViewModel
 import com.example.wardrobe.viewmodel.WardrobeViewModel
 import com.example.wardrobe.ui.theme.WardrobeTheme
 import androidx.activity.compose.BackHandler
-import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.example.wardrobe.ui.components.MainView
+import com.example.wardrobe.data.Theme
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,13 +39,16 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
-            WardrobeTheme {
-                //var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+            var theme by remember { mutableStateOf(Theme.LIGHT) }
+
+            WardrobeTheme(darkTheme = theme == Theme.DARK) {
                 val memberViewModel: MemberViewModel = viewModel(factory = memberVmFactory)
                 MainView(
                     repo = repo,
-                    vm = memberViewModel
-                    )
+                    vm = memberViewModel,
+                    theme = theme,
+                    onThemeChange = { theme = it }
+                )
 
                 /*if (selectedMemberId == null) {
                     // This is the root screen, handle app exit here

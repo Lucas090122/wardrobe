@@ -26,10 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.wardrobe.R
 import com.example.wardrobe.Screen
 import com.example.wardrobe.data.Member
 import com.example.wardrobe.data.Theme
@@ -57,7 +55,10 @@ fun SimpleDrawerItem(
         Text(
             text = item.dTitle,
             style = MaterialTheme.typography.bodyLarge,
-            color = if(selected) colorResource(R.color.app_bar_bg_dark) else colorResource(R.color.app_bar_bg_light)
+            color = if (selected)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.onSurface
         )
     }
 }

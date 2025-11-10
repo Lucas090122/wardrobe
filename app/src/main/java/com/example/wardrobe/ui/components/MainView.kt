@@ -3,11 +3,12 @@ package com.example.wardrobe.ui.components
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,10 +23,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +53,8 @@ import kotlinx.coroutines.launch
 fun MainView(
     repo: WardrobeRepository,
     vm: MemberViewModel,
+    theme: Theme,
+    onThemeChange: (Theme) -> Unit
 ){
     val members by vm.members.collectAsState()
 
@@ -76,11 +76,12 @@ fun MainView(
 
     val scope : CoroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var theme by remember { mutableStateOf(Theme.LIGHT) }
 
     val drawerContent = @Composable {
         ModalDrawerSheet (
-            modifier = Modifier.padding(top = 40.dp)
+            modifier = Modifier
+                .padding(top = 40.dp)
+                .width(280.dp)
         ){
             SimpleDrawerItem(
                 Screen.DrawerScreen.Home,
@@ -117,8 +118,8 @@ fun MainView(
                 }
             }
 
-            ToggleDrawerItem(theme) { newTheme ->
-                theme = newTheme
+            ToggleDrawerItem(currentTheme = theme) { newTheme ->
+                onThemeChange(newTheme)
             }
         }
     }
@@ -150,7 +151,7 @@ fun MainView(
                             }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Home,
+                                imageVector = Icons.Default.Menu,
                                 contentDescription = "Open Drawer",
                                 modifier = Modifier.padding(5.dp)
                             )
