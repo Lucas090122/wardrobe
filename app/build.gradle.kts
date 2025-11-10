@@ -67,6 +67,9 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     kapt("androidx.room:room-compiler:2.6.1")
 
+    // Jetpack DataStore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Capturable for taking screenshots of Composables
     implementation("dev.shreyaspatil:capturable:3.0.1")
 
