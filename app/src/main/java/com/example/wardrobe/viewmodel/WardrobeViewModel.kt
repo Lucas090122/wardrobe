@@ -192,7 +192,13 @@ class WardrobeViewModel(
         imageUri: String?,
         tagIds: List<Long>,
         stored: Boolean,
-        locationId: Long?
+        locationId: Long?,
+        category: String,
+        warmthLevel: Int,
+        occasions: String,
+        isWaterproof: Boolean,
+        color: String,
+        isFavorite: Boolean
     ) = viewModelScope.launch {
         repo.saveItem(
             memberId = memberId,
