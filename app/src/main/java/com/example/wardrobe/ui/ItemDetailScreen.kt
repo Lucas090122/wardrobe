@@ -13,6 +13,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwapHoriz // Added import
+import androidx.compose.material3.ExposedDropdownMenuBox // Added import
+import androidx.compose.material3.ExposedDropdownMenuDefaults // Added import
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -25,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
+import com.example.wardrobe.data.Member // Added import
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.TagUiModel
 import com.example.wardrobe.viewmodel.WardrobeViewModel
@@ -45,6 +49,10 @@ fun ItemDetailScreen(
     val itemData by vm.itemFlow(itemId).collectAsState(initial = null)
     val uiState by vm.uiState.collectAsState()
     var showConfirm by remember { mutableStateOf(false) }
+    var showTransferDialog by remember { mutableStateOf(false) }
+
+    var expanded by remember { mutableStateOf(false) } // Added
+    var selectedMember by remember { mutableStateOf<Member?>(null) } // Added
 
     val captureController = rememberCaptureController()
     val scope = rememberCoroutineScope()
@@ -60,6 +68,9 @@ fun ItemDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showTransferDialog = true }) { // Added Transfer button
+                        Icon(Icons.Default.SwapHoriz, "Transfer")
+                    }
                     // Share button
                     IconButton(onClick = {
                         scope.launch {
@@ -148,6 +159,73 @@ fun ItemDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showTransferDialog) {
+        AlertDialog(
+            onDismissRequest = { showTransferDialog = false },
+            title = { Text("Transfer Item") },
+            text = {
+                itemData?.let { data ->
+                    val currentOwnerId = data.item.ownerMemberId
+                    val otherMembers = uiState.members.filter { member: Member -> member.memberId != currentOwnerId }
+
+                    Column {
+                        Text("Select a member to transfer this item to:")
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedMember?.name ?: "Select Member",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                otherMembers.forEach { member: Member ->
+                                    DropdownMenuItem(
+                                        text = { Text(member.name) },
+                                        onClick = {
+                                            selectedMember = member
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } ?: Text("Loading item data...")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedMember?.let { member ->
+                            vm.transferItem(itemId, member.memberId)
+                            showTransferDialog = false
+                            onBack() // Go back to home
+                        }
+                    },
+                    enabled = selectedMember != null
+                ) {
+                    Text("Transfer")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTransferDialog = false }) {
                     Text("Cancel")
                 }
             }

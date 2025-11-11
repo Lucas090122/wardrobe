@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
+import com.example.wardrobe.data.Member // Added import
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +35,7 @@ sealed class DialogEffect {
 
 data class UiState(
     val memberName: String = "",
+    val members: List<Member> = emptyList(), // Added
     val tags: List<TagUiModel> = emptyList(),
     val locations: List<Location> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
@@ -77,14 +79,16 @@ class WardrobeViewModel(
             itemsFlow,
             repo.getMember(memberId),
             tagsFlow,
-            repo.observeLocations()
-        ) { items, member, tagsWithCount, locations ->
+            repo.observeLocations(),
+            repo.getAllMembers() // Added
+        ) { items, member, tagsWithCount, locations, allMembers -> // Modified signature
             val filteredItems = items.filter { item ->
                 if (state.view == ViewType.IN_USE) !item.stored else item.stored
             }
 
             UiState(
                 memberName = member?.name ?: "",
+                members = allMembers, // Added
                 tags = tagsWithCount.map { tag ->
                     TagUiModel(
                         id = tag.tagId,
@@ -198,5 +202,9 @@ class WardrobeViewModel(
 
     fun setAdminMode(isAdmin: Boolean) = viewModelScope.launch {
         repo.settings.setAdminMode(isAdmin)
+    }
+
+    fun transferItem(itemId: Long, newOwnerMemberId: Long) = viewModelScope.launch {
+        repo.transferItem(itemId, newOwnerMemberId)
     }
 }

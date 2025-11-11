@@ -95,4 +95,7 @@ interface ClothesDao {
 
     @Query("SELECT createdAt FROM ClothingItem WHERE itemId = :itemId")
     suspend fun getCreatedAt(itemId: Long): Long?
+
+    @Query("UPDATE ClothingItem SET ownerMemberId = :newOwnerMemberId WHERE itemId = :itemId")
+    suspend fun updateItemOwner(itemId: Long, newOwnerMemberId: Long)
 }

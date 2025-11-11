@@ -99,4 +99,8 @@ class WardrobeRepository(
         dao.clearTagsForItem(itemId)
         dao.deleteItemById(itemId)
     }
+
+    suspend fun transferItem(itemId: Long, newOwnerMemberId: Long) {
+        dao.updateItemOwner(itemId, newOwnerMemberId)
+    }
 }
