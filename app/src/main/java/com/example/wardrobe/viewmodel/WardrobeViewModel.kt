@@ -194,7 +194,22 @@ class WardrobeViewModel(
         stored: Boolean,
         locationId: Long?
     ) = viewModelScope.launch {
-        repo.saveItem(memberId, itemId, description, imageUri, tagIds, stored, locationId)
+        repo.saveItem(
+            memberId = memberId,
+            itemId = itemId,
+            description = description,
+            imageUri = imageUri,
+            tagIds = tagIds,
+            stored = stored,
+            locationId = locationId,
+            // Pass default values for new fields to ensure compilation
+            category = "TOP",
+            warmthLevel = 3,
+            occasions = "CASUAL",
+            isWaterproof = false,
+            color = "#FFFFFF",
+            isFavorite = false
+        )
     }
 
     fun itemFlow(itemId: Long) = repo.observeItem(itemId)
@@ -206,6 +221,8 @@ class WardrobeViewModel(
     fun setAdminMode(isAdmin: Boolean) = viewModelScope.launch {
         repo.settings.setAdminMode(isAdmin)
     }
+
+
 
     fun transferItem(itemId: Long, newOwnerMemberId: Long) = viewModelScope.launch {
         // Get the current item to retrieve its ownerMemberId before transfer
