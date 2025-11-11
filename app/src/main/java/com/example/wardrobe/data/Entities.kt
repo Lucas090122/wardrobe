@@ -55,7 +55,33 @@ data class ClothingItem(
     val imageUri: String?,
     val stored: Boolean = false,
     val locationId: Long? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    // --- V2.4 新增字段 ---
+
+    // 核心推荐字段
+    @ColumnInfo(defaultValue = "'TOP'")
+    val category: String,
+
+    @ColumnInfo(defaultValue = "3")
+    val warmthLevel: Int,
+    
+    // 存储逗号分隔的字符串，如 "CASUAL,WORK"
+    @ColumnInfo(defaultValue = "'CASUAL'") 
+    val occasions: String,
+
+    @ColumnInfo(defaultValue = "0") // Room中Boolean以0/1存储
+    val isWaterproof: Boolean,
+
+    // 优化字段
+    @ColumnInfo(defaultValue = "'#FFFFFF'")
+    val color: String,
+
+    @ColumnInfo(defaultValue = "0")
+    val lastWornAt: Long,
+
+    @ColumnInfo(defaultValue = "0")
+    val isFavorite: Boolean
 )
 
 @Entity(

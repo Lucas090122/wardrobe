@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Member::class, ClothingItem::class, Tag::class, ClothingTagCrossRef::class, Location::class, TransferHistory::class],
-    version = 5,
+    version = 6, // Incremented version to trigger migration
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

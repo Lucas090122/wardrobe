@@ -1,7 +1,8 @@
 package com.example.wardrobe.data
 
-import kotlinx.coroutines.flow.Flow
 import com.example.wardrobe.data.TransferHistoryDetails // Added import
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 class WardrobeRepository(
     private val dao: ClothesDao,
@@ -34,7 +35,8 @@ class WardrobeRepository(
     // Tag functions
     fun observeTags() = dao.allTags()
 
-    fun observeTagsWithCounts(memberId: Long, isStored: Boolean) = dao.getTagsWithCounts(memberId, isStored)
+    fun observeTagsWithCounts(memberId: Long, isStored: Boolean) =
+        dao.getTagsWithCounts(memberId, isStored)
 
     suspend fun getOrCreateTag(name: String): Long {
         val sanitizedName = name.trim()
@@ -66,12 +68,21 @@ class WardrobeRepository(
         imageUri: String?,
         tagIds: List<Long>,
         stored: Boolean,
-        locationId: Long?
+        locationId: Long?,
+        // --- V2.4 new fields ---
+        category: String,
+        warmthLevel: Int,
+        occasions: String,
+        isWaterproof: Boolean,
+        color: String,
+        isFavorite: Boolean
     ): Long {
-        val createdAt = if (itemId != null && itemId != 0L)
-            dao.getCreatedAt(itemId) ?: System.currentTimeMillis()
-        else
-            System.currentTimeMillis()
+        val existingItem = if (itemId != null && itemId != 0L) {
+            // We need to use firstOrNull() as itemWithTags returns a Flow
+            dao.itemWithTags(itemId).firstOrNull()?.item
+        } else {
+            null
+        }
 
         val newClothingItem = ClothingItem(
             itemId = itemId ?: 0,
@@ -80,10 +91,20 @@ class WardrobeRepository(
             imageUri = imageUri,
             stored = stored,
             locationId = locationId,
-            createdAt = createdAt
+            createdAt = existingItem?.createdAt ?: System.currentTimeMillis(),
+
+            // --- V2.4 new fields ---
+            category = category,
+            warmthLevel = warmthLevel,
+            occasions = occasions,
+            isWaterproof = isWaterproof,
+            color = color,
+            lastWornAt = existingItem?.lastWornAt ?: 0, // Preserve existing lastWornAt
+            isFavorite = isFavorite
         )
 
-        val id = dao.upsertItem(newClothingItem).let { if (itemId != null && itemId != 0L) itemId else it }
+        val id = dao.upsertItem(newClothingItem)
+            .let { if (itemId != null && itemId != 0L) itemId else it }
 
         dao.clearTagsForItem(id)
         dao.upsertCrossRefs(tagIds.map { ClothingTagCrossRef(id, it) })
