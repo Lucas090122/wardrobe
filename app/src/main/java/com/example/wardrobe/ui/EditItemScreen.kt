@@ -1096,31 +1096,47 @@ fun EditItemScreen(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-            Text("Color", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Color",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            Spacer(Modifier.height(6.dp))
+
             val availableColors = listOf(
                 "#FFFFFF", "#000000", "#FF0000", "#FFA500",
                 "#FFFF00", "#00FF00", "#00FFFF", "#0000FF",
                 "#800080", "#A52A2A"
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+            ) {
                 availableColors.forEach { hex ->
-                    val selected = (colorHex.equals(hex, ignoreCase = true))
+                    val selected = colorHex.equals(hex, ignoreCase = true)
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(34.dp)
                             .clip(CircleShape)
                             .background(Color(android.graphics.Color.parseColor(hex)))
                             .border(
                                 width = if (selected) 3.dp else 1.dp,
-                                color = if (selected) MaterialTheme.colorScheme.primary else Color.Gray,
+                                color = if (selected)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.outlineVariant,
                                 shape = CircleShape
                             )
                             .clickable { colorHex = hex }
                     )
                 }
             }
+
 
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
