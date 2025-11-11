@@ -169,7 +169,7 @@ fun ExpandableDrawerItem(
                 Row (
                     modifier = Modifier.fillMaxWidth(.8f)
                         .clip(RoundedCornerShape(30))
-                        .background(Color.Green)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable{showAddMemberDialog = true},
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
