@@ -101,4 +101,19 @@ interface ClothesDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransferHistory(transferHistory: TransferHistory)
+
+    @Transaction
+    @Query("""
+        SELECT
+            TH.transferTime,
+            SM.name AS sourceMemberName,
+            TM.name AS targetMemberName,
+            CI.description AS itemName
+        FROM TransferHistory AS TH
+        INNER JOIN Member AS SM ON TH.sourceMemberId = SM.memberId
+        INNER JOIN Member AS TM ON TH.targetMemberId = TM.memberId
+        INNER JOIN ClothingItem AS CI ON TH.itemId = CI.itemId
+        ORDER BY TH.transferTime DESC
+    """)
+    fun getAllTransferHistoryDetails(): Flow<List<TransferHistoryDetails>>
 }

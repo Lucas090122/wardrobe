@@ -6,6 +6,7 @@ import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Member // Added import
 import com.example.wardrobe.data.TransferHistory // Added import
+import com.example.wardrobe.data.TransferHistoryDetails // Added import
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -220,4 +221,8 @@ class WardrobeViewModel(
             )
         )
     }
+
+    val transferHistory: StateFlow<List<TransferHistoryDetails>> =
+        repo.getAllTransferHistoryDetails()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 }

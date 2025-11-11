@@ -1,6 +1,7 @@
 package com.example.wardrobe.data
 
 import kotlinx.coroutines.flow.Flow
+import com.example.wardrobe.data.TransferHistoryDetails // Added import
 
 class WardrobeRepository(
     private val dao: ClothesDao,
@@ -106,5 +107,9 @@ class WardrobeRepository(
 
     suspend fun recordTransferHistory(transferHistory: TransferHistory) {
         dao.insertTransferHistory(transferHistory)
+    }
+
+    fun getAllTransferHistoryDetails(): Flow<List<TransferHistoryDetails>> {
+        return dao.getAllTransferHistoryDetails()
     }
 }

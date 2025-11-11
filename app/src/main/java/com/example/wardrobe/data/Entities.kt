@@ -134,3 +134,10 @@ data class TransferHistory(
     val targetMemberId: Long,
     val transferTime: Long = System.currentTimeMillis()
 )
+
+data class TransferHistoryDetails(
+    val transferTime: Long,
+    val sourceMemberName: String,
+    val targetMemberName: String,
+    val itemName: String
+)

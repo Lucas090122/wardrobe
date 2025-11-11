@@ -19,6 +19,7 @@ import com.example.wardrobe.ui.Home
 import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
 import com.example.wardrobe.ui.SettingsScreen
+import com.example.wardrobe.ui.StatisticsScreen // Added import
 
 
 @Composable
@@ -53,7 +54,7 @@ fun Navigation(
         )
         }
         composable(Screen.DrawerScreen.Statistics.route) {
-            Text("Stats")
+            StatisticsScreen(repo = repo)
         }
         composable(Screen.DrawerScreen.Settings.route) {
             SettingsScreen(repo = repo)
