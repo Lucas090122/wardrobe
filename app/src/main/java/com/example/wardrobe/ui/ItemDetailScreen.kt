@@ -50,6 +50,7 @@ fun ItemDetailScreen(
     val uiState by vm.uiState.collectAsState()
     var showConfirm by remember { mutableStateOf(false) }
     var showTransferDialog by remember { mutableStateOf(false) }
+    var showConfirmTransferDialog by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) } // Added
     var selectedMember by remember { mutableStateOf<Member?>(null) } // Added
@@ -213,11 +214,7 @@ fun ItemDetailScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        selectedMember?.let { member ->
-                            vm.transferItem(itemId, member.memberId)
-                            showTransferDialog = false
-                            onBack() // Go back to home
-                        }
+                        showConfirmTransferDialog = true
                     },
                     enabled = selectedMember != null
                 ) {
@@ -226,6 +223,33 @@ fun ItemDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showTransferDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showConfirmTransferDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmTransferDialog = false },
+            title = { Text("Confirm Transfer") },
+            text = {
+                Text("Are you sure you want to transfer this item to ${selectedMember?.name ?: "the selected member"}?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedMember?.let { member ->
+                        vm.transferItem(itemId, member.memberId)
+                        showTransferDialog = false // Close the transfer form dialog
+                        showConfirmTransferDialog = false // Close this confirmation dialog
+                        onBack() // Navigate back after transfer
+                    }
+                }) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmTransferDialog = false }) {
                     Text("Cancel")
                 }
             }
