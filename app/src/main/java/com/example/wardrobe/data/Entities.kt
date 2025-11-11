@@ -99,3 +99,38 @@ data class TagWithCount(
     val name: String,
     val count: Int
 )
+
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = ClothingItem::class,
+            parentColumns = ["itemId"],
+            childColumns = ["itemId"],
+            onDelete = CASCADE
+        ),
+        ForeignKey(
+            entity = Member::class,
+            parentColumns = ["memberId"],
+            childColumns = ["sourceMemberId"],
+            onDelete = CASCADE
+        ),
+        ForeignKey(
+            entity = Member::class,
+            parentColumns = ["memberId"],
+            childColumns = ["targetMemberId"],
+            onDelete = CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["itemId"]),
+        Index(value = ["sourceMemberId"]),
+        Index(value = ["targetMemberId"])
+    ]
+)
+data class TransferHistory(
+    @PrimaryKey(autoGenerate = true) val transferId: Long = 0,
+    val itemId: Long,
+    val sourceMemberId: Long,
+    val targetMemberId: Long,
+    val transferTime: Long = System.currentTimeMillis()
+)

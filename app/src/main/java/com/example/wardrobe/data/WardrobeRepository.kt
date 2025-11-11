@@ -103,4 +103,8 @@ class WardrobeRepository(
     suspend fun transferItem(itemId: Long, newOwnerMemberId: Long) {
         dao.updateItemOwner(itemId, newOwnerMemberId)
     }
+
+    suspend fun recordTransferHistory(transferHistory: TransferHistory) {
+        dao.insertTransferHistory(transferHistory)
+    }
 }

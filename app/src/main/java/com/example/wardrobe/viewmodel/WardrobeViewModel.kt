@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Member // Added import
+import com.example.wardrobe.data.TransferHistory // Added import
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.firstOrNull // Added import
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -205,6 +207,17 @@ class WardrobeViewModel(
     }
 
     fun transferItem(itemId: Long, newOwnerMemberId: Long) = viewModelScope.launch {
+        // Get the current item to retrieve its ownerMemberId before transfer
+        val currentItem = repo.observeItem(itemId).firstOrNull()?.item
+        val sourceMemberId = currentItem?.ownerMemberId ?: return@launch // Should not be null
+
         repo.transferItem(itemId, newOwnerMemberId)
+        repo.recordTransferHistory(
+            TransferHistory(
+                itemId = itemId,
+                sourceMemberId = sourceMemberId,
+                targetMemberId = newOwnerMemberId
+            )
+        )
     }
 }

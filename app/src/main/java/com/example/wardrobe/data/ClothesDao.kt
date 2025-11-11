@@ -98,4 +98,7 @@ interface ClothesDao {
 
     @Query("UPDATE ClothingItem SET ownerMemberId = :newOwnerMemberId WHERE itemId = :itemId")
     suspend fun updateItemOwner(itemId: Long, newOwnerMemberId: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTransferHistory(transferHistory: TransferHistory)
 }
