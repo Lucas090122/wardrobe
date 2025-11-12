@@ -1,6 +1,5 @@
-package com.example.wardrobe.data
+package com.example.wardrobe.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
@@ -13,14 +12,10 @@ enum class Theme {
     DARK, LIGHT
 }
 
-/*enum class DrawerItemType{
-    SIMPLE, EXPANDABLE, SIMPLETOGGLE
-}*/
-
 @Composable
 fun bgColor(
     theme: Theme
-) : Color{
+) : Color {
     return if (theme == Theme.LIGHT) {
         colorResource(R.color.bg_light)
     } else {
@@ -49,11 +44,13 @@ fun appBarColor (
     {
         TopAppBarDefaults.topAppBarColors(
             containerColor = colorResource(id = R.color.app_bar_bg_light),
-            titleContentColor = colorResource(id = R.color.app_bar_text_light))
+            titleContentColor = colorResource(id = R.color.app_bar_text_light)
+        )
     } else
     {
         TopAppBarDefaults.topAppBarColors(
             containerColor = colorResource(id = R.color.app_bar_bg_dark),
-            titleContentColor = colorResource(id = R.color.app_bar_text_dark))
+            titleContentColor = colorResource(id = R.color.app_bar_text_dark)
+        )
     }
 }

@@ -37,9 +37,9 @@
 //import androidx.navigation.compose.rememberNavController
 //import com.example.wardrobe.Screen
 //import com.example.wardrobe.ScreensInDrawer
-//import com.example.wardrobe.data.Theme
+//import com.example.wardrobe.ui.theme.Theme
 //import com.example.wardrobe.data.WardrobeRepository
-//import com.example.wardrobe.data.appBarColor
+//import com.example.wardrobe.ui.theme.appBarColor
 //import com.example.wardrobe.util.AdminModeDrawerItem
 //import com.example.wardrobe.util.ExpandableDrawerItem
 //import com.example.wardrobe.util.Navigation
@@ -311,9 +311,9 @@
 //import androidx.navigation.compose.rememberNavController
 //import com.example.wardrobe.Screen
 //import com.example.wardrobe.ScreensInDrawer
-//import com.example.wardrobe.data.Theme
+//import com.example.wardrobe.ui.theme.Theme
 //import com.example.wardrobe.data.WardrobeRepository
-//import com.example.wardrobe.data.appBarColor
+//import com.example.wardrobe.ui.theme.appBarColor
 //import com.example.wardrobe.util.AdminModeDrawerItem
 //import com.example.wardrobe.util.ExpandableDrawerItem
 //import com.example.wardrobe.util.Navigation
@@ -608,9 +608,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.wardrobe.Screen
 import com.example.wardrobe.ScreensInDrawer
-import com.example.wardrobe.data.Theme
+import com.example.wardrobe.ui.theme.Theme
 import com.example.wardrobe.data.WardrobeRepository
-import com.example.wardrobe.data.appBarColor
+import com.example.wardrobe.ui.theme.appBarColor
 import com.example.wardrobe.util.AdminModeDrawerItem
 import com.example.wardrobe.util.ExpandableDrawerItem
 import com.example.wardrobe.util.Navigation

@@ -18,7 +18,7 @@
 //import androidx.activity.compose.BackHandler
 //import androidx.compose.ui.platform.LocalContext
 //import com.example.wardrobe.ui.components.MainView
-//import com.example.wardrobe.data.Theme
+//import com.example.wardrobe.ui.theme.Theme
 //import androidx.compose.runtime.mutableStateOf
 //import androidx.compose.runtime.remember
 //
@@ -156,7 +156,7 @@
 //import com.example.wardrobe.ui.theme.WardrobeTheme
 //import androidx.activity.compose.BackHandler
 //import com.example.wardrobe.ui.components.MainView
-//import com.example.wardrobe.data.Theme
+//import com.example.wardrobe.ui.theme.Theme
 //import com.example.wardrobe.viewmodel.MemberViewModel
 //import com.example.wardrobe.viewmodel.WardrobeViewModel
 //import androidx.compose.runtime.mutableStateOf
@@ -270,7 +270,7 @@
 //import androidx.lifecycle.ViewModelProvider
 //import androidx.lifecycle.viewmodel.compose.viewModel
 //import com.example.wardrobe.data.AppDatabase
-//import com.example.wardrobe.data.Theme
+//import com.example.wardrobe.ui.theme.Theme
 //import com.example.wardrobe.data.WardrobeRepository
 //import com.example.wardrobe.data.WeatherRepository
 //import com.example.wardrobe.ui.components.MainView
@@ -403,7 +403,7 @@
 //import androidx.lifecycle.ViewModelProvider
 //import androidx.lifecycle.viewmodel.compose.viewModel
 //import com.example.wardrobe.data.AppDatabase
-//import com.example.wardrobe.data.Theme
+//import com.example.wardrobe.ui.theme.Theme
 //import com.example.wardrobe.data.WardrobeRepository
 //import com.example.wardrobe.data.WeatherRepository
 //import com.example.wardrobe.ui.components.MainView
@@ -555,7 +555,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wardrobe.data.AppDatabase
-import com.example.wardrobe.data.Theme
+import com.example.wardrobe.ui.theme.Theme
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.data.WeatherRepository
 import com.example.wardrobe.ui.components.MainView
