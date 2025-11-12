@@ -34,18 +34,26 @@ The app also supports weather-based outfit recommendations and localization for 
 ##  System Design
 
 ### **ER Diagram**
- ![36031762378840_ pic](https://github.com/user-attachments/assets/81e303fb-dd55-486a-9936-1d07e76738da)
+ <img width="796" height="682" alt="截屏2025-11-12 10 43 13" src="https://github.com/user-attachments/assets/19e0665d-b835-445d-9b9c-5c501a06b582" />
+ 
 #### **Entity Overview**
-- **Member** – stores user info such as name and ID.  
+- **Member** – stores user info such as name, gender, and age.
 - **ClothingItem** – represents a clothing record (description, image URI, created time).  
 - **Tag** – global shared tags (e.g., “Winter”, “Formal”, “Sports”).
-- **Location** – stores physical storage information, such as `locationId`, `name`, and `description` (e.g., “Main Wardrobe”, “Storage Box A”). 
+- **Location** – stores physical storage information, such as `locationId`, `name`, and `description` (e.g., “Main Wardrobe”, “Storage Box A”).
+- **TransferHistory** - records the transfer of a clothing item between members, including source member, target member, and transfer time.
 - **Relationships:**  
-  - Each **Member** can own multiple **ClothingItem** records.  
-  - Each **ClothingItem** can have multiple **Tag**s (many-to-many relationship).  
-  - Each **ClothingItem** belongs to exactly one **Location** (one-to-many relationship from `Location` to `ClothingItem`).  
-  - **Tag**s are globally shared across all members.  
-  - When a **Member** is deleted, all related **ClothingItem** entries are also removed (cascade delete).
+  - Each Member can own multiple ClothingItem records.
+  - Each ClothingItem belongs to exactly one Member.
+  - Each ClothingItem can have multiple Tags (many-to-many relationship via ClothingTagCrossRef).
+  - Each Tag can be linked to multiple ClothingItems.
+  - Each ClothingItem can optionally belong to one Location (one-to-many relationship from Location to ClothingItem).
+  - Each Location can store multiple ClothingItems.
+  - TransferHistory links clothing items with both source and target members to record ownership transfers.
+  - Tags are globally shared across all members.
+  - When a Member is deleted, all related ClothingItem and TransferHistory entries are also removed (cascade delete).
+  - When a Location is deleted, related clothing items’ locationId is set to null (set null).
+  - When a Tag or ClothingItem is deleted, the corresponding records in ClothingTagCrossRef are removed automatically (cascade delete).
 
 
 ---
