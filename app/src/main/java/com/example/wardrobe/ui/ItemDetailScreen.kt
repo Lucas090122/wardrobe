@@ -288,7 +288,7 @@ private fun ItemSharePoster(
             ) {
                 Column {
                     Text(
-                        text = "Lucas Wardrobe",
+                        text = "Wardrobe",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
