@@ -907,6 +907,7 @@ import androidx.compose.ui.unit.min
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
+import com.example.wardrobe.clothingClassification.classifyClothing
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.util.persistImageToAppStorage
@@ -1399,6 +1400,10 @@ private fun ImageAndCameraSection(
                     val d = s.result.drawable
                     aspect = max(1, d.intrinsicWidth).toFloat() / max(1, d.intrinsicHeight).toFloat()
                 }
+            )
+            classifyClothing(
+                context,
+                imageUri
             )
         } else {
             Box(
