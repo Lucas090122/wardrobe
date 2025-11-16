@@ -1,34 +1,34 @@
 package com.example.wardrobe.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.wardrobe.data.TransferHistoryDetails
+import androidx.navigation.NavController
+import com.example.wardrobe.Screen
 import com.example.wardrobe.data.WardrobeRepository
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
-    repo: WardrobeRepository
+    repo: WardrobeRepository,
+    navController: NavController
 ) {
-    val transferHistory by repo.getAllTransferHistoryDetails().collectAsState(initial = emptyList())
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -42,23 +42,23 @@ fun StatisticsScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Transfer History",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            if (transferHistory.isEmpty()) {
-                Text(text = "No transfer history found.")
-            } else {
-                LazyColumn {
-                    items(transferHistory) { record ->
-                        val formattedDate = SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH).format(Date(record.transferTime))
-                        Text(
-                            text = "${record.sourceMemberName} transferred ${record.itemName} to ${record.targetMemberName} on $formattedDate.",
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        navController.navigate(Screen.TransferHistory.route)
                     }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Transfer History",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(Icons.Default.ArrowForward, contentDescription = "Go to Transfer History")
                 }
             }
         }

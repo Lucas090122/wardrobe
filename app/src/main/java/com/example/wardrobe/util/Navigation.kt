@@ -2,7 +2,6 @@ package com.example.wardrobe.util
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -16,10 +15,11 @@ import com.example.wardrobe.Screen
 import com.example.wardrobe.WardrobeApp
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.Home
+import com.example.wardrobe.ui.SettingsScreen
+import com.example.wardrobe.ui.StatisticsScreen
+import com.example.wardrobe.ui.TransferHistoryScreen
 import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
-import com.example.wardrobe.ui.SettingsScreen
-import com.example.wardrobe.ui.StatisticsScreen // Added import
 
 
 @Composable
@@ -54,10 +54,13 @@ fun Navigation(
         )
         }
         composable(Screen.DrawerScreen.Statistics.route) {
-            StatisticsScreen(repo = repo)
+            StatisticsScreen(repo = repo, navController = navController)
         }
         composable(Screen.DrawerScreen.Settings.route) {
             SettingsScreen(repo = repo)
+        }
+        composable(Screen.TransferHistory.route) {
+            TransferHistoryScreen(repo = repo, navController = navController)
         }
     }
 }

@@ -38,6 +38,7 @@ sealed class Screen(
             dRoute = "theme",
         )
     }
+    object TransferHistory: Screen("Transfer History", "transfer_history")
 }
 
 val ScreensInDrawer = listOf(
