@@ -908,6 +908,7 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.wardrobe.data.Location
+import com.example.wardrobe.data.Season
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.util.persistImageToAppStorage
 import com.example.wardrobe.viewmodel.DialogEffect
@@ -944,6 +945,7 @@ fun EditItemScreen(
     var isWaterproof by remember { mutableStateOf(false) }
     var colorHex by remember { mutableStateOf("#FFFFFF") }
     var isFavorite by remember { mutableStateOf(false) }
+    var season by remember { mutableStateOf(Season.SPRING_AUTUMN) }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -963,6 +965,7 @@ fun EditItemScreen(
             isWaterproof = d.item.isWaterproof
             colorHex = d.item.color.ifBlank { "#FFFFFF" }
             isFavorite = d.item.isFavorite
+            season = d.item.season
         }
     }
 
@@ -1011,7 +1014,8 @@ fun EditItemScreen(
                             occasions = occasionSet.joinToString(","),
                             isWaterproof = isWaterproof,
                             color = colorHex.ifBlank { "#FFFFFF" },
-                            isFavorite = isFavorite
+                            isFavorite = isFavorite,
+                            season = season
                         )
                         onDone()
                     }) { Text("Save") }
@@ -1051,6 +1055,19 @@ fun EditItemScreen(
                         },
                         label = { Text(c) },
                         leadingIcon = { if (category == c) Icon(Icons.Default.Check, null) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Text("Season", style = MaterialTheme.typography.titleSmall)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Season.values().forEach { s ->
+                    FilterChip(
+                        selected = (season == s),
+                        onClick = { season = s },
+                        label = { Text(s.name.replace('_', '/')) },
+                        leadingIcon = { if (season == s) Icon(Icons.Default.Check, null) }
                     )
                 }
             }
@@ -1174,12 +1191,6 @@ private fun syncTagsFromAttributes(
     )
     categoryMap[category]?.let { tagNames.add(it) }
 
-    val season = when (warmthLevel) {
-        1, 2 -> "Summer"
-        3, 4 -> "Spring/Autumn"
-        else -> "Winter"
-    }
-    tagNames.add(season)
     if (isWaterproof) tagNames.add("Waterproof")
     tagNames.addAll(occasions)
 

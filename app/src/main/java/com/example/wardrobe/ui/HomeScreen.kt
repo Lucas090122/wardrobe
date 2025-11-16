@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.wardrobe.data.Season
 import com.example.wardrobe.ui.components.ClothingCard
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.viewmodel.ViewType
@@ -96,6 +97,34 @@ fun HomeScreen(
                     onToggle = vm::toggleTag,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Column {
+                Row(
+                    modifier = Modifier.height(40.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Filter by seasons", modifier = Modifier.weight(1f))
+                    if (ui.selectedSeason != null) {
+                        TextButton(onClick = vm::clearSeasonFilter) {
+                            Text("Clear")
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Season.values().forEach { season ->
+                        FilterChip(
+                            selected = ui.selectedSeason == season,
+                            onClick = { vm.setSeasonFilter(season) },
+                            label = { Text(season.name.replace('_', '/')) }
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(8.dp))

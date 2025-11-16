@@ -81,7 +81,10 @@ data class ClothingItem(
     val lastWornAt: Long,
 
     @ColumnInfo(defaultValue = "0")
-    val isFavorite: Boolean
+    val isFavorite: Boolean,
+
+    @ColumnInfo(defaultValue = "'SPRING_AUTUMN'")
+    val season: Season
 )
 
 @Entity(

@@ -46,9 +46,9 @@ interface ClothesDao {
 
     @Transaction
     @Query(
-        "SELECT * FROM ClothingItem WHERE ownerMemberId = :memberId AND (:q IS NULL OR :q = '' OR description LIKE '%' || :q || '%') ORDER BY createdAt DESC"
+        "SELECT * FROM ClothingItem WHERE ownerMemberId = :memberId AND (:q IS NULL OR :q = '' OR description LIKE '%' || :q || '%') AND (:season IS NULL OR season = :season) ORDER BY createdAt DESC"
     )
-    fun itemsStream(memberId: Long, q: String?): Flow<List<ClothingItem>>
+    fun itemsStream(memberId: Long, q: String?, season: String?): Flow<List<ClothingItem>>
 
     @Transaction
     @Query(
@@ -58,11 +58,12 @@ interface ClothesDao {
         WHERE ClothingItem.ownerMemberId = :memberId
           AND ClothingTagCrossRef.tagId IN (:tagIds)
           AND (:q IS NULL OR :q = '' OR ClothingItem.description LIKE '%' || :q || '%')
+          AND (:season IS NULL OR season = :season)
         GROUP BY ClothingItem.itemId
         ORDER BY ClothingItem.createdAt DESC
         """
     )
-    fun itemsByTagsStream(memberId: Long, tagIds: List<Long>, q: String?): Flow<List<ClothingItem>>
+    fun itemsByTagsStream(memberId: Long, tagIds: List<Long>, q: String?, season: String?): Flow<List<ClothingItem>>
 
     @Transaction
     @Query("SELECT * FROM ClothingItem WHERE itemId = :itemId")

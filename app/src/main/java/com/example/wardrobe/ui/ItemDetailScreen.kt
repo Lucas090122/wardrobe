@@ -29,6 +29,7 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.wardrobe.data.Member // Added import
+import com.example.wardrobe.data.Season
 import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.TagUiModel
 import com.example.wardrobe.viewmodel.WardrobeViewModel
@@ -136,7 +137,8 @@ fun ItemDetailScreen(
                     tags = tagModels,
                     isStored = item.stored,
                     locationName = locationName,
-                    ownerName = ownerName
+                    ownerName = ownerName,
+                    season = item.season
                 )
             }
         }
@@ -265,7 +267,8 @@ private fun ItemSharePoster(
     tags: List<TagUiModel>,
     isStored: Boolean,
     locationName: String?,
-    ownerName: String?
+    ownerName: String?,
+    season: Season
 ) {
     val imageUri = imageUriString?.toUri()
 
@@ -321,6 +324,12 @@ private fun ItemSharePoster(
             Text(
                 text = description,
                 style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = "Season: ${season.name.replace('_', '/')}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (isStored) {

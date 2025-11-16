@@ -55,9 +55,9 @@ class WardrobeRepository(
     }
 
     // Item functions
-    fun observeItems(memberId: Long, selectedTagIds: List<Long>, query: String?) =
-        if (selectedTagIds.isEmpty()) dao.itemsStream(memberId, query)
-        else dao.itemsByTagsStream(memberId, selectedTagIds, query)
+    fun observeItems(memberId: Long, selectedTagIds: List<Long>, query: String?, season: Season?) =
+        if (selectedTagIds.isEmpty()) dao.itemsStream(memberId, query, season?.name)
+        else dao.itemsByTagsStream(memberId, selectedTagIds, query, season?.name)
 
     fun observeItem(itemId: Long) = dao.itemWithTags(itemId)
 
@@ -75,7 +75,8 @@ class WardrobeRepository(
         occasions: String,
         isWaterproof: Boolean,
         color: String,
-        isFavorite: Boolean
+        isFavorite: Boolean,
+        season: Season
     ): Long {
         val existingItem = if (itemId != null && itemId != 0L) {
             // We need to use firstOrNull() as itemWithTags returns a Flow
@@ -100,7 +101,8 @@ class WardrobeRepository(
             isWaterproof = isWaterproof,
             color = color,
             lastWornAt = existingItem?.lastWornAt ?: 0, // Preserve existing lastWornAt
-            isFavorite = isFavorite
+            isFavorite = isFavorite,
+            season = season
         )
 
         val id = dao.upsertItem(newClothingItem)

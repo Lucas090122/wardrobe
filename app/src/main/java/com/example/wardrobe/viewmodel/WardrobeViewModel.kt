@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Member // Added import
+import com.example.wardrobe.data.Season
 import com.example.wardrobe.data.TransferHistory // Added import
 import com.example.wardrobe.data.TransferHistoryDetails // Added import
 import com.example.wardrobe.data.WardrobeRepository
@@ -42,6 +43,7 @@ data class UiState(
     val tags: List<TagUiModel> = emptyList(),
     val locations: List<Location> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
+    val selectedSeason: Season? = null,
     val query: String = "",
     val items: List<ClothingItem> = emptyList(),
     val currentView: ViewType = ViewType.IN_USE,
@@ -53,11 +55,12 @@ private data class VmCoreState(
     val sel: Set<Long>,
     val q: String,
     val view: ViewType,
+    val season: Season?,
     val isAdmin: Boolean,
     val dialogEffect: DialogEffect
 )
 
-private val DEFAULT_TAGS = setOf("Spring/Autumn", "Summer", "Winter", "Hat", "Top", "Pants", "Shoes", "Jumpsuit")
+private val DEFAULT_TAGS = setOf("Hat", "Top", "Pants", "Shoes", "Jumpsuit")
 
 class WardrobeViewModel(
     private val repo: WardrobeRepository,
@@ -66,16 +69,31 @@ class WardrobeViewModel(
     private val selectedTagIds = MutableStateFlow<Set<Long>>(emptySet())
     private val query = MutableStateFlow("")
     private val currentView = MutableStateFlow(ViewType.IN_USE)
+    private val selectedSeason = MutableStateFlow<Season?>(null)
     private val dialogEffect = MutableStateFlow<DialogEffect>(DialogEffect.Hidden)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState> = combine(
-        combine(selectedTagIds, query, currentView) { sel, q, view -> Triple(sel, q, view) },
-        combine(repo.settings.isAdminMode, dialogEffect) { isAdmin, effect -> isAdmin to effect }
-    ) { (sel, q, view), (isAdmin, effect) ->
-        VmCoreState(sel, q, view, isAdmin, effect)
+        combine(
+            selectedTagIds,
+            query,
+            currentView,
+            selectedSeason,
+            repo.settings.isAdminMode
+        ) { sel, q, view, season, isAdmin ->
+            object {
+                val sel = sel
+                val q = q
+                val view = view
+                val season = season
+                val isAdmin = isAdmin
+            }
+        },
+        dialogEffect
+    ) { five, effect ->
+        VmCoreState(five.sel, five.q, five.view, five.season, five.isAdmin, effect)
     }.flatMapLatest { state ->
-        val itemsFlow = repo.observeItems(memberId, state.sel.toList(), state.q)
+        val itemsFlow = repo.observeItems(memberId, state.sel.toList(), state.q, state.season)
         val tagsFlow = repo.observeTagsWithCounts(memberId, state.view == ViewType.STORED)
 
         combine(
@@ -83,15 +101,15 @@ class WardrobeViewModel(
             repo.getMember(memberId),
             tagsFlow,
             repo.observeLocations(),
-            repo.getAllMembers() // Added
-        ) { items, member, tagsWithCount, locations, allMembers -> // Modified signature
+            repo.getAllMembers()
+        ) { items, member, tagsWithCount, locations, allMembers ->
             val filteredItems = items.filter { item ->
                 if (state.view == ViewType.IN_USE) !item.stored else item.stored
             }
 
             UiState(
                 memberName = member?.name ?: "",
-                members = allMembers, // Added
+                members = allMembers,
                 tags = tagsWithCount.map { tag ->
                     TagUiModel(
                         id = tag.tagId,
@@ -102,6 +120,7 @@ class WardrobeViewModel(
                 },
                 locations = locations,
                 selectedTagIds = state.sel,
+                selectedSeason = state.season,
                 query = state.q,
                 items = filteredItems,
                 currentView = state.view,
@@ -124,6 +143,18 @@ class WardrobeViewModel(
 
     fun clearTagSelection() {
         selectedTagIds.value = emptySet()
+    }
+
+    fun setSeasonFilter(season: Season) {
+        if (selectedSeason.value == season) {
+            selectedSeason.value = null
+        } else {
+            selectedSeason.value = season
+        }
+    }
+
+    fun clearSeasonFilter() {
+        selectedSeason.value = null
     }
 
     suspend fun getOrCreateTag(name: String): Long {
@@ -198,7 +229,8 @@ class WardrobeViewModel(
         occasions: String,
         isWaterproof: Boolean,
         color: String,
-        isFavorite: Boolean
+        isFavorite: Boolean,
+        season: Season
     ) = viewModelScope.launch {
         repo.saveItem(
             memberId = memberId,
@@ -208,13 +240,13 @@ class WardrobeViewModel(
             tagIds = tagIds,
             stored = stored,
             locationId = locationId,
-            // Pass default values for new fields to ensure compilation
-            category = "TOP",
-            warmthLevel = 3,
-            occasions = "CASUAL",
-            isWaterproof = false,
-            color = "#FFFFFF",
-            isFavorite = false
+            category = category,
+            warmthLevel = warmthLevel,
+            occasions = occasions,
+            isWaterproof = isWaterproof,
+            color = color,
+            isFavorite = isFavorite,
+            season = season
         )
     }
 
