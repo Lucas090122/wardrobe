@@ -170,3 +170,7 @@ data class TransferHistoryDetails(
     val targetMemberName: String,
     val itemName: String
 )
+
+data class NameCount(val name: String, val count: Int)
+data class SeasonCount(val season: Season, val count: Int)
+data class CategoryCount(val category: String, val count: Int)

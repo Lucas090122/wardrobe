@@ -39,6 +39,7 @@ sealed class Screen(
         )
     }
     object TransferHistory: Screen("Transfer History", "transfer_history")
+    object ClothingInventory: Screen("Clothing Inventory", "clothing_inventory")
 }
 
 val ScreensInDrawer = listOf(

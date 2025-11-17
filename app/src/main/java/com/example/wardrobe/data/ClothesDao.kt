@@ -117,4 +117,13 @@ interface ClothesDao {
         ORDER BY TH.transferTime DESC
     """)
     fun getAllTransferHistoryDetails(): Flow<List<TransferHistoryDetails>>
+
+    @Query("SELECT m.name, COUNT(ci.itemId) as count FROM Member m JOIN ClothingItem ci ON m.memberId = ci.ownerMemberId GROUP BY m.name")
+    fun getCountByMember(): Flow<List<NameCount>>
+
+    @Query("SELECT season, COUNT(itemId) as count FROM ClothingItem GROUP BY season")
+    fun getCountBySeason(): Flow<List<SeasonCount>>
+
+    @Query("SELECT category, COUNT(itemId) as count FROM ClothingItem GROUP BY category")
+    fun getCountByCategory(): Flow<List<CategoryCount>>
 }

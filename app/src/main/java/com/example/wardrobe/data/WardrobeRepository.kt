@@ -135,4 +135,8 @@ class WardrobeRepository(
     fun getAllTransferHistoryDetails(): Flow<List<TransferHistoryDetails>> {
         return dao.getAllTransferHistoryDetails()
     }
+
+    fun getCountByMember(): Flow<List<NameCount>> = dao.getCountByMember()
+    fun getCountBySeason(): Flow<List<SeasonCount>> = dao.getCountBySeason()
+    fun getCountByCategory(): Flow<List<CategoryCount>> = dao.getCountByCategory()
 }

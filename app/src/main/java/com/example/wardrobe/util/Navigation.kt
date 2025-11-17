@@ -18,8 +18,10 @@ import com.example.wardrobe.ui.Home
 import com.example.wardrobe.ui.SettingsScreen
 import com.example.wardrobe.ui.StatisticsScreen
 import com.example.wardrobe.ui.TransferHistoryScreen
+import com.example.wardrobe.ui.ClothingInventoryScreen
 import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
+import com.example.wardrobe.viewmodel.StatisticsViewModel
 
 
 @Composable
@@ -28,6 +30,7 @@ fun Navigation(
     vm : MemberViewModel,
     navController: NavController,
     viewModel: MainViewModel,
+    statisticsViewModel: StatisticsViewModel,
     pd: PaddingValues
 ){
     NavHost(
@@ -61,6 +64,9 @@ fun Navigation(
         }
         composable(Screen.TransferHistory.route) {
             TransferHistoryScreen(repo = repo, navController = navController)
+        }
+        composable(Screen.ClothingInventory.route) {
+            ClothingInventoryScreen(vm = statisticsViewModel, navController = navController)
         }
     }
 }

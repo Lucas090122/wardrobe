@@ -78,6 +78,10 @@ dependencies {
     // Capturable for taking screenshots of Composables
     implementation("dev.shreyaspatil:capturable:3.0.1")
 
+    // MPAndroidChart for diagnosis
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("io.github.bytebeats:compose-charts:0.2.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

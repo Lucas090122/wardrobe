@@ -618,6 +618,8 @@ import com.example.wardrobe.util.SimpleDrawerItem
 import com.example.wardrobe.util.ToggleDrawerItem
 import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
+import com.example.wardrobe.viewmodel.StatisticsViewModel
+import com.example.wardrobe.viewmodel.StatisticsViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.material3.AlertDialog
@@ -649,6 +651,9 @@ fun MainView(
 
     val viewModel : MainViewModel = viewModel()
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
+
+    val statsVmFactory = StatisticsViewModelFactory(repo)
+    val statisticsViewModel: StatisticsViewModel = viewModel(factory = statsVmFactory)
 
     val controller: NavController = rememberNavController()
     val navBackStackEntry by controller.currentBackStackEntryAsState()
@@ -805,6 +810,7 @@ fun MainView(
                     vm = vm,
                     navController = controller,
                     viewModel = viewModel,
+                    statisticsViewModel = statisticsViewModel,
                     pd = innerPadding
                 )
             }
