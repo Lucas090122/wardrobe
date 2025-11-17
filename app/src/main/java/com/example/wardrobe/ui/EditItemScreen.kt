@@ -1076,7 +1076,14 @@ fun EditItemScreen(
             Text("Warmth Level: $warmthLevel")
             Slider(
                 value = warmthLevel.toFloat(),
-                onValueChange = { warmthLevel = it.toInt().coerceIn(1, 5) },
+                onValueChange = {
+                    warmthLevel = it.toInt().coerceIn(1, 5)
+                    season = when (warmthLevel) {
+                        1, 2 -> Season.SUMMER
+                        3, 4 -> Season.SPRING_AUTUMN
+                        else -> Season.WINTER
+                    }
+                },
                 onValueChangeFinished = {
                     syncTagsFromAttributes(vm, selectedTagIds, category, warmthLevel, occasionSet.toSet(), isWaterproof, scope)
                 },
