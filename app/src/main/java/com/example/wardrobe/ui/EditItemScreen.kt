@@ -1044,7 +1044,7 @@ fun EditItemScreen(
             Text("Recommendation Attributes", style = MaterialTheme.typography.titleMedium)
 
             // Category
-            val categories = listOf("TOP", "PANTS", "SHOES", "HAT", "JUMPSUIT", "OUTER")
+            val categories = listOf("TOP", "PANTS", "SHOES", "HAT")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.forEach { c ->
                     FilterChip(
@@ -1187,7 +1187,7 @@ private fun syncTagsFromAttributes(
     val tagNames = mutableSetOf<String>()
     val categoryMap = mapOf(
         "TOP" to "Top", "PANTS" to "Pants", "SHOES" to "Shoes",
-        "HAT" to "Hat", "JUMPSUIT" to "Jumpsuit", "OUTER" to "Jacket"
+        "HAT" to "Hat"
     )
     categoryMap[category]?.let { tagNames.add(it) }
 

@@ -60,7 +60,7 @@ private data class VmCoreState(
     val dialogEffect: DialogEffect
 )
 
-private val DEFAULT_TAGS = setOf("Hat", "Top", "Pants", "Shoes", "Jumpsuit")
+private val DEFAULT_TAGS = setOf("Hat", "Top", "Pants", "Shoes")
 
 class WardrobeViewModel(
     private val repo: WardrobeRepository,
