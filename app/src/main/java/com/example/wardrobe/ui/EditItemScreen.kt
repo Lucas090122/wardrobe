@@ -878,6 +878,15 @@
 package com.example.wardrobe.ui
 
 import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Log
+import com.example.wardrobe.data.remote.GeminiAiService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -946,6 +955,7 @@ fun EditItemScreen(
     var colorHex by remember { mutableStateOf("#FFFFFF") }
     var isFavorite by remember { mutableStateOf(false) }
     var season by remember { mutableStateOf(Season.SPRING_AUTUMN) }
+    var isAnalyzing by remember { mutableStateOf(false) }
 
     val currentMember = ui.members.find { it.name == ui.memberName }
     val isMinor = (currentMember?.age ?: 0) in 0 until 18
@@ -998,6 +1008,56 @@ fun EditItemScreen(
         }
     )
 
+    // 当选择/拍摄图片后，自动调用 Gemini 识别（仅在新增模式下）
+    LaunchedEffect(imageUri, itemId) {
+        // 编辑已有衣物时，不自动覆盖原数据
+        if (itemId != null) return@LaunchedEffect
+
+        val uri = imageUri ?: return@LaunchedEffect
+
+        isAnalyzing = true
+        try {
+            // 1. 从 Uri 读取并适当压缩成 Bitmap（在 IO 线程）
+            val bitmap = withContext(Dispatchers.IO) {
+                loadScaledBitmapFromUri(context, uri, 1024)
+            } ?: return@LaunchedEffect
+
+            // 2. 调用 Gemini 识别
+            val result = GeminiAiService.analyzeClothing(bitmap) ?: return@LaunchedEffect
+
+            // 3. 用识别结果填充字段
+            category = result.category
+            description = result.description
+
+            warmthLevel = result.warmthLevel.coerceIn(1, 5)
+            season = when (warmthLevel) {
+                1, 2 -> Season.SUMMER
+                3, 4 -> Season.SPRING_AUTUMN
+                else -> Season.WINTER
+            }
+
+            colorHex = result.colorHex
+
+            // 同步推荐标签（用新的属性）
+            syncTagsFromAttributes(
+                vm = vm,
+                selectedTagIds = selectedTagIds,
+                category = category,
+                warmthLevel = warmthLevel,
+                occasions = occasionSet.toSet(),
+                isWaterproof = isWaterproof,
+                scope = scope
+            )
+
+            Log.d("EditItemScreen", "Gemini result: $result")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("EditItemScreen", "Gemini analyze error", e)
+        } finally {
+            isAnalyzing = false
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -1044,6 +1104,21 @@ fun EditItemScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             ImageAndCameraSection(imageUri, galleryPicker, takePicture, newImageFile) { pendingPhotoFile = it }
+
+            if (isAnalyzing) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Analyzing outfit with AI…")
+                }
+            }
 
             OutlinedTextField(
                 value = description,
@@ -1462,6 +1537,38 @@ private fun ImageAndCameraSection(
         OutlinedButton(onClick = {
             galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }) { Text("Choose from Album") }
+    }
+}
+
+private fun loadScaledBitmapFromUri(
+    context: android.content.Context,
+    uri: Uri,
+    maxSize: Int
+): Bitmap? {
+    return try {
+        val raw = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(context.contentResolver, uri)
+            ImageDecoder.decodeBitmap(source)
+        } else {
+            @Suppress("DEPRECATION")
+            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+        }
+
+        val w = raw.width
+        val h = raw.height
+        val maxDim = maxOf(w, h)
+
+        if (maxDim <= maxSize) {
+            raw
+        } else {
+            val scale = maxSize.toFloat() / maxDim.toFloat()
+            val newW = (w * scale).roundToInt()
+            val newH = (h * scale).roundToInt()
+            Bitmap.createScaledBitmap(raw, newW, newH, true)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
 
