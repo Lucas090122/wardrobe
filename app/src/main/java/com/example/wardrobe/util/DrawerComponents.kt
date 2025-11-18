@@ -152,14 +152,21 @@ fun ExpandableDrawerItem(
                 modifier = Modifier.padding(start = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                subItems.forEach { item ->
+                subItems.forEach { member ->
                     Text(
-                        text = item.name,
+                        text = member.name,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                controller.navigate(Screen.DrawerScreen.Member.createRoute(item.memberId))
+                                vm.setCurrentMember(member.memberId)
+
+                                controller.navigate(Screen.DrawerScreen.Member.createRoute(member.memberId)) {
+                                    popUpTo(controller.graph.startDestinationId) {
+                                        saveState = false
+                                    }
+                                }
+
                                 onItemClicked()
                             }
                             .padding(vertical = 8.dp)

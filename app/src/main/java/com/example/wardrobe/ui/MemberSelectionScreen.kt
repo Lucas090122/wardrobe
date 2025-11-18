@@ -13,7 +13,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.wardrobe.data.Member
-import com.example.wardrobe.ui.components.MainView
 import com.example.wardrobe.viewmodel.MemberViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +48,10 @@ fun MemberSelectionScreen(
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     items(members) { member ->
                         val outdated = outdatedMap[member.memberId] ?: 0
-                        MemberCard(member = member, outdatedCount = outdated, onClick = { onMemberSelected(member.memberId) })
+                        MemberCard(member = member, outdatedCount = outdated, onClick = {
+                            vm.setCurrentMember(member.memberId)
+                            onMemberSelected(member.memberId)
+                        })
                     }
                 }
             }

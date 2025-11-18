@@ -1,10 +1,13 @@
 package com.example.wardrobe.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,6 +29,19 @@ fun HomeScreen(
 ) {
     val ui by vm.uiState.collectAsState()
 
+    val title = if (ui.memberName.isNotEmpty()) {
+        "${ui.memberName}'s Wardrobe"
+    } else {
+        "Wardrobe"
+    }
+
+    var queryForTextField by remember { mutableStateOf(ui.query) }
+    LaunchedEffect(ui.query) {
+        if (queryForTextField != ui.query) {
+            queryForTextField = ui.query
+        }
+    }
+
     var showOutdatedOnly by remember { mutableStateOf(false) }
     val itemsToShow = remember(ui.items, ui.outdatedItemIds, showOutdatedOnly) {
         if (showOutdatedOnly) {
@@ -35,45 +51,20 @@ fun HomeScreen(
         }
     }
 
-    val title = if (ui.memberName.isNotEmpty()) {
-        "${ui.memberName}'s Wardrobe"
-    } else {
-        "Wardrobe"
-    }
-
-    // Local state for the text field to ensure immediate UI response.
-    var queryForTextField by remember { mutableStateOf(ui.query) }
-    // Sync local state when the ViewModel's state changes (e.g., initial load, or cleared externally).
-    LaunchedEffect(ui.query) {
-        if (queryForTextField != ui.query) {
-            queryForTextField = ui.query
-        }
-    }
+    var filtersExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(title) }) },
-        floatingActionButton = { FloatingActionButton(onClick = onAddClick) { Text("+") } }
+//        topBar = { TopAppBar(title = { Text(title) }) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddClick) { Text("+") }
+        }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(horizontal = 16.dp)) {
-            OutlinedTextField(
-                value = queryForTextField, // Use local state for value
-                onValueChange = {
-                    queryForTextField = it // Update local state immediately
-                    vm.setQuery(it)      // Notify ViewModel to trigger search
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search description...") },
-                trailingIcon = {
-                    if (queryForTextField.isNotEmpty()) {
-                        IconButton(onClick = { vm.setQuery("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
-                        }
-                    }
-                }
-            )
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
             Spacer(Modifier.height(8.dp))
-
             TabRow(selectedTabIndex = ui.currentView.ordinal) {
                 Tab(
                     selected = ui.currentView == ViewType.IN_USE,
@@ -89,55 +80,106 @@ fun HomeScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Column {
-                Row(
-                    modifier = Modifier.height(40.dp), // Give the row a fixed height
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Filter by tags", modifier = Modifier.weight(1f))
-                    if (ui.selectedTagIds.isNotEmpty()) {
-                        TextButton(onClick = vm::clearTagSelection) {
-                            Text("Clear")
-                        }
-                    }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Filters & search")
+                TextButton(onClick = { filtersExpanded = !filtersExpanded }) {
+                    Text(if (filtersExpanded) "Hide" else "Show")
+                    Icon(
+                        imageVector = if (filtersExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
                 }
-                TagChips(
-                    tags = ui.tags,
-                    selectedIds = ui.selectedTagIds,
-                    onToggle = vm::toggleTag,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Column {
-                Row(
-                    modifier = Modifier.height(40.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Filter by seasons", modifier = Modifier.weight(1f))
-                    if (ui.selectedSeason != null) {
-                        TextButton(onClick = vm::clearSeasonFilter) {
-                            Text("Clear")
+            AnimatedVisibility(visible = filtersExpanded) {
+                Column {
+                    OutlinedTextField(
+                        value = queryForTextField,
+                        onValueChange = {
+                            queryForTextField = it
+                            vm.setQuery(it)
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        placeholder = { Text("Search description...") },
+                        trailingIcon = {
+                            if (queryForTextField.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    queryForTextField = ""
+                                    vm.setQuery("")
+                                }) {
+                                    Icon(
+                                        Icons.Default.Clear,
+                                        contentDescription = "Clear search"
+                                    )
+                                }
+                            }
                         }
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Season.values().forEach { season ->
-                        FilterChip(
-                            selected = ui.selectedSeason == season,
-                            onClick = { vm.setSeasonFilter(season) },
-                            label = { Text(season.name.replace('_', '/')) }
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Tag filters
+                    Column {
+                        Row(
+                            modifier = Modifier.height(40.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Filter by tags", modifier = Modifier.weight(1f))
+                            if (ui.selectedTagIds.isNotEmpty()) {
+                                TextButton(onClick = vm::clearTagSelection) {
+                                    Text("Clear")
+                                }
+                            }
+                        }
+                        TagChips(
+                            tags = ui.tags,
+                            selectedIds = ui.selectedTagIds,
+                            onToggle = vm::toggleTag,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Season filters
+                    Column {
+                        Row(
+                            modifier = Modifier.height(40.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Filter by seasons", modifier = Modifier.weight(1f))
+                            if (ui.selectedSeason != null) {
+                                TextButton(onClick = vm::clearSeasonFilter) {
+                                    Text("Clear")
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Season.values().forEach { season ->
+                                FilterChip(
+                                    selected = ui.selectedSeason == season,
+                                    onClick = { vm.setSeasonFilter(season) },
+                                    label = { Text(season.name.replace('_', '/')) }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
 
             if (ui.outdatedCount > 0) {
                 AssistChip(
@@ -159,12 +201,12 @@ fun HomeScreen(
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                 )
-                Spacer(Modifier.height(4.dp))
             }
 
+            Spacer(Modifier.height(4.dp))
 
             LazyColumn {
-                items(ui.items) { item ->
+                items(itemsToShow) { item ->
                     ClothingCard(item = item, onClick = { onItemClick(item.itemId) })
                     Divider()
                 }

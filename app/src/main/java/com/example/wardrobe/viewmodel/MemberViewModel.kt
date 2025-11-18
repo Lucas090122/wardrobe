@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
@@ -19,6 +20,15 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
 
     private val _outdatedCounts = MutableStateFlow<Map<Long, Int>>(emptyMap())
     val outdatedCounts: StateFlow<Map<Long, Int>> = _outdatedCounts.asStateFlow()
+
+    private val _currentMemberId = MutableStateFlow<Long?>(null)
+    val currentMemberId: StateFlow<Long?> = _currentMemberId.asStateFlow()
+    val currentMemberName: StateFlow<String> =
+        members
+            .combine(currentMemberId) { list, id ->
+                list.firstOrNull { it.memberId == id }?.name ?: ""
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
 
     init {
         viewModelScope.launch {
@@ -42,5 +52,9 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
         viewModelScope.launch {
             repo.createMember(name, gender, age, birthDate)
         }
+    }
+
+    fun setCurrentMember(id: Long?) {
+        _currentMemberId.value = id
     }
 }

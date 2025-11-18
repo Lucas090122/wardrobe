@@ -53,7 +53,9 @@ fun Navigation(
         val memberId: Long = backStackEntry.arguments?.getLong("memberId") ?: return@composable
         WardrobeApp(
             memberId = memberId,
-            onExit = { navController.popBackStack() }
+            onExit = {
+                vm.setCurrentMember(null)
+                navController.popBackStack() }
         )
         }
         composable(Screen.DrawerScreen.Statistics.route) {

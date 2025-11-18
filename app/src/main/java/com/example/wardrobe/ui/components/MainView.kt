@@ -646,6 +646,7 @@ fun MainView(
     hasLocationPermission: Boolean
 ){
     val members by vm.members.collectAsState()
+    val currentMemberName by vm.currentMemberName.collectAsState()
     val isAdminMode by repo.settings.isAdminMode.collectAsState(initial = false)
     var showAdminPinDialog by remember { mutableStateOf(false) }
 
@@ -660,8 +661,20 @@ fun MainView(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val title = when (currentRoute) {
-        Screen.DrawerScreen.Home.dRoute -> Screen.DrawerScreen.Home.dTitle
-        Screen.DrawerScreen.Member.dRoute -> Screen.DrawerScreen.Member.dTitle
+        Screen.DrawerScreen.Home.dRoute -> {
+            if (currentMemberName.isNotBlank()) {
+                "${currentMemberName}'s Wardrobe"
+            } else {
+                Screen.DrawerScreen.Home.dTitle
+            }
+        }
+        Screen.DrawerScreen.Member.dRoute -> {
+            if (currentMemberName.isNotBlank()) {
+                "${currentMemberName}'s Wardrobe"
+            } else {
+                Screen.DrawerScreen.Member.dTitle
+            }
+        }
         Screen.DrawerScreen.Statistics.dRoute -> Screen.DrawerScreen.Statistics.dTitle
         Screen.DrawerScreen.Settings.dRoute -> Screen.DrawerScreen.Settings.dTitle
         else -> ""

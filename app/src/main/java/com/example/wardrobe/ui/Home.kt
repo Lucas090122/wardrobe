@@ -2,7 +2,6 @@ package com.example.wardrobe.ui
 
 import android.app.Activity
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,11 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wardrobe.WardrobeApp
-import com.example.wardrobe.data.AppDatabase
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.viewmodel.MemberViewModel
 
@@ -57,6 +52,7 @@ fun Home(
     } else {
         WardrobeApp(memberId = selectedMemberId!!) {
             selectedMemberId = null // On back pressed from app, go back to member selection
+            memberViewModel.setCurrentMember(null)
         }
     }
 }
