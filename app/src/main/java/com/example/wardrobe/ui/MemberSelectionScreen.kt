@@ -56,8 +56,8 @@ fun MemberSelectionScreen(
     if (showAddMemberDialog) {
         AddMemberDialog(
             onDismiss = { showAddMemberDialog = false },
-            onSave = {
-                vm.createMember(it.name, it.gender, it.age)
+            onSave = { name, gender, age, birthDate ->
+                vm.createMember(name, gender, age, birthDate)
                 showAddMemberDialog = false
             }
         )
@@ -86,13 +86,25 @@ fun MemberCard(member: Member, onClick: () -> Unit) {
 @Composable
 fun AddMemberDialog(
     onDismiss: () -> Unit,
-    onSave: (Member) -> Unit
+    onSave: (String, String, Int, Long?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    val isSaveEnabled = name.isNotBlank() && gender.isNotBlank() && age.isNotBlank()
+    var ageText by remember { mutableStateOf("") }
+
     val genderOptions = listOf("Male", "Female")
+
+    val ageInt = ageText.toIntOrNull() ?: 0
+    val isMinor = ageInt in 0 until 18
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    var birthDateMillis by remember { mutableStateOf<Long?>(null) }
+
+    val isSaveEnabled =
+        name.isNotBlank() &&
+                gender.isNotBlank() &&
+                ageText.isNotBlank() &&
+                (!isMinor || birthDateMillis != null)
 
     Dialog(onDismissRequest = onDismiss) {
         Card {
@@ -101,14 +113,20 @@ fun AddMemberDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text("Add New Member", style = MaterialTheme.typography.titleLarge)
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Gender", style = MaterialTheme.typography.bodyLarge)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         genderOptions.forEach { option ->
                             FilterChip(
-                                selected = (option == gender),
+                                selected = gender == option,
                                 onClick = { gender = option },
                                 label = { Text(option) }
                             )
@@ -117,25 +135,76 @@ fun AddMemberDialog(
                 }
 
                 OutlinedTextField(
-                    value = age,
-                    onValueChange = { age = it },
+                    value = ageText,
+                    onValueChange = { ageText = it.filter { ch -> ch.isDigit() } },
                     label = { Text("Age") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+
+                if (isMinor) {
+                    Column {
+                        Text("Birthday", style = MaterialTheme.typography.bodyLarge)
+                        TextButton(onClick = { showDatePicker = true }) {
+                            Text(
+                                if (birthDateMillis != null)
+                                    "Selected: ${java.text.SimpleDateFormat("yyyy-MM-dd")
+                                        .format(java.util.Date(birthDateMillis!!))}"
+                                else
+                                    "Select birthday"
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     TextButton(onClick = onDismiss) {
                         Text("Cancel")
                     }
                     Spacer(Modifier.width(8.dp))
                     Button(
-                        onClick = { onSave(Member(name = name, gender = gender, age = age.toIntOrNull() ?: 0)) },
+                        onClick = {
+                            onSave(
+                                name,
+                                gender,
+                                ageInt,
+                                if (isMinor) birthDateMillis else null
+                            )
+                        },
                         enabled = isSaveEnabled
                     ) {
                         Text("Save")
                     }
                 }
             }
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val selected = datePickerState.selectedDateMillis
+                        if (selected != null) {
+                            birthDateMillis = selected
+                        }
+                        showDatePicker = false
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }

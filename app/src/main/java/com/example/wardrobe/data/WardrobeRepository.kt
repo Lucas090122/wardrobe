@@ -13,8 +13,20 @@ class WardrobeRepository(
 
     fun getMember(memberId: Long): Flow<Member?> = dao.getMember(memberId)
 
-    suspend fun createMember(name: String, gender: String, age: Int): Long {
-        return dao.insertMember(Member(name = name, gender = gender, age = age))
+    suspend fun createMember(
+        name: String,
+        gender: String,
+        age: Int,
+        birthDate: Long?
+    ): Long {
+        return dao.insertMember(
+            Member(
+                name = name,
+                gender = gender,
+                age = age,
+                birthDate = birthDate
+            )
+        )
     }
 
     // Location functions
@@ -75,6 +87,7 @@ class WardrobeRepository(
         occasions: String,
         isWaterproof: Boolean,
         color: String,
+        sizeLabel: String?,
         isFavorite: Boolean,
         season: Season
     ): Long {
@@ -102,7 +115,8 @@ class WardrobeRepository(
             color = color,
             lastWornAt = existingItem?.lastWornAt ?: 0, // Preserve existing lastWornAt
             isFavorite = isFavorite,
-            season = season
+            season = season,
+            sizeLabel = sizeLabel
         )
 
         val id = dao.upsertItem(newClothingItem)

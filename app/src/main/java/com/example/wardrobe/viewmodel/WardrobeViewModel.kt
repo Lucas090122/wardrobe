@@ -246,7 +246,8 @@ class WardrobeViewModel(
             isWaterproof = isWaterproof,
             color = color,
             isFavorite = isFavorite,
-            season = season
+            season = season,
+            sizeLabel = null
         )
     }
 

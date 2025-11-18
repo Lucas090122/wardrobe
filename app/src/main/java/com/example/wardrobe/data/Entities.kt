@@ -16,7 +16,8 @@ data class Member(
     @PrimaryKey(autoGenerate = true) val memberId: Long = 0,
     @ColumnInfo(index = true) val name: String,
     val gender: String,
-    val age: Int
+    val age: Int,
+    val birthDate: Long? = null
 )
 
 @Entity
@@ -84,7 +85,9 @@ data class ClothingItem(
     val isFavorite: Boolean,
 
     @ColumnInfo(defaultValue = "'SPRING_AUTUMN'")
-    val season: Season
+    val season: Season,
+
+    val sizeLabel: String? = null
 )
 
 @Entity(

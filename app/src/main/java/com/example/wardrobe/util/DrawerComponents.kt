@@ -189,8 +189,8 @@ fun ExpandableDrawerItem(
     if (showAddMemberDialog) {
         AddMemberDialog(
             onDismiss = { showAddMemberDialog = false },
-            onSave = {
-                vm.createMember(it.name, it.gender, it.age)
+            onSave = { name, gender, age, birthDate ->
+                vm.createMember(name, gender, age, birthDate)
                 showAddMemberDialog = false
             }
         )
