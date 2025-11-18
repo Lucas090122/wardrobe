@@ -94,6 +94,9 @@ interface ClothesDao {
     @Query("DELETE FROM ClothingItem WHERE itemId = :itemId")
     suspend fun deleteItemById(itemId: Long)
 
+    @Query("SELECT * FROM ClothingItem WHERE ownerMemberId = :memberId")
+    suspend fun getItemsByMember(memberId: Long): List<ClothingItem>
+
     @Query("SELECT createdAt FROM ClothingItem WHERE itemId = :itemId")
     suspend fun getCreatedAt(itemId: Long): Long?
 

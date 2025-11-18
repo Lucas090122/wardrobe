@@ -20,9 +20,11 @@ import com.example.wardrobe.viewmodel.MemberViewModel
 @Composable
 fun MemberSelectionScreen(
     vm: MemberViewModel,
+
     onMemberSelected: (Long) -> Unit
 ) {
     val members by vm.members.collectAsState()
+    val outdatedMap by vm.outdatedCounts.collectAsState()
     var showAddMemberDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -46,7 +48,8 @@ fun MemberSelectionScreen(
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     items(members) { member ->
-                        MemberCard(member = member, onClick = { onMemberSelected(member.memberId) })
+                        val outdated = outdatedMap[member.memberId] ?: 0
+                        MemberCard(member = member, outdatedCount = outdated, onClick = { onMemberSelected(member.memberId) })
                     }
                 }
             }
@@ -65,19 +68,41 @@ fun MemberSelectionScreen(
 }
 
 @Composable
-fun MemberCard(member: Member, onClick: () -> Unit) {
+fun MemberCard(
+    member: Member,
+    outdatedCount: Int,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = member.name,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Text(text = "${member.gender}, ${member.age}", style = MaterialTheme.typography.bodyMedium)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = member.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = "${member.gender}, ${member.age}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            if (member.age < 18 && outdatedCount > 0) {
+                AssistChip(
+                    onClick = { /* 这里只是显示，不必有动作，未来可以点进去看详情 */ },
+                    label = { Text("$outdatedCount items may be too small") },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        labelColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                )
+            }
         }
     }
 }

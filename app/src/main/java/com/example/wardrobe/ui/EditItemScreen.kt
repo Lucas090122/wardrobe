@@ -1025,6 +1025,7 @@ fun EditItemScreen(
                             occasions = occasionSet.joinToString(","),
                             isWaterproof = isWaterproof,
                             color = colorHex.ifBlank { "#FFFFFF" },
+                            sizeLabel = finalSizeLabel,
                             isFavorite = isFavorite,
                             season = season
                         )

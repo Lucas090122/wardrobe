@@ -229,6 +229,7 @@ class WardrobeViewModel(
         occasions: String,
         isWaterproof: Boolean,
         color: String,
+        sizeLabel: String?,
         isFavorite: Boolean,
         season: Season
     ) = viewModelScope.launch {
@@ -245,9 +246,9 @@ class WardrobeViewModel(
             occasions = occasions,
             isWaterproof = isWaterproof,
             color = color,
+            sizeLabel = sizeLabel,
             isFavorite = isFavorite,
-            season = season,
-            sizeLabel = null
+            season = season
         )
     }
 

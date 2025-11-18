@@ -3,6 +3,7 @@ package com.example.wardrobe.data
 import com.example.wardrobe.data.TransferHistoryDetails // Added import
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlin.math.max
 
 class WardrobeRepository(
     private val dao: ClothesDao,
@@ -148,6 +149,53 @@ class WardrobeRepository(
 
     fun getAllTransferHistoryDetails(): Flow<List<TransferHistoryDetails>> {
         return dao.getAllTransferHistoryDetails()
+    }
+
+    suspend fun countOutdatedItems(memberId: Long): Int {
+        val member = dao.getMember(memberId).firstOrNull() ?: return 0
+
+        val now = System.currentTimeMillis()
+        val ageYears: Int = try {
+
+            val birthDateField = Member::class.java.getDeclaredField("birthDate")
+            birthDateField.isAccessible = true
+            val birthMillis = birthDateField.get(member) as? Long
+            if (birthMillis != null && birthMillis > 0L) {
+                GrowthSizeTable.ageFromBirthMillis(birthMillis, now)
+            } else {
+                member.age
+            }
+        } catch (e: Exception) {
+
+            member.age
+        }
+
+        if (ageYears >= 18) return 0
+
+        val rec = GrowthSizeTable.getRecommendedSize(member.gender, ageYears)
+
+        val items = dao.getItemsByMember(memberId)
+
+        return items.count { item ->
+
+            if (item.category !in listOf("TOP", "PANTS", "SHOES")) return@count false
+
+
+            val sizeLabelField = ClothingItem::class.java.getDeclaredField("sizeLabel")
+            sizeLabelField.isAccessible = true
+            val sizeLabel = sizeLabelField.get(item) as? String
+            val numericSize = sizeLabel
+                ?.filter { it.isDigit() }
+                ?.toIntOrNull()
+                ?: return@count false
+
+            when (item.category) {
+                "TOP"   -> rec.top   != null && numericSize < rec.top
+                "PANTS" -> rec.pants != null && numericSize < rec.pants
+                "SHOES" -> rec.shoes != null && numericSize < rec.shoes
+                else    -> false
+            }
+        }
     }
 
     fun getCountByMember(): Flow<List<NameCount>> = dao.getCountByMember()
