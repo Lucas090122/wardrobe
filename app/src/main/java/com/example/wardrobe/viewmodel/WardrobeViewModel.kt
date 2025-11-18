@@ -2,6 +2,7 @@ package com.example.wardrobe.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wardrobe.data.GrowthSizeTable
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Member // Added import
@@ -48,7 +49,9 @@ data class UiState(
     val items: List<ClothingItem> = emptyList(),
     val currentView: ViewType = ViewType.IN_USE,
     val isAdminMode: Boolean = false,
-    val dialogEffect: DialogEffect = DialogEffect.Hidden
+    val dialogEffect: DialogEffect = DialogEffect.Hidden,
+    val outdatedItemIds: Set<Long> = emptySet(),
+    val outdatedCount: Int = 0
 )
 
 private data class VmCoreState(
@@ -107,6 +110,16 @@ class WardrobeViewModel(
                 if (state.view == ViewType.IN_USE) !item.stored else item.stored
             }
 
+            val outdatedIds: Set<Long> =
+                if (member != null && computeAgeYears(member) < 18) {
+                    filteredItems
+                        .filter { item -> isItemOutdatedForMember(item, member) }
+                        .map { it.itemId }
+                        .toSet()
+                } else {
+                    emptySet()
+                }
+
             UiState(
                 memberName = member?.name ?: "",
                 members = allMembers,
@@ -125,7 +138,9 @@ class WardrobeViewModel(
                 items = filteredItems,
                 currentView = state.view,
                 isAdminMode = state.isAdmin,
-                dialogEffect = state.dialogEffect
+                dialogEffect = state.dialogEffect,
+                outdatedItemIds = outdatedIds,
+                outdatedCount = outdatedIds.size
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
@@ -262,7 +277,34 @@ class WardrobeViewModel(
         repo.settings.setAdminMode(isAdmin)
     }
 
+    private fun computeAgeYears(member: Member): Int {
+        val now = System.currentTimeMillis()
+        return if (member.birthDate != null && member.birthDate > 0L) {
+            GrowthSizeTable.ageFromBirthMillis(member.birthDate, now)
+        } else {
+            member.age
+        }
+    }
 
+    private fun isItemOutdatedForMember(item: ClothingItem, member: Member): Boolean {
+        val ageYears = computeAgeYears(member)
+        if (ageYears >= 18) return false
+        if (item.category !in listOf("TOP", "PANTS", "SHOES")) return false
+
+        val rec = GrowthSizeTable.getRecommendedSize(member.gender, ageYears)
+
+        val numericSize = item.sizeLabel
+            ?.filter { it.isDigit() }
+            ?.toIntOrNull()
+            ?: return false
+
+        return when (item.category) {
+            "TOP"   -> rec.top   != null && numericSize < rec.top
+            "PANTS" -> rec.pants != null && numericSize < rec.pants
+            "SHOES" -> rec.shoes != null && numericSize < rec.shoes
+            else    -> false
+        }
+    }
 
     fun transferItem(itemId: Long, newOwnerMemberId: Long) = viewModelScope.launch {
         // Get the current item to retrieve its ownerMemberId before transfer
