@@ -120,7 +120,10 @@ fun ItemDetailScreen(
             val createdText = android.text.format.DateFormat
                 .format("yyyy-MM-dd", item.createdAt)
                 .toString()
-            val ownerName = uiState.memberName.takeIf { it.isNotBlank() }
+            val owner = uiState.members.find { it.memberId == item.ownerMemberId }
+            val ownerName = owner?.name
+            val isMinorOwner = (owner?.age ?: 0) in 0 until 18
+
 
             Column(
                 modifier = Modifier
@@ -138,7 +141,9 @@ fun ItemDetailScreen(
                     isStored = item.stored,
                     locationName = locationName,
                     ownerName = ownerName,
-                    season = item.season
+                    season = item.season,
+                    sizeLabel = item.sizeLabel,
+                    showSize = isMinorOwner
                 )
             }
         }
@@ -268,7 +273,9 @@ private fun ItemSharePoster(
     isStored: Boolean,
     locationName: String?,
     ownerName: String?,
-    season: Season
+    season: Season,
+    sizeLabel: String?,
+    showSize: Boolean
 ) {
     val imageUri = imageUriString?.toUri()
 
@@ -331,6 +338,14 @@ private fun ItemSharePoster(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            if (showSize && !sizeLabel.isNullOrBlank()) {
+                Text(
+                    text = "Size: $sizeLabel",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             if (isStored) {
                 val text = if (!locationName.isNullOrBlank()) {

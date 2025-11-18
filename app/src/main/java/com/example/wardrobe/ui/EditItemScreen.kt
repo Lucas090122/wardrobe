@@ -947,6 +947,11 @@ fun EditItemScreen(
     var isFavorite by remember { mutableStateOf(false) }
     var season by remember { mutableStateOf(Season.SPRING_AUTUMN) }
 
+    val currentMember = ui.members.find { it.name == ui.memberName }
+    val isMinor = (currentMember?.age ?: 0) in 0 until 18
+    val showSizeField = isMinor && category in listOf("TOP", "PANTS", "SHOES")
+    var sizeText by remember { mutableStateOf("") }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -966,6 +971,8 @@ fun EditItemScreen(
             colorHex = d.item.color.ifBlank { "#FFFFFF" }
             isFavorite = d.item.isFavorite
             season = d.item.season
+
+            sizeText = d.item.sizeLabel.orEmpty()
         }
     }
 
@@ -1002,6 +1009,10 @@ fun EditItemScreen(
                             if (uri.scheme == "file") uri
                             else persistImageToAppStorage(context, uri)
                         }
+
+                        val finalSizeLabel =
+                            if (showSizeField && sizeText.isNotBlank()) sizeText.trim() else null
+
                         vm.saveItem(
                             itemId = itemId,
                             description = description.trim(),
@@ -1014,6 +1025,7 @@ fun EditItemScreen(
                             occasions = occasionSet.joinToString(","),
                             isWaterproof = isWaterproof,
                             color = colorHex.ifBlank { "#FFFFFF" },
+                            sizeLabel = finalSizeLabel,
                             isFavorite = isFavorite,
                             season = season
                         )
@@ -1057,6 +1069,16 @@ fun EditItemScreen(
                         leadingIcon = { if (category == c) Icon(Icons.Default.Check, null) }
                     )
                 }
+            }
+
+            if (showSizeField) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = sizeText,
+                    onValueChange = { sizeText = it },
+                    label = { Text("Size (e.g. 110, 28, 32)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(Modifier.height(12.dp))

@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +25,15 @@ fun HomeScreen(
     onItemClick: (Long) -> Unit
 ) {
     val ui by vm.uiState.collectAsState()
+
+    var showOutdatedOnly by remember { mutableStateOf(false) }
+    val itemsToShow = remember(ui.items, ui.outdatedItemIds, showOutdatedOnly) {
+        if (showOutdatedOnly) {
+            ui.items.filter { it.itemId in ui.outdatedItemIds }
+        } else {
+            ui.items
+        }
+    }
 
     val title = if (ui.memberName.isNotEmpty()) {
         "${ui.memberName}'s Wardrobe"
@@ -128,6 +138,30 @@ fun HomeScreen(
             }
 
             Spacer(Modifier.height(8.dp))
+
+            if (ui.outdatedCount > 0) {
+                AssistChip(
+                    onClick = { showOutdatedOnly = !showOutdatedOnly },
+                    label = {
+                        val text = if (showOutdatedOnly) {
+                            "${ui.outdatedCount} items may be too small (showing)"
+                        } else {
+                            "${ui.outdatedCount} items may be too small (tap to filter)"
+                        }
+                        Text(text)
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                )
+                Spacer(Modifier.height(4.dp))
+            }
+
 
             LazyColumn {
                 items(ui.items) { item ->
