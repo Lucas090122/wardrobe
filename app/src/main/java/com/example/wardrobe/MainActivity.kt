@@ -565,6 +565,7 @@ import com.example.wardrobe.viewmodel.WardrobeViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.platform.LocalContext
+import com.example.wardrobe.data.WeatherInfo
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -659,7 +660,7 @@ class WardrobeViewModelFactory(private val repo: WardrobeRepository, private val
 }
 
 @Composable
-fun WardrobeApp(memberId: Long, onExit: () -> Unit) {
+fun WardrobeApp(memberId: Long,weather: WeatherInfo?, onExit: () -> Unit) {
     val context = LocalContext.current
     val db = AppDatabase.get(context)
     val repo = WardrobeRepository(db.clothesDao(), db.settingsRepository)
@@ -680,6 +681,7 @@ fun WardrobeApp(memberId: Long, onExit: () -> Unit) {
     when (route) {
         "home" -> com.example.wardrobe.ui.HomeScreen(
             vm = vm,
+            weather = weather,
             onAddClick = { currentClothingId = null; route = "edit" },
             onItemClick = { id -> currentClothingId = id; route = "detail" }
         )

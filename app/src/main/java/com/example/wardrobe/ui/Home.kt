@@ -50,9 +50,15 @@ fun Home(
             }
         )
     } else {
-        WardrobeApp(memberId = selectedMemberId!!) {
-            selectedMemberId = null // On back pressed from app, go back to member selection
-            memberViewModel.setCurrentMember(null)
-        }
+        WardrobeApp(
+            memberId = selectedMemberId!!,
+            weather = null,
+            onExit = {
+                selectedMemberId = null
+                memberViewModel.setCurrentMember(null)
+            }
+        )
+
+
     }
 }

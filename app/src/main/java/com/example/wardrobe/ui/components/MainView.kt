@@ -685,28 +685,31 @@ fun MainView(
 
     // ---- 天气状态 ----
     var weather by remember { mutableStateOf<WeatherInfo?>(null) }
-    var weatherLoading by remember { mutableStateOf(false) }
-    var weatherError by remember { mutableStateOf<String?>(null) }
+//    var weatherLoading by remember { mutableStateOf(false) }
+//    var weatherError by remember { mutableStateOf<String?>(null) }
 
-    fun refreshWeather() {
-        scope.launch {
-            try {
-                weatherLoading = true
-                weatherError = null
-                weather = weatherRepo.getCurrentWeather()
-                if (weather == null) weatherError = "N/A"
-            } catch (e: Exception) {
-                weatherError = "N/A"
-            } finally {
-                weatherLoading = false
-            }
-        }
-    }
+//    fun refreshWeather() {
+//        scope.launch {
+//            try {
+//                weatherLoading = true
+//                weatherError = null
+//                weather = weatherRepo.getCurrentWeather()
+//                if (weather == null) weatherError = "N/A"
+//            } catch (e: Exception) {
+//                weatherError = "N/A"
+//            } finally {
+//                weatherLoading = false
+//            }
+//        }
+//    }
 
     // 仅在有权限时加载；权限从 false→true 时也会触发
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) refreshWeather()
+        if (hasLocationPermission) {
+            weather = weatherRepo.getCurrentWeather()
+        }
     }
+
     // -------------------
 
     val drawerContent = @Composable {
@@ -798,19 +801,21 @@ fun MainView(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
-                                IconButton(onClick = { refreshWeather() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Refresh,
-                                        contentDescription = "Refresh weather",
-                                        modifier = Modifier.padding(5.dp)
-                                    )
-                                }
-                                val tempText = when {
-                                    weatherLoading -> "..."
-                                    weatherError != null -> "N/A"
-                                    weather != null -> "${weather!!.temperature.toInt()}°"
-                                    else -> "N/A"
-                                }
+//                                IconButton(onClick = { refreshWeather() }) {
+//                                    Icon(
+//                                        imageVector = Icons.Default.Refresh,
+//                                        contentDescription = "Refresh weather",
+//                                        modifier = Modifier.padding(5.dp)
+//                                    )
+//                                }
+//                                val tempText = when {
+//                                    weatherLoading -> "..."
+//                                    weatherError != null -> "N/A"
+//                                    weather != null -> "${weather!!.temperature.toInt()}°"
+//                                    else -> "N/A"
+//                                }
+                                val tempText =
+                                    if (weather != null) "${weather!!.temperature.toInt()}°" else "N/A"
                                 Text(text = "${weather?.icon ?: ""} $tempText".trim())
                             }
                         }
@@ -824,7 +829,8 @@ fun MainView(
                     navController = controller,
                     viewModel = viewModel,
                     statisticsViewModel = statisticsViewModel,
-                    pd = innerPadding
+                    pd = innerPadding,
+                    weather=weather
                 )
             }
         )

@@ -198,6 +198,16 @@ class WardrobeRepository(
         }
     }
 
+    // 标记一组衣服为“今天穿过”
+    suspend fun markItemsAsWorn(items: List<ClothingItem>) {
+        val now = System.currentTimeMillis()
+        items.forEach { item ->
+            // 只更新 lastWornAt，其它字段保持不变
+            dao.upsertItem(item.copy(lastWornAt = now))
+        }
+    }
+
+
     fun getCountByMember(): Flow<List<NameCount>> = dao.getCountByMember()
     fun getCountBySeason(): Flow<List<SeasonCount>> = dao.getCountBySeason()
     fun getCountByCategory(): Flow<List<CategoryCount>> = dao.getCountByCategory()

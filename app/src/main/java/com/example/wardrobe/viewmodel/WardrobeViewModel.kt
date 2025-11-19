@@ -324,4 +324,11 @@ class WardrobeViewModel(
     val transferHistory: StateFlow<List<TransferHistoryDetails>> =
         repo.getAllTransferHistoryDetails()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun markOutfitAsWorn(items: List<ClothingItem>) {
+        viewModelScope.launch {
+            repo.markItemsAsWorn(items)
+        }
+    }
+
 }
