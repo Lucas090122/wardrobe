@@ -213,20 +213,20 @@
 //    }
 //}
 //2----------
-package com.example.wardrobe.ui.components
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import com.example.wardrobe.data.ClothingItem
-import com.example.wardrobe.data.WeatherInfo
-import com.example.wardrobe.ui.util.WeatherRecommender
+//package com.example.wardrobe.ui.components
+//
+//import androidx.compose.animation.AnimatedVisibility
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.unit.dp
+//import coil.compose.AsyncImage
+//import com.example.wardrobe.data.ClothingItem
+//import com.example.wardrobe.data.WeatherInfo
+//import com.example.wardrobe.ui.util.WeatherRecommender
 
 //@Composable
 //fun WeatherRecommendationCard(
@@ -323,125 +323,279 @@ import com.example.wardrobe.ui.util.WeatherRecommender
 //    }
 //}
 
+//
+//@Composable
+//fun WeatherRecommendationCard(
+//    weather: WeatherInfo?,
+//    items: List<ClothingItem>,
+//    onItemClick: (Long) -> Unit,
+//    onConfirmOutfit: (List<ClothingItem>) -> Unit
+//) {
+//    if (weather == null) {
+//        Text("天气不可用")
+//        return
+//    }
+//
+//    val result = remember(weather, items) {
+//        WeatherRecommender.recommend(weather, items)
+//    }
+//
+//    var showDebug by remember { mutableStateOf(false) }
+//
+//    Card(
+//        modifier = Modifier.fillMaxWidth()
+//    ) {
+//        Column(Modifier.padding(16.dp)) {
+//            Text("今日推荐", style = MaterialTheme.typography.titleMedium)
+//            Spacer(Modifier.height(8.dp))
+//
+//            Text(result.reason)
+//
+//            if (result.outfit == null) {
+//                Spacer(Modifier.height(8.dp))
+//                Text("无法生成穿搭，请查看调试信息。")
+//            } else {
+//                Spacer(Modifier.height(8.dp))
+//
+//                result.outfit.top?.let {
+//                    Text("上衣：${it.description}")
+//                }
+//                result.outfit.pants?.let {
+//                    Text("裤子：${it.description}")
+//                }
+//                result.outfit.shoes?.let {
+//                    Text("鞋子：${it.description}")
+//                }
+//
+//                Button(
+//                    onClick = {
+//                        onConfirmOutfit(
+//                            listOfNotNull(
+//                                result.outfit.top,
+//                                result.outfit.pants,
+//                                result.outfit.shoes
+//                            )
+//                        )
+//                    },
+//                    modifier = Modifier.padding(top = 8.dp)
+//                ) {
+//                    Text("确认穿搭")
+//                }
+//            }
+//
+//            Spacer(Modifier.height(12.dp))
+//
+//            // ---- Debug Section ----
+//            TextButton(onClick = { showDebug = !showDebug }) {
+//                Text(if (showDebug) "隐藏调试信息" else "显示调试信息")
+//            }
+//
+//            AnimatedVisibility(showDebug) {
+//                Text(
+//                    result.debugLog,
+//                    modifier = Modifier.padding(top = 8.dp)
+//                )
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//private fun OutfitPreviewRow(
+//    top: ClothingItem?,
+//    pants: ClothingItem?,
+//    shoes: ClothingItem?,
+//    onItemClick: (Long) -> Unit
+//) {
+//    Row(
+//        horizontalArrangement = Arrangement.spacedBy(12.dp),
+//        modifier = Modifier.fillMaxWidth()
+//    ) {
+//        ItemImageCard(item = top, label = "Top", onItemClick)
+//        ItemImageCard(item = pants, label = "Pants", onItemClick)
+//        ItemImageCard(item = shoes, label = "Shoes", onItemClick)
+//    }
+//}
+//
+//@Composable
+//private fun ItemImageCard(
+//    item: ClothingItem?,
+//    label: String,
+//    onItemClick: (Long) -> Unit
+//) {
+//    Card(
+//        modifier = Modifier
+//            .size(100.dp)
+//            .padding(4.dp),
+//        shape = RoundedCornerShape(12.dp),
+//        onClick = { if (item != null) onItemClick(item.itemId) }
+//    ) {
+//        if (item == null || item.imageUri.isNullOrBlank()) {
+//            // 无图片 → 显示文字占位
+//            Box(contentAlignment = Alignment.Center) {
+//                Text("$label\n(No Image)")
+//            }
+//        } else {
+//            // 有图片 → 显示衣服照片
+//            AsyncImage(
+//                model = item.imageUri,
+//                contentDescription = null,
+//                modifier = Modifier.fillMaxSize()
+//            )
+//        }
+//    }
+//}
+
+//3-----
+package com.example.wardrobe.ui.components
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.example.wardrobe.data.ClothingItem
+import com.example.wardrobe.data.WeatherInfo
+import com.example.wardrobe.ui.util.WeatherRecommender
 
 @Composable
 fun WeatherRecommendationCard(
     weather: WeatherInfo?,
     items: List<ClothingItem>,
     onItemClick: (Long) -> Unit,
-    onConfirmOutfit: (List<ClothingItem>) -> Unit
+    onConfirmOutfit: (List<ClothingItem>) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    if (weather == null) {
-        Text("天气不可用")
-        return
-    }
+    // 今天是否已经确认了一套穿搭
+    var fixedOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
 
-    val result = remember(weather, items) {
-        WeatherRecommender.recommend(weather, items)
-    }
-
-    var showDebug by remember { mutableStateOf(false) }
+    // “换一套”使用：记住上一套，以便避免重复
+    var lastOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
+    var refreshSeed by remember { mutableStateOf(0) }
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("今日推荐", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "今日推荐",
+                style = MaterialTheme.typography.titleMedium
+            )
+
             Spacer(Modifier.height(8.dp))
 
-            Text(result.reason)
+            // ---------- 已确认：固定为“今日穿搭” ----------
+            if (fixedOutfit != null) {
+                val outfit = fixedOutfit!!
+                Text(
+                    text = "今日穿搭（已确认）",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                val outfitItems = listOfNotNull(outfit.top, outfit.pants, outfit.shoes)
+                outfitItems.forEachIndexed { index, item ->
+                    if (index > 0) {
+                        Divider(Modifier.padding(vertical = 4.dp))
+                    }
+                    ClothingCard(
+                        item = item,
+                        onClick = { onItemClick(item.itemId) }
+                    )
+                }
+
+                // 此状态下不再出现“换一套 / 确认”按钮，卡片变成当天固定页
+                return@Column
+            }
+
+            // ---------- 还未确认：正常推荐逻辑 ----------
+            if (weather == null) {
+                Text("天气信息不可用，暂时无法推荐穿搭。")
+                return@Column
+            }
+
+            val result = remember(weather, items, refreshSeed, lastOutfit) {
+                WeatherRecommender.recommend(
+                    weather = weather,
+                    items = items,
+                    lastOutfit = lastOutfit
+                )
+            }
 
             if (result.outfit == null) {
-                Spacer(Modifier.height(8.dp))
-                Text("无法生成穿搭，请查看调试信息。")
-            } else {
-                Spacer(Modifier.height(8.dp))
+                // 没有搭配成功的情况：依然展示原因
+                Text(
+                    text = "无法生成穿搭，请检查衣物信息。",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = result.reason,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+                return@Column
+            }
 
-                result.outfit.top?.let {
-                    Text("上衣：${it.description}")
-                }
-                result.outfit.pants?.let {
-                    Text("裤子：${it.description}")
-                }
-                result.outfit.shoes?.let {
-                    Text("鞋子：${it.description}")
-                }
+            val outfit = result.outfit
+            val outfitItems = listOfNotNull(outfit.top, outfit.pants, outfit.shoes)
 
-                Button(
-                    onClick = {
-                        onConfirmOutfit(
-                            listOfNotNull(
-                                result.outfit.top,
-                                result.outfit.pants,
-                                result.outfit.shoes
-                            )
-                        )
-                    },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text("确认穿搭")
+            // 推荐理由
+            Text(
+                text = result.reason,
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // ---------- 用 ClothingCard 展示图片（解决“推荐不显示图片”） ----------
+            outfitItems.forEachIndexed { index, item ->
+                if (index > 0) {
+                    Divider(Modifier.padding(vertical = 4.dp))
                 }
+                ClothingCard(
+                    item = item,
+                    onClick = { onItemClick(item.itemId) }
+                )
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // ---- Debug Section ----
-            TextButton(onClick = { showDebug = !showDebug }) {
-                Text(if (showDebug) "隐藏调试信息" else "显示调试信息")
-            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // “换一套”按钮（只有在可刷新时出现）
+                if (result.canRefresh) {
+                    TextButton(
+                        onClick = {
+                            lastOutfit = outfit
+                            refreshSeed++      // 触发重新计算推荐
+                        }
+                    ) {
+                        Text("换一套")
+                    }
+                }
 
-            AnimatedVisibility(showDebug) {
-                Text(
-                    result.debugLog,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Button(
+                    onClick = {
+                        fixedOutfit = outfit      // 之后变成“今日穿搭”固定页
+                        onConfirmOutfit(outfitItems)
+                    }
+                ) {
+                    Text("确认今天就穿这套")
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun OutfitPreviewRow(
-    top: ClothingItem?,
-    pants: ClothingItem?,
-    shoes: ClothingItem?,
-    onItemClick: (Long) -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        ItemImageCard(item = top, label = "Top", onItemClick)
-        ItemImageCard(item = pants, label = "Pants", onItemClick)
-        ItemImageCard(item = shoes, label = "Shoes", onItemClick)
-    }
-}
-
-@Composable
-private fun ItemImageCard(
-    item: ClothingItem?,
-    label: String,
-    onItemClick: (Long) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .size(100.dp)
-            .padding(4.dp),
-        shape = RoundedCornerShape(12.dp),
-        onClick = { if (item != null) onItemClick(item.itemId) }
-    ) {
-        if (item == null || item.imageUri.isNullOrBlank()) {
-            // 无图片 → 显示文字占位
-            Box(contentAlignment = Alignment.Center) {
-                Text("$label\n(No Image)")
-            }
-        } else {
-            // 有图片 → 显示衣服照片
-            AsyncImage(
-                model = item.imageUri,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize()
-            )
         }
     }
 }
