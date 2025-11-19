@@ -1,3 +1,15 @@
+import java.util.Properties
+
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    } else {
+        println("Warning: local.properties not found, GEMINI_API_KEY will be empty.")
+    }
+}
+val apiKey = localProps.getProperty("GEMINI_API_KEY") ?: ""
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,6 +29,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        android.buildFeatures.buildConfig = true
+        buildConfigField(
+            type = "String",
+            name = "GEMINI_API_KEY",
+            value = "\"$apiKey\""
+        )
     }
 
     buildTypes {
@@ -89,4 +107,10 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Gemini Android SDK
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    implementation("androidx.concurrent:concurrent-futures-ktx:1.2.0-alpha02")
+//    implementation("org.slf4j:slf4j-android:2.0.7")
 }
