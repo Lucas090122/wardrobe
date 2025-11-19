@@ -215,6 +215,7 @@
 //2----------
 package com.example.wardrobe.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -227,6 +228,102 @@ import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.ui.util.WeatherRecommender
 
+//@Composable
+//fun WeatherRecommendationCard(
+//    weather: WeatherInfo?,
+//    items: List<ClothingItem>,
+//    onItemClick: (Long) -> Unit,
+//    onConfirmOutfit: (List<ClothingItem>) -> Unit
+//) {
+//    var lastOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
+//    var result by remember { mutableStateOf<WeatherRecommender.Result?>(null) }
+//
+//    // 当天气或衣物发生变化时重算推荐
+//    LaunchedEffect(weather, items) {
+//        result = weather?.let {
+//            WeatherRecommender.recommend(
+//                weather = it,
+//                items = items,
+//                lastOutfit = lastOutfit
+//            )
+//        }
+//    }
+//
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 8.dp),
+//        shape = RoundedCornerShape(16.dp),
+//        elevation = CardDefaults.cardElevation(4.dp)
+//    ) {
+//        Column(modifier = Modifier.padding(16.dp)) {
+//
+//            Text(
+//                "Today's Outfit Recommendation",
+//                style = MaterialTheme.typography.titleMedium
+//            )
+//
+//            Spacer(Modifier.height(12.dp))
+//
+//            if (weather == null) {
+//                Text("Weather unavailable.")
+//                return@Column
+//            }
+//
+//            val res = result
+//            if (res == null || res.outfit == null) {
+//                Text(res?.reason ?: "No outfit available.")
+//                return@Column
+//            }
+//
+//            val outfit = res.outfit
+//
+//            // ======== 图片展示三件衣服 ========
+//            OutfitPreviewRow(
+//                top = outfit.top,
+//                pants = outfit.pants,
+//                shoes = outfit.shoes,
+//                onItemClick = onItemClick
+//            )
+//            // =================================
+//
+//            Spacer(Modifier.height(12.dp))
+//
+//            Text(
+//                res.reason,
+//                style = MaterialTheme.typography.bodySmall,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant
+//            )
+//
+//            Spacer(Modifier.height(12.dp))
+//
+//            // ===== 按钮区域 =====
+//            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+//
+//                if (res.canRefresh) {
+//                    Button(onClick = {
+//                        lastOutfit = outfit
+//                        result = WeatherRecommender.recommend(
+//                            weather = weather,
+//                            items = items,
+//                            lastOutfit = lastOutfit
+//                        )
+//                    }) { Text("换一套") }
+//                }
+//
+//                Button(onClick = {
+//                    val list = listOfNotNull(outfit.top, outfit.pants, outfit.shoes)
+//                    onConfirmOutfit(list)
+//                    lastOutfit = outfit
+//                }) {
+//                    Text("就这套")
+//                }
+//            }
+//        }
+//    }
+//}
+
+
 @Composable
 fun WeatherRecommendationCard(
     weather: WeatherInfo?,
@@ -234,89 +331,70 @@ fun WeatherRecommendationCard(
     onItemClick: (Long) -> Unit,
     onConfirmOutfit: (List<ClothingItem>) -> Unit
 ) {
-    var lastOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
-    var result by remember { mutableStateOf<WeatherRecommender.Result?>(null) }
-
-    // 当天气或衣物发生变化时重算推荐
-    LaunchedEffect(weather, items) {
-        result = weather?.let {
-            WeatherRecommender.recommend(
-                weather = it,
-                items = items,
-                lastOutfit = lastOutfit
-            )
-        }
+    if (weather == null) {
+        Text("天气不可用")
+        return
     }
 
+    val result = remember(weather, items) {
+        WeatherRecommender.recommend(weather, items)
+    }
+
+    var showDebug by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(Modifier.padding(16.dp)) {
+            Text("今日推荐", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
 
-            Text(
-                "Today's Outfit Recommendation",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(result.reason)
 
-            Spacer(Modifier.height(12.dp))
+            if (result.outfit == null) {
+                Spacer(Modifier.height(8.dp))
+                Text("无法生成穿搭，请查看调试信息。")
+            } else {
+                Spacer(Modifier.height(8.dp))
 
-            if (weather == null) {
-                Text("Weather unavailable.")
-                return@Column
-            }
+                result.outfit.top?.let {
+                    Text("上衣：${it.description}")
+                }
+                result.outfit.pants?.let {
+                    Text("裤子：${it.description}")
+                }
+                result.outfit.shoes?.let {
+                    Text("鞋子：${it.description}")
+                }
 
-            val res = result
-            if (res == null || res.outfit == null) {
-                Text(res?.reason ?: "No outfit available.")
-                return@Column
-            }
-
-            val outfit = res.outfit
-
-            // ======== 图片展示三件衣服 ========
-            OutfitPreviewRow(
-                top = outfit.top,
-                pants = outfit.pants,
-                shoes = outfit.shoes,
-                onItemClick = onItemClick
-            )
-            // =================================
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                res.reason,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // ===== 按钮区域 =====
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-
-                if (res.canRefresh) {
-                    Button(onClick = {
-                        lastOutfit = outfit
-                        result = WeatherRecommender.recommend(
-                            weather = weather,
-                            items = items,
-                            lastOutfit = lastOutfit
+                Button(
+                    onClick = {
+                        onConfirmOutfit(
+                            listOfNotNull(
+                                result.outfit.top,
+                                result.outfit.pants,
+                                result.outfit.shoes
+                            )
                         )
-                    }) { Text("换一套") }
+                    },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text("确认穿搭")
                 }
+            }
 
-                Button(onClick = {
-                    val list = listOfNotNull(outfit.top, outfit.pants, outfit.shoes)
-                    onConfirmOutfit(list)
-                    lastOutfit = outfit
-                }) {
-                    Text("就这套")
-                }
+            Spacer(Modifier.height(12.dp))
+
+            // ---- Debug Section ----
+            TextButton(onClick = { showDebug = !showDebug }) {
+                Text(if (showDebug) "隐藏调试信息" else "显示调试信息")
+            }
+
+            AnimatedVisibility(showDebug) {
+                Text(
+                    result.debugLog,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
     }

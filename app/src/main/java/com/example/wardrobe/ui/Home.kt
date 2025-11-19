@@ -12,12 +12,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.example.wardrobe.WardrobeApp
 import com.example.wardrobe.data.WardrobeRepository
+import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.viewmodel.MemberViewModel
 
 @Composable
 fun Home(
     repo: WardrobeRepository,
-    memberViewModel : MemberViewModel
+    memberViewModel : MemberViewModel,
+    weather: WeatherInfo?
 ){
 
     /*val memberVmFactory = object : ViewModelProvider.Factory {
@@ -52,7 +54,7 @@ fun Home(
     } else {
         WardrobeApp(
             memberId = selectedMemberId!!,
-            weather = null,
+            weather = weather,
             onExit = {
                 selectedMemberId = null
                 memberViewModel.setCurrentMember(null)

@@ -115,7 +115,7 @@ fun Navigation(
         )
     ) {
         composable(Screen.DrawerScreen.Home.route){
-            Home(repo = repo, vm)
+            Home(repo = repo, vm,weather)
         }
 
         composable(
