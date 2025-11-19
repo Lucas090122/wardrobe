@@ -237,6 +237,8 @@ import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.WeatherRecommendationCard
 import com.example.wardrobe.viewmodel.ViewType
 import com.example.wardrobe.viewmodel.WardrobeViewModel
+import com.example.wardrobe.ui.util.WeatherRecommender
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -294,14 +296,26 @@ fun HomeScreen(
             Spacer(Modifier.height(8.dp))
 
             // ----- 推荐卡片 -----
-            WeatherRecommendationCard(
-                weather = weather,
-                items = ui.items,
-                onItemClick = onItemClick,
-                onConfirmOutfit = { outfitItems ->
-                    vm.markOutfitAsWorn(outfitItems)
-                }
-            )
+//            WeatherRecommendationCard(
+//                weather = weather,
+//                items = ui.items,
+//                onItemClick = onItemClick,
+//                onConfirmOutfit = { outfitItems ->
+//                    vm.markOutfitAsWorn(outfitItems)
+//                }
+//            )
+            if (ui.currentView == ViewType.IN_USE) {
+                WeatherRecommendationCard(
+                    weather = weather,
+                    items = ui.items,
+                    onItemClick = onItemClick,
+                    onConfirmOutfit = { outfitItems ->
+                        vm.markOutfitAsWorn(outfitItems)
+                    }
+                )
+
+                Spacer(Modifier.height(8.dp))
+            }
 
             // ----------------------
 
