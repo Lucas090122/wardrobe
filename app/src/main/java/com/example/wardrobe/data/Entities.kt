@@ -237,3 +237,31 @@ data class TransferHistoryDetails(
 data class NameCount(val name: String, val count: Int)
 data class SeasonCount(val season: Season, val count: Int)
 data class CategoryCount(val category: String, val count: Int)
+
+/**
+ * NFC tag binding to a specific physical storage location.
+ *
+ * Each NFC tag has a unique hardware ID (converted to a hex string).
+ * Users can bind a tag to a Location inside Settings.
+ *
+ * When a Location is deleted, all bound tags are removed (CASCADE).
+*/
+@Entity(
+    tableName = "NfcTag",
+    foreignKeys = [
+        ForeignKey(
+            entity = Location::class,
+            parentColumns = ["locationId"],
+            childColumns = ["locationId"],
+            onDelete = CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["locationId"])
+    ]
+)
+data class NfcTagEntity(
+    @PrimaryKey
+    val tagId: String,       // NFC unique ID in hex format, e.g., "04AABB22FF01"
+    val locationId: Long     // Bound storage location
+)

@@ -25,6 +25,9 @@ interface ClothesDao {
     @Query("DELETE FROM Location WHERE locationId = :locationId")
     suspend fun deleteLocation(locationId: Long)
 
+    @Query("SELECT * FROM Location WHERE locationId = :locationId LIMIT 1")
+    suspend fun getLocationById(locationId: Long): Location?
+
     @Query("SELECT COUNT(itemId) FROM ClothingItem WHERE locationId = :locationId")
     suspend fun getItemCountForLocation(locationId: Long): Int
 
@@ -129,4 +132,15 @@ interface ClothesDao {
 
     @Query("SELECT category, COUNT(itemId) as count FROM ClothingItem GROUP BY category")
     fun getCountByCategory(): Flow<List<CategoryCount>>
+
+    // NFC tag bindings -------------------------------------------
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertNfcTag(tag: NfcTagEntity)
+
+    @Query("SELECT * FROM NfcTag WHERE tagId = :tagId LIMIT 1")
+    suspend fun getNfcTag(tagId: String): NfcTagEntity?
+
+    @Query("DELETE FROM NfcTag WHERE tagId = :tagId")
+    suspend fun deleteNfcTag(tagId: String)
 }
