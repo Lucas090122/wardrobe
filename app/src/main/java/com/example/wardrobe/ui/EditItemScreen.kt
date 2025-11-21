@@ -50,7 +50,8 @@ import java.io.File
 import java.util.*
 import kotlin.math.max
 
-// 全局保存上一次自动同步的 tagIds
+// Globally remember the last automatically-synced tagIds.
+// This allows us to remove previously auto-added tags when new AI suggestions come in.
 private var lastAutoTagIds: MutableSet<Long> = mutableSetOf()
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -60,17 +61,21 @@ fun EditItemScreen(
     itemId: Long? = null,
     onDone: () -> Unit
 ) {
+    // Main UI state from the view model (includes settings such as AI mode)
     val ui by vm.uiState.collectAsState()
     val aiEnabled = ui.isAiEnabled
+
+    // When editing an existing item, observe it; when creating a new one this will be null
     val editing = if (itemId != null) vm.itemFlow(itemId).collectAsState(initial = null).value else null
 
+    // Form state
     var description by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val selectedTagIds = remember { mutableStateListOf<Long>() }
     var isStored by remember { mutableStateOf(false) }
     var selectedLocationId by remember { mutableStateOf<Long?>(null) }
 
-    // 推荐字段状态
+    // Recommendation-related fields (category, warmth, occasions, etc.)
     var category by remember { mutableStateOf("TOP") }
     var warmthLevel by remember { mutableStateOf(3) }
     val allOccasions = remember { listOf("CASUAL", "SCHOOL", "SPORT", "FORMAL", "WORK") }
@@ -81,6 +86,7 @@ fun EditItemScreen(
     var season by remember { mutableStateOf(Season.SPRING_AUTUMN) }
     var isAnalyzing by remember { mutableStateOf(false) }
 
+    // Age-based logic for size recommendation
     val currentMember = ui.members.find { it.name == ui.memberName }
     val isMinor = (currentMember?.age ?: 0) in 0 until 18
     val showSizeField = isMinor && category in listOf("TOP", "PANTS", "SHOES")
@@ -89,7 +95,7 @@ fun EditItemScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // 预填数据
+    // Pre-fill form when editing an existing item
     LaunchedEffect(editing) {
         editing?.let { d ->
             description = d.item.description
@@ -100,7 +106,11 @@ fun EditItemScreen(
             category = d.item.category
             warmthLevel = d.item.warmthLevel.coerceIn(1, 5)
             occasionSet.clear()
-            occasionSet.addAll(d.item.occasions.split(",").map { it.trim() }.filter { it.isNotEmpty() })
+            occasionSet.addAll(
+                d.item.occasions.split(",")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+            )
             isWaterproof = d.item.isWaterproof
             colorHex = d.item.color.ifBlank { "#FFFFFF" }
             isFavorite = d.item.isFavorite
@@ -110,12 +120,13 @@ fun EditItemScreen(
         }
     }
 
-    // 图片选择逻辑
+    // Image selection logic: from gallery or camera
     val galleryPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> if (uri != null) imageUri = uri }
     )
 
+    // Helper to create a new image file inside app storage for camera photos
     val newImageFile = remember(context) {
         {
             val dir = File(context.filesDir, "images").apply { if (!exists()) mkdirs() }
@@ -132,25 +143,28 @@ fun EditItemScreen(
         }
     )
 
-    // Only analyze when new item is created
-    LaunchedEffect(imageUri, itemId) {
-        // Do nothing if already exist
+    // Only analyze with AI when a NEW item is created and AI mode is enabled.
+    // For existing items we don't auto-override the user's data.
+    LaunchedEffect(imageUri, itemId, aiEnabled) {
+        // Skip analysis when editing an existing item.
         if (itemId != null) return@LaunchedEffect
+
+        // If AI mode is turned off in settings, do nothing.
         if (!aiEnabled) return@LaunchedEffect
 
         val uri = imageUri ?: return@LaunchedEffect
 
         isAnalyzing = true
         try {
-            // 1. 从 Uri 读取并适当压缩成 Bitmap（在 IO 线程）
+            // 1. Load a reasonably sized Bitmap from the Uri on an IO dispatcher
             val bitmap = withContext(Dispatchers.IO) {
                 loadScaledBitmapFromUri(context, uri, 1024)
             } ?: return@LaunchedEffect
 
-            // 2. 调用 Gemini 识别
+            // 2. Call Gemini to analyze clothing attributes
             val result = GeminiAiService.analyzeClothing(bitmap) ?: return@LaunchedEffect
 
-            // 3. 用识别结果填充字段
+            // 3. Populate form fields with AI result
             category = result.category
             description = result.description
 
@@ -163,7 +177,7 @@ fun EditItemScreen(
 
             colorHex = result.colorHex
 
-            // 同步推荐标签（用新的属性）
+            // Sync recommended tags based on updated attributes
             syncTagsFromAttributes(
                 vm = vm,
                 selectedTagIds = selectedTagIds,
@@ -190,6 +204,7 @@ fun EditItemScreen(
                 navigationIcon = { TextButton(onClick = onDone) { Text("Back") } },
                 actions = {
                     TextButton(onClick = {
+                        // Persist image into app storage if it is not already a file Uri
                         val finalImageUri = imageUri?.let { uri ->
                             if (uri.scheme == "file") uri
                             else persistImageToAppStorage(context, uri)
@@ -228,7 +243,13 @@ fun EditItemScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ImageAndCameraSection(imageUri, galleryPicker, takePicture, newImageFile) { pendingPhotoFile = it }
+            ImageAndCameraSection(
+                imageUri = imageUri,
+                galleryPicker = galleryPicker,
+                takePicture = takePicture,
+                newImageFile = newImageFile,
+                onPendingFile = { pendingPhotoFile = it }
+            )
 
             if (isAnalyzing) {
                 Row(
@@ -236,8 +257,7 @@ fun EditItemScreen(
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(18.dp),
+                        modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp
                     )
                     Spacer(Modifier.width(8.dp))
@@ -252,10 +272,10 @@ fun EditItemScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // 推荐字段区
+            // Section: recommendation attributes
             Text("Recommendation Attributes", style = MaterialTheme.typography.titleMedium)
 
-            // Category
+            // Category chips
             val categories = listOf("TOP", "PANTS", "SHOES", "HAT")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.forEach { c ->
@@ -263,7 +283,16 @@ fun EditItemScreen(
                         selected = (category == c),
                         onClick = {
                             category = c
-                            syncTagsFromAttributes(vm, selectedTagIds, category, warmthLevel, occasionSet.toSet(), isWaterproof, scope)
+                            // Re-sync tags whenever the category changes
+                            syncTagsFromAttributes(
+                                vm,
+                                selectedTagIds,
+                                category,
+                                warmthLevel,
+                                occasionSet.toSet(),
+                                isWaterproof,
+                                scope
+                            )
                         },
                         label = { Text(c) },
                         leadingIcon = { if (category == c) Icon(Icons.Default.Check, null) }
@@ -271,6 +300,7 @@ fun EditItemScreen(
                 }
             }
 
+            // Optional size field for minors (children's clothing)
             if (showSizeField) {
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
@@ -307,7 +337,16 @@ fun EditItemScreen(
                     }
                 },
                 onValueChangeFinished = {
-                    syncTagsFromAttributes(vm, selectedTagIds, category, warmthLevel, occasionSet.toSet(), isWaterproof, scope)
+                    // When the slider is released, sync tags again based on new warmth
+                    syncTagsFromAttributes(
+                        vm,
+                        selectedTagIds,
+                        category,
+                        warmthLevel,
+                        occasionSet.toSet(),
+                        isWaterproof,
+                        scope
+                    )
                 },
                 valueRange = 1f..5f,
                 steps = 3
@@ -322,7 +361,16 @@ fun EditItemScreen(
                         selected = checked,
                         onClick = {
                             if (checked) occasionSet.remove(occ) else occasionSet.add(occ)
-                            syncTagsFromAttributes(vm, selectedTagIds, category, warmthLevel, occasionSet.toSet(), isWaterproof, scope)
+                            // Occasion also affects tag suggestions
+                            syncTagsFromAttributes(
+                                vm,
+                                selectedTagIds,
+                                category,
+                                warmthLevel,
+                                occasionSet.toSet(),
+                                isWaterproof,
+                                scope
+                            )
                         },
                         label = { Text(occ) },
                         leadingIcon = { if (checked) Icon(Icons.Default.Check, null) }
@@ -332,12 +380,25 @@ fun EditItemScreen(
 
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Waterproof", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Text(
+                    "Waterproof",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f)
+                )
                 Switch(
                     checked = isWaterproof,
                     onCheckedChange = {
                         isWaterproof = it
-                        syncTagsFromAttributes(vm, selectedTagIds, category, warmthLevel, occasionSet.toSet(), isWaterproof, scope)
+                        // Waterproof is also encoded as a tag
+                        syncTagsFromAttributes(
+                            vm,
+                            selectedTagIds,
+                            category,
+                            warmthLevel,
+                            occasionSet.toSet(),
+                            isWaterproof,
+                            scope
+                        )
                     }
                 )
             }
@@ -383,11 +444,17 @@ fun EditItemScreen(
                 }
             }
 
-
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Favorite", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                IconToggleButton(checked = isFavorite, onCheckedChange = { isFavorite = it }) {
+                Text(
+                    "Favorite",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                IconToggleButton(
+                    checked = isFavorite,
+                    onCheckedChange = { isFavorite = it }
+                ) {
                     if (isFavorite) Icon(Icons.Filled.Star, null)
                     else Icon(Icons.Outlined.StarBorder, null)
                 }
@@ -395,15 +462,33 @@ fun EditItemScreen(
 
             Divider()
 
+            // Tag selection & manual tag creation
             TagsSection(vm = vm, ui = ui, selectedTagIds = selectedTagIds)
-            StorageSection(vm, isStored, { isStored = it }, ui.locations, selectedLocationId) { selectedLocationId = it }
+
+            // Storage information: whether stored, and where
+            StorageSection(
+                vm = vm,
+                isStored = isStored,
+                onStoredChange = { isStored = it },
+                locations = ui.locations,
+                selectedLocationId = selectedLocationId
+            ) { selectedLocationId = it }
         }
     }
 
+    // Global dialogs for delete-location / delete-tag confirmation
     HandleDialogEffects(vm, ui.dialogEffect)
 }
 
-// ----------- 智能同步逻辑（更新版） -----------
+// ----------- Smart tag sync logic (updated version) -----------
+/**
+ * Automatically syncs tags based on clothing attributes (category, warmth, occasions, waterproof).
+ * This function:
+ *  1. Computes a set of "automatic" tag names from attributes.
+ *  2. Ensures those tags exist in DB (creating them if necessary).
+ *  3. Removes previously auto-added tags that are no longer relevant.
+ *  4. Adds new tags that should now be attached.
+ */
 private fun syncTagsFromAttributes(
     vm: WardrobeViewModel,
     selectedTagIds: MutableList<Long>,
@@ -414,6 +499,8 @@ private fun syncTagsFromAttributes(
     scope: kotlinx.coroutines.CoroutineScope
 ) {
     val tagNames = mutableSetOf<String>()
+
+    // Map internal category codes to human-readable tag names
     val categoryMap = mapOf(
         "TOP" to "Top", "PANTS" to "Pants", "SHOES" to "Shoes",
         "HAT" to "Hat"
@@ -430,15 +517,15 @@ private fun syncTagsFromAttributes(
             if (id > 0) newAutoTagIds.add(id)
         }
 
-        // 移除旧自动 tag
+        // Remove auto-tags that were previously added but are no longer desired
         val toRemove = lastAutoTagIds - newAutoTagIds
         selectedTagIds.removeAll(toRemove)
 
-        // 添加新的自动 tag
+        // Add newly recommended auto-tags that are not in the selection yet
         val toAdd = newAutoTagIds - selectedTagIds.toSet()
         selectedTagIds.addAll(toAdd)
 
-        // 记录新的自动标签集
+        // Remember the latest set of auto-generated tags for next time
         lastAutoTagIds = newAutoTagIds
     }
 }
@@ -450,61 +537,103 @@ private fun HandleDialogEffects(vm: WardrobeViewModel, effect: DialogEffect) {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
                 title = { Text("Confirm Deletion") },
-                text = { Text("Are you sure you want to delete this location? ${effect.itemCount} items will become unassigned.") },
+                text = {
+                    Text(
+                        "Are you sure you want to delete this location? " +
+                                "${effect.itemCount} items will become unassigned."
+                    )
+                },
                 confirmButton = {
-                    TextButton(onClick = { vm.forceDeleteLocation(effect.locationId) }) { Text("Delete") }
+                    TextButton(onClick = { vm.forceDeleteLocation(effect.locationId) }) {
+                        Text("Delete")
+                    }
                 },
                 dismissButton = {
-                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("Cancel") }
+                    TextButton(onClick = { vm.clearDialogEffect() }) {
+                        Text("Cancel")
+                    }
                 }
             )
         }
+
         is DialogEffect.DeleteLocation.PreventDelete -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
                 title = { Text("Action Not Allowed") },
-                text = { Text("This location is in use by ${effect.itemCount} items and cannot be deleted in Normal Mode.") },
+                text = {
+                    Text(
+                        "This location is in use by ${effect.itemCount} items " +
+                                "and cannot be deleted in Normal Mode."
+                    )
+                },
                 confirmButton = {
-                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("OK") }
+                    TextButton(onClick = { vm.clearDialogEffect() }) {
+                        Text("OK")
+                    }
                 }
             )
         }
+
         is DialogEffect.DeleteTag.AdminConfirm -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
                 title = { Text("Confirm Deletion") },
-                text = { Text("Are you sure you want to delete this tag? It is used by ${effect.itemCount} items.") },
+                text = {
+                    Text(
+                        "Are you sure you want to delete this tag? " +
+                                "It is used by ${effect.itemCount} items."
+                    )
+                },
                 confirmButton = {
-                    TextButton(onClick = { vm.forceDeleteTag(effect.tagId) }) { Text("Delete") }
+                    TextButton(onClick = { vm.forceDeleteTag(effect.tagId) }) {
+                        Text("Delete")
+                    }
                 },
                 dismissButton = {
-                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("Cancel") }
+                    TextButton(onClick = { vm.clearDialogEffect() }) {
+                        Text("Cancel")
+                    }
                 }
             )
         }
+
         is DialogEffect.DeleteTag.PreventDelete -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
                 title = { Text("Action Not Allowed") },
-                text = { Text("This tag is in use by ${effect.itemCount} items and cannot be deleted in Normal Mode.") },
+                text = {
+                    Text(
+                        "This tag is in use by ${effect.itemCount} items " +
+                                "and cannot be deleted in Normal Mode."
+                    )
+                },
                 confirmButton = {
-                    TextButton(onClick = { vm.clearDialogEffect() }) { Text("OK") }
+                    TextButton(onClick = { vm.clearDialogEffect() }) {
+                        Text("OK")
+                    }
                 }
             )
         }
+
         else -> {}
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TagsSection(vm: WardrobeViewModel, ui: com.example.wardrobe.viewmodel.UiState, selectedTagIds: MutableList<Long>) {
+private fun TagsSection(
+    vm: WardrobeViewModel,
+    ui: com.example.wardrobe.viewmodel.UiState,
+    selectedTagIds: MutableList<Long>
+) {
     var newTagName by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     Column {
         Text("Tags", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
+
+        // Existing tags with chip selection
         TagChips(
             tags = ui.tags,
             selectedIds = selectedTagIds.toSet(),
@@ -516,8 +645,14 @@ private fun TagsSection(vm: WardrobeViewModel, ui: com.example.wardrobe.viewmode
             showCount = false,
             onDelete = { vm.deleteTag(it) }
         )
+
         Spacer(Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+        // Add new custom tag by name
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             OutlinedTextField(
                 value = newTagName,
                 onValueChange = { newTagName = it },
@@ -554,7 +689,11 @@ private fun StorageSection(
 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Stored", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(
+                "Stored",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
             Switch(checked = isStored, onCheckedChange = onStoredChange)
         }
 
@@ -563,13 +702,16 @@ private fun StorageSection(
             Text("Storage Location", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
 
+            // Existing locations as selectable chips, each with a delete icon (admin-aware)
             if (locations.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     locations.forEach { location ->
                         InputChip(
                             selected = location.locationId == selectedLocationId,
                             onClick = {
-                                val newSelection = if (location.locationId == selectedLocationId) null else location.locationId
+                                val newSelection =
+                                    if (location.locationId == selectedLocationId) null
+                                    else location.locationId
                                 onLocationSelected(newSelection)
                             },
                             label = { Text(location.name) },
@@ -588,7 +730,12 @@ private fun StorageSection(
             }
 
             Spacer(Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+            // Create a new named storage location
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = newLocationName,
                     onValueChange = { newLocationName = it },
@@ -607,6 +754,10 @@ private fun StorageSection(
     }
 }
 
+/**
+ * Combined UI for displaying the selected image and providing shortcuts
+ * to open the gallery picker or camera.
+ */
 @Composable
 private fun ImageAndCameraSection(
     imageUri: Uri?,
@@ -622,7 +773,13 @@ private fun ImageAndCameraSection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable { galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+            .clickable {
+                galleryPicker.launch(
+                    PickVisualMediaRequest(
+                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+            }
     ) {
         val w = this.maxWidth
         val targetH = min(w / aspect, 360.dp)
@@ -636,8 +793,10 @@ private fun ImageAndCameraSection(
                     .height(targetH),
                 contentScale = ContentScale.Fit,
                 onSuccess = { s ->
+                    // Adjust aspect ratio based on real image size to avoid distortion
                     val d = s.result.drawable
-                    aspect = max(1, d.intrinsicWidth).toFloat() / max(1, d.intrinsicHeight).toFloat()
+                    aspect = max(1, d.intrinsicWidth).toFloat() /
+                            max(1, d.intrinsicHeight).toFloat()
                 }
             )
         } else {
@@ -647,24 +806,37 @@ private fun ImageAndCameraSection(
                     .height(180.dp)
                     .background(Color(0x11FFFFFF)),
                 contentAlignment = Alignment.Center
-            ) { Text("Tap to select image") }
+            ) {
+                Text("Tap to select image")
+            }
         }
     }
 
     Spacer(Modifier.height(8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(onClick = {
+            // Create a file, remember it, and launch camera with a FileProvider Uri
             val file = newImageFile().also(onPendingFile)
-            val contentUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            val contentUri =
+                FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             takePicture.launch(contentUri)
         }) { Text("Take Photo") }
 
         OutlinedButton(onClick = {
-            galleryPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            galleryPicker.launch(
+                PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
         }) { Text("Choose from Album") }
     }
 }
 
+/**
+ * Utility: load a Bitmap from a Uri, optionally downscaling it so that the
+ * longest side is at most [maxSize] pixels. This keeps memory and upload
+ * size under control.
+ */
 private fun loadScaledBitmapFromUri(
     context: android.content.Context,
     uri: Uri,
@@ -696,4 +868,3 @@ private fun loadScaledBitmapFromUri(
         null
     }
 }
-
