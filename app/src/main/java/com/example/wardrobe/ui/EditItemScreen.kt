@@ -61,6 +61,7 @@ fun EditItemScreen(
     onDone: () -> Unit
 ) {
     val ui by vm.uiState.collectAsState()
+    val aiEnabled = ui.isAiEnabled
     val editing = if (itemId != null) vm.itemFlow(itemId).collectAsState(initial = null).value else null
 
     var description by remember { mutableStateOf("") }
@@ -131,10 +132,11 @@ fun EditItemScreen(
         }
     )
 
-    // 当选择/拍摄图片后，自动调用 Gemini 识别（仅在新增模式下）
+    // Only analyze when new item is created
     LaunchedEffect(imageUri, itemId) {
-        // 编辑已有衣物时，不自动覆盖原数据
+        // Do nothing if already exist
         if (itemId != null) return@LaunchedEffect
+        if (!aiEnabled) return@LaunchedEffect
 
         val uri = imageUri ?: return@LaunchedEffect
 
@@ -239,7 +241,7 @@ fun EditItemScreen(
                         strokeWidth = 2.dp
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Analyzing outfit with AI…")
+                    Text("Analyzing clothes with AI…")
                 }
             }
 

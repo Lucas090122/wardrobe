@@ -51,7 +51,8 @@ data class UiState(
     val isAdminMode: Boolean = false,
     val dialogEffect: DialogEffect = DialogEffect.Hidden,
     val outdatedItemIds: Set<Long> = emptySet(),
-    val outdatedCount: Int = 0
+    val outdatedCount: Int = 0,
+    val isAiEnabled: Boolean = false
 )
 
 private data class VmCoreState(
@@ -60,7 +61,17 @@ private data class VmCoreState(
     val view: ViewType,
     val season: Season?,
     val isAdmin: Boolean,
-    val dialogEffect: DialogEffect
+    val dialogEffect: DialogEffect,
+    val isAiEnabled: Boolean
+)
+
+private data class CoreSettingsState(
+    val selectedTagIds: Set<Long>,
+    val query: String,
+    val currentView: ViewType,
+    val selectedSeason: Season?,
+    val isAdminMode: Boolean,
+    val isAiEnabled: Boolean
 )
 
 private val DEFAULT_TAGS = setOf("Hat", "Top", "Pants", "Shoes")
@@ -75,26 +86,44 @@ class WardrobeViewModel(
     private val selectedSeason = MutableStateFlow<Season?>(null)
     private val dialogEffect = MutableStateFlow<DialogEffect>(DialogEffect.Hidden)
 
+    private val coreSettingsFlow = combine(
+        selectedTagIds,
+        query,
+        currentView,
+        selectedSeason,
+        repo.settings.isAdminMode
+    ) { sel, q, view, season, isAdmin ->
+        CoreSettingsState(
+            selectedTagIds = sel,
+            query = q,
+            currentView = view,
+            selectedSeason = season,
+            isAdminMode = isAdmin,
+            isAiEnabled = false
+        )
+    }
+
+    private val coreWithAiFlow = combine(
+        coreSettingsFlow,
+        repo.settings.isAiEnabled
+    ) { core, isAiEnabled ->
+        core.copy(isAiEnabled = isAiEnabled)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState> = combine(
-        combine(
-            selectedTagIds,
-            query,
-            currentView,
-            selectedSeason,
-            repo.settings.isAdminMode
-        ) { sel, q, view, season, isAdmin ->
-            object {
-                val sel = sel
-                val q = q
-                val view = view
-                val season = season
-                val isAdmin = isAdmin
-            }
-        },
+        coreWithAiFlow,
         dialogEffect
-    ) { five, effect ->
-        VmCoreState(five.sel, five.q, five.view, five.season, five.isAdmin, effect)
+    ) { core, effect ->
+        VmCoreState(
+            sel = core.selectedTagIds,
+            q = core.query,
+            view = core.currentView,
+            season = core.selectedSeason,
+            isAdmin = core.isAdminMode,
+            dialogEffect = effect,
+            isAiEnabled = core.isAiEnabled
+        )
     }.flatMapLatest { state ->
         val itemsFlow = repo.observeItems(memberId, state.sel.toList(), state.q, state.season)
         val tagsFlow = repo.observeTagsWithCounts(memberId, state.view == ViewType.STORED)
@@ -140,11 +169,11 @@ class WardrobeViewModel(
                 isAdminMode = state.isAdmin,
                 dialogEffect = state.dialogEffect,
                 outdatedItemIds = outdatedIds,
-                outdatedCount = outdatedIds.size
+                outdatedCount = outdatedIds.size,
+                isAiEnabled = state.isAiEnabled      // ✅ 把 AI 状态传到 UiState
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
-
     init {
         // Ensure some default tags exist the first time
         viewModelScope.launch {

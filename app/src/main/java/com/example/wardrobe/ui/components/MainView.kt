@@ -57,6 +57,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import com.example.wardrobe.data.WeatherRepository
 import com.example.wardrobe.data.WeatherInfo
+import com.example.wardrobe.util.AiModeDrawerItem
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +74,9 @@ fun MainView(
     val currentMemberName by vm.currentMemberName.collectAsState()
     val isAdminMode by repo.settings.isAdminMode.collectAsState(initial = false)
     var showAdminPinDialog by remember { mutableStateOf(false) }
+
+    val isAiEnabled by repo.settings.isAiEnabled.collectAsState(initial = false)
+    var showAiPrivacyDialog by remember { mutableStateOf(false) }
 
     val viewModel : MainViewModel = viewModel()
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
@@ -175,6 +179,18 @@ fun MainView(
                         showAdminPinDialog = true
                     } else {
                         scope.launch { repo.settings.setAdminMode(false) }
+                    }
+                }
+            )
+
+            AiModeDrawerItem(
+                isEnabled = isAiEnabled,
+                onToggle = { enabled ->
+                    if (enabled) {
+                        // 先不直接改设置，弹隐私说明
+                        showAiPrivacyDialog = true
+                    } else {
+                        scope.launch { repo.settings.setAiEnabled(false) }
                     }
                 }
             )
@@ -302,6 +318,39 @@ fun MainView(
                 },
                 dismissButton = {
                     TextButton(onClick = { showAdminPinDialog = false }) { Text("Cancel") }
+                }
+            )
+        }
+
+        if (showAiPrivacyDialog) {
+            AlertDialog(
+                onDismissRequest = { showAiPrivacyDialog = false },
+                title = { Text("Enable AI mode?") },
+                text = {
+                    Text(
+                        "When AI mode is enabled, your clothing photos will be sent to Google's Gemini service " +
+                                "for analysis in order to auto-fill item details. " +
+                                "Please only upload photos you are comfortable sharing."
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showAiPrivacyDialog = false
+                            scope.launch { repo.settings.setAiEnabled(true) }
+                        }
+                    ) {
+                        Text("Agree and enable")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showAiPrivacyDialog = false
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
                 }
             )
         }

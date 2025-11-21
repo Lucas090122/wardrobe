@@ -115,6 +115,32 @@ fun AdminModeDrawerItem(
 }
 
 @Composable
+fun AiModeDrawerItem(
+    isEnabled: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "AI Mode",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = isEnabled,
+            onCheckedChange = { checked ->
+                onToggle(checked)
+            }
+        )
+    }
+}
+
+@Composable
 fun ExpandableDrawerItem(
     item: Screen.DrawerScreen,
     subItems: List<Member>,

@@ -18,6 +18,7 @@ class SettingsRepository(private val context: Context) {
     private object Keys {
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
+        val IS_AI_ENABLED = booleanPreferencesKey("is_ai_enabled")
     }
 
     val isAdminMode: Flow<Boolean> = context.dataStore.data
@@ -28,6 +29,17 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAdminMode(isAdmin: Boolean) {
         context.dataStore.edit {
             it[Keys.IS_ADMIN_MODE] = isAdmin
+        }
+    }
+
+    val isAiEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[Keys.IS_AI_ENABLED] ?: false
+        }
+
+    suspend fun setAiEnabled(enabled: Boolean) {
+        context.dataStore.edit {
+            it[Keys.IS_AI_ENABLED] = enabled
         }
     }
 
