@@ -22,11 +22,6 @@ import kotlinx.coroutines.launch
  * Sections:
  *  - Security: change Admin PIN
  *  - NFC Storage Stickers: bind NFC stickers to Locations
- *
- * NFC flow:
- *  1) User taps "Add new NFC sticker" card → MainViewModel enters BindLocation mode
- *  2) User scans a sticker → MainViewModel.pendingTagIdForBinding is updated
- *  3) User selects a Location and confirms binding
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +31,10 @@ fun SettingsScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    // Observe the stored Admin PIN (null means no PIN has been set yet)
+    // Admin PIN state (null → not set)
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
 
-    // Observe NFC mode and currently scanned tag ID
+    // NFC mode and scanned tag ID
     val nfcMode by mainVm.nfcMode
     val pendingTagId by mainVm.pendingTagIdForBinding
 
@@ -48,27 +43,30 @@ fun SettingsScreen(
 
     var showChangePinDialog by remember { mutableStateOf(false) }
 
-    // Local UI state for NFC Location dropdown
+    // Local UI state for NFC dropdown (used inside dialog)
     var selectedLocationId by remember { mutableStateOf<Long?>(null) }
     var selectedLocationName by remember { mutableStateOf("") }
     var locationDropdownExpanded by remember { mutableStateOf(false) }
     var nfcError by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // When a new tag is detected, pre-select the first location if none is selected yet
+    // Auto pre-select first location when a new tag is detected
     LaunchedEffect(pendingTagId, locations) {
-        if (pendingTagId != null && selectedLocationId == null && locations.isNotEmpty()) {
+        if (pendingTagId != null && locations.isNotEmpty() && selectedLocationId == null) {
             val first = locations.first()
             selectedLocationId = first.locationId
             selectedLocationName = first.name
         }
     }
 
+    // Show NFC binding dialog only when:
+    //  - We are in BindLocation mode
+    //  - A tag has been detected
+    val showNfcBindDialog =
+        nfcMode == MainViewModel.NfcMode.BindLocation && pendingTagId != null
+
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Settings") }
-            )
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -77,9 +75,7 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // ---------------------------------------------------------------
-            // Security section (Admin PIN)
-            // ---------------------------------------------------------------
+            // ---------------- Security ----------------
             Text(
                 text = "Security",
                 style = MaterialTheme.typography.titleMedium
@@ -130,9 +126,7 @@ fun SettingsScreen(
                 )
             }
 
-            // ---------------------------------------------------------------
-            // NFC storage sticker section
-            // ---------------------------------------------------------------
+            // ---------------- NFC Storage Stickers ----------------
             Text(
                 text = "NFC Storage Stickers",
                 style = MaterialTheme.typography.titleMedium
@@ -142,7 +136,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        // Start NFC binding mode
+                        // Enter binding mode and wait for a tag scan
                         nfcError = null
                         selectedLocationId = null
                         selectedLocationName = ""
@@ -172,134 +166,19 @@ fun SettingsScreen(
                 }
             }
 
-            // If we are in binding mode, show guidance and binding UI
-            if (nfcMode == MainViewModel.NfcMode.BindLocation) {
+            // Small hint below card when waiting for a scan
+            if (nfcMode == MainViewModel.NfcMode.BindLocation && pendingTagId == null) {
                 Spacer(Modifier.height(8.dp))
-
-                if (pendingTagId == null) {
-                    // Waiting for user to scan a sticker
-                    Text(
-                        text = "Hold a new NFC sticker near your phone to register it.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    // Tag detected, allow user to bind it to a Location
-                    Text(
-                        text = "Sticker detected: $pendingTagId",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    if (locations.isEmpty()) {
-                        Text(
-                            text = "No locations available. Please create at least one storage location first.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    } else {
-                        ExposedDropdownMenuBox(
-                            expanded = locationDropdownExpanded,
-                            onExpandedChange = { locationDropdownExpanded = !locationDropdownExpanded }
-                        ) {
-                            OutlinedTextField(
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                readOnly = true,
-                                value = selectedLocationName,
-                                onValueChange = { },
-                                label = { Text("Bind to Location") },
-                                placeholder = {
-                                    if (selectedLocationName.isEmpty()) {
-                                        Text("Select a location")
-                                    }
-                                },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = locationDropdownExpanded
-                                    )
-                                }
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = locationDropdownExpanded,
-                                onDismissRequest = { locationDropdownExpanded = false }
-                            ) {
-                                locations.forEach { location ->
-                                    DropdownMenuItem(
-                                        text = { Text(location.name) },
-                                        onClick = {
-                                            selectedLocationId = location.locationId
-                                            selectedLocationName = location.name
-                                            locationDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        if (nfcError != null) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = nfcError!!,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-
-                        Spacer(Modifier.height(8.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    nfcError = null
-                                    if (selectedLocationId == null) {
-                                        nfcError = "Please select a location first."
-                                        return@Button
-                                    }
-                                    val tagId = pendingTagId
-                                    if (tagId == null) {
-                                        nfcError = "Sticker is no longer detected, please scan again."
-                                        return@Button
-                                    }
-
-                                    scope.launch {
-                                        repo.bindNfcTagToLocation(tagId, selectedLocationId!!)
-                                        // Reset binding UI and leave bind mode
-                                        selectedLocationId = null
-                                        selectedLocationName = ""
-                                        mainVm.onLocationBound()
-                                    }
-                                }
-                            ) {
-                                Text("Bind sticker")
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    // Cancel binding and clear local state
-                                    selectedLocationId = null
-                                    selectedLocationName = ""
-                                    nfcError = null
-                                    mainVm.cancelBindLocationMode()
-                                }
-                            ) {
-                                Text("Cancel")
-                            }
-                        }
-                    }
-                }
+                Text(
+                    text = "Hold a new NFC sticker near your phone to register it.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
 
-    // ------------------------------------------------------------------------
-    // Dialog for changing the Admin PIN (unchanged logic, new card opens this)
-    // ------------------------------------------------------------------------
+    // --------------- Change Admin PIN dialog ---------------
     if (showChangePinDialog) {
         var currentPin by remember { mutableStateOf("") }
         var newPin by remember { mutableStateOf("") }
@@ -358,7 +237,6 @@ fun SettingsScreen(
                     scope.launch {
                         when {
                             savedPin == null -> {
-                                // Should not happen: Change button is disabled when no PIN exists
                                 pinError = "No existing PIN set"
                             }
                             currentPin != savedPin -> {
@@ -382,6 +260,135 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showChangePinDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // --------------- NFC bind dialog ---------------
+    if (showNfcBindDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // User closes dialog → leave bind mode
+                selectedLocationId = null
+                selectedLocationName = ""
+                nfcError = null
+                mainVm.cancelBindLocationMode()
+            },
+            title = { Text("Bind NFC sticker") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Sticker detected: ${pendingTagId ?: ""}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    if (locations.isEmpty()) {
+                        Text(
+                            text = "No locations available. Please create at least one storage location first.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        ExposedDropdownMenuBox(
+                            expanded = locationDropdownExpanded,
+                            onExpandedChange = { locationDropdownExpanded = !locationDropdownExpanded }
+                        ) {
+                            OutlinedTextField(
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                readOnly = true,
+                                value = selectedLocationName,
+                                onValueChange = {},
+                                label = { Text("Bind to Location") },
+                                placeholder = {
+                                    if (selectedLocationName.isEmpty()) {
+                                        Text("Select a location")
+                                    }
+                                },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = locationDropdownExpanded
+                                    )
+                                }
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = locationDropdownExpanded,
+                                onDismissRequest = { locationDropdownExpanded = false }
+                            ) {
+                                locations.forEach { location ->
+                                    DropdownMenuItem(
+                                        text = { Text(location.name) },
+                                        onClick = {
+                                            selectedLocationId = location.locationId
+                                            selectedLocationName = location.name
+                                            locationDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        if (nfcError != null) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = nfcError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            val tagId = pendingTagId
+                            val locId = selectedLocationId
+
+                            if (locations.isEmpty()) return@launch
+
+                            if (tagId == null) {
+                                nfcError = "Sticker is no longer detected, please scan again."
+                                return@launch
+                            }
+                            if (locId == null) {
+                                nfcError = "Please select a location first."
+                                return@launch
+                            }
+
+                            // Persist tag → location binding
+                            repo.bindNfcTagToLocation(tagId, locId)
+
+                            // Show success feedback
+                            snackbarHostState.showSnackbar(
+                                message = "Sticker bound to ${selectedLocationName.ifBlank { "location" }}",
+                            )
+
+                            // Reset local UI + leave bind mode
+                            selectedLocationId = null
+                            selectedLocationName = ""
+                            nfcError = null
+                            mainVm.onLocationBound()
+                        }
+                    }
+                ) {
+                    Text("Bind")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedLocationId = null
+                        selectedLocationName = ""
+                        nfcError = null
+                        mainVm.cancelBindLocationMode()
+                    }
+                ) {
                     Text("Cancel")
                 }
             }
