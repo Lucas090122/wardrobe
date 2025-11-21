@@ -107,7 +107,8 @@ class MainActivity : ComponentActivity() {
                     theme = theme,
                     onThemeChange = { theme = it },
                     weatherRepo = weatherRepo,
-                    hasLocationPermission = hasLocationPermission
+                    hasLocationPermission = hasLocationPermission,
+                    mainVm = viewModel()
                 )
             }
         }

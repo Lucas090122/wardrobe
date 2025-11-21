@@ -39,7 +39,7 @@ fun Navigation(
     repo: WardrobeRepository,
     vm: MemberViewModel,
     navController: NavController,
-    viewModel: MainViewModel,
+    viewModel: MainViewModel,           // global MainViewModel (includes NFC state)
     statisticsViewModel: StatisticsViewModel,
     pd: PaddingValues,
     weather: WeatherInfo?
@@ -75,7 +75,7 @@ fun Navigation(
 
             WardrobeApp(
                 memberId = memberId,
-                weather = weather,      // ← IMPORTANT: propagate weather down
+                weather = weather,
                 onExit = {
                     vm.setCurrentMember(null)
                     navController.popBackStack()
@@ -87,14 +87,20 @@ fun Navigation(
         // STATISTICS SCREEN
         // -------------------------------------------------------------
         composable(Screen.DrawerScreen.Statistics.route) {
-            StatisticsScreen(repo = repo, navController = navController)
+            StatisticsScreen(
+                repo = repo,
+                navController = navController
+            )
         }
 
         // -------------------------------------------------------------
         // SETTINGS SCREEN
         // -------------------------------------------------------------
         composable(Screen.DrawerScreen.Settings.route) {
-            SettingsScreen(repo = repo)
+            SettingsScreen(
+                repo = repo,
+                mainVm = viewModel     // pass global MainViewModel for NFC binding
+            )
         }
     }
 }

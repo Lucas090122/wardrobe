@@ -78,7 +78,8 @@ fun MainView(
     theme: Theme,
     onThemeChange: (Theme) -> Unit,
     weatherRepo: WeatherRepository,
-    hasLocationPermission: Boolean
+    hasLocationPermission: Boolean,
+    mainVm: MainViewModel
 ){
     val members by vm.members.collectAsState()
     val currentMemberName by vm.currentMemberName.collectAsState()
@@ -91,7 +92,6 @@ fun MainView(
     val isAiEnabled by repo.settings.isAiEnabled.collectAsState(initial = false)
     var showAiPrivacyDialog by remember { mutableStateOf(false) }
 
-    val viewModel: MainViewModel = viewModel()
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
 
     val statsVmFactory = StatisticsViewModelFactory(repo)
@@ -275,7 +275,7 @@ fun MainView(
                     repo = repo,
                     vm = vm,
                     navController = controller,
-                    viewModel = viewModel,
+                    viewModel = mainVm,
                     statisticsViewModel = statisticsViewModel,
                     pd = innerPadding,
                     weather = weather
