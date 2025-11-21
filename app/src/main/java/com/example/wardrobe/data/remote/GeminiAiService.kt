@@ -12,10 +12,10 @@ import kotlin.math.pow
 
 private const val TAG = "GeminiAiService"
 
-// 模型允许的类别集合
+// Allowed clothing categories that the model is expected to output
 private val ALLOWED_CATEGORIES = setOf("TOP", "PANTS", "SHOES", "HAT")
 
-// 允许的颜色列表（和项目里保持一致）
+// Allowed color palette (kept in sync with the rest of the project)
 private val ALLOWED_COLORS = listOf(
     "#FFFFFF", "#000000", "#FF0000", "#FFA500",
     "#FFFF00", "#00FF00", "#00FFFF", "#0000FF",
@@ -26,12 +26,19 @@ data class GeminiClothingResult(
     val category: String,   // "TOP" / "PANTS" / "SHOES" / "HAT"
     val description: String,
     val warmthLevel: Int,   // 1..5
-    val colorHex: String    // 从 ALLOWED_COLORS 中选一个
+    val colorHex: String    // Hex color chosen from ALLOWED_COLORS
 )
 
+/**
+ * Simple singleton wrapper around the Gemini model used for clothing analysis.
+ *
+ * This class is intentionally stateless from the outside: callers only pass a Bitmap
+ * and receive a structured [GeminiClothingResult] or null on failure.
+ */
 object GeminiAiService {
 
-    // 创建一个 Gemini 模型实例
+    // Lazily create a Gemini model instance.
+    // Using lazy means the model is only created when the feature is actually used.
     private val model by lazy {
         GenerativeModel(
             modelName = "gemini-2.5-flash",
@@ -40,25 +47,27 @@ object GeminiAiService {
     }
 
     /**
-     * 把衣服照片发给 Gemini，让它帮我们识别：
-     * - category: TOP / PANTS / SHOES / HAT
-     * - description: 英文简短描述
-     * - warmthLevel: 1..5
-     * - colorHex: 从 ALLOWED_COLORS 里选一个最接近的
+     * Sends a clothing photo to Gemini and asks it to extract structured information:
      *
-     * 失败时返回 null
+     * - category: TOP / PANTS / SHOES / HAT
+     * - description: short English description
+     * - warmthLevel: integer 1..5
+     * - colorHex: closest color from [ALLOWED_COLORS]
+     *
+     * All heavy work (model call + JSON parsing) runs on [Dispatchers.IO].
+     * Returns `null` if anything goes wrong (network error, JSON parsing, etc.).
      */
     suspend fun analyzeClothing(bitmap: Bitmap): GeminiClothingResult? =
         withContext(Dispatchers.IO) {
             try {
                 val prompt = content {
-                    // 图片
+                    // Provide the image for multimodal analysis
                     image(bitmap)
 
-                    // 非常明确地要求只返回 JSON
+                    // Ask very explicitly for a single JSON object with a strict schema
                     text(
                         """
-                        You are an assistant for a kids' wardrobe app.
+                        You are an assistant for a wardrobe app.
                         Look at the clothing item in the photo and extract structured information.
 
                         Return ONLY a single strict JSON object.
@@ -95,7 +104,7 @@ object GeminiAiService {
 
                 Log.d(TAG, "Raw Gemini response: $raw")
 
-                // 1️⃣ 先从返回文本中“抠出”第一段 JSON 对象
+                // 1. Extract the first JSON object {...} from the response text
                 val jsonText = extractFirstJsonObject(raw) ?: run {
                     Log.w(TAG, "Failed to extract JSON object from response")
                     return@withContext null
@@ -103,21 +112,22 @@ object GeminiAiService {
 
                 Log.d(TAG, "Parsed JSON text: $jsonText")
 
-                // 2️⃣ 解析 JSON
+                // 2. Parse JSON and normalize individual fields
                 val obj = JSONObject(jsonText)
 
                 val rawDescription = obj.optString("description").ifBlank { "Clothing item" }
 
-                // 类别规范化 + 兜底逻辑
+                // Normalize category and provide a reasonable fallback
                 val rawCategory = obj.optString("category")
                 val category = normalizeCategory(rawCategory, rawDescription)
 
-                // 保证 warmthLevel 为 1..5
+                // Ensure warmthLevel is in the expected range 1..5
                 val warmth = obj.optInt("warmthLevel", 3).let {
                     if (it in 1..5) it else 3
                 }
 
-                // 颜色：如果模型给了奇怪的颜色，自动映射到最近的那个
+                // Normalize color: if the model returns an unknown color,
+                // map it to the closest one from ALLOWED_COLORS.
                 val rawColor = obj.optString("colorHex").uppercase()
                 val color = normalizeColor(rawColor)
 
@@ -134,10 +144,15 @@ object GeminiAiService {
         }
 
     /**
-     * 从模型返回的字符串中，尽量安全地提取出第一段 {...} JSON 对象。
+     * Try to safely extract the first `{ ... }` JSON object from the model's raw response.
+     *
+     * The model might sometimes wrap the JSON in ```json ...``` fences or add extra text.
+     * This helper:
+     *  1. Strips obvious fences.
+     *  2. Scans for the first balanced `{ ... }` pair and returns that substring.
      */
     private fun extractFirstJsonObject(raw: String): String? {
-        // 先去掉 ```json ``` 之类的包裹
+        // Strip leading/trailing code fences such as ```json ... ```
         val cleaned = raw
             .removePrefix("```json")
             .removePrefix("```JSON")
@@ -145,12 +160,12 @@ object GeminiAiService {
             .removeSuffix("```")
             .trim()
 
-        // 如果本身就是以 { 开头、以 } 结尾，就直接用
+        // If the cleaned text already looks like a single JSON object, use it directly
         if (cleaned.startsWith("{") && cleaned.endsWith("}")) {
             return cleaned
         }
 
-        // 否则就从整段文本里找到第一个 { ... } 的平衡区域
+        // Otherwise, scan the string and find the first balanced {...} region
         var depth = 0
         var startIndex = -1
         for (i in cleaned.indices) {
@@ -177,10 +192,13 @@ object GeminiAiService {
     }
 
     /**
-     * 把模型返回的 category 做一层“纠错 + 推断”：
-     * - 先看有没有刚好是 TOP/PANTS/SHOES/HAT
-     * - 如果不是，就根据文本里是不是出现了 shoes/pants/hat 等词来猜
-     * - 实在猜不到，就当 TOP
+     * Normalize the category returned by the model.
+     *
+     * Strategy:
+     *  1. If the raw category is already one of the allowed values, use it.
+     *  2. Otherwise, inspect both the raw category and description text to guess
+     *     whether it is shoes/pants/hat using keyword matching.
+     *  3. If we still cannot guess, fall back to "TOP".
      */
     private fun normalizeCategory(rawCategory: String?, description: String): String {
         val up = rawCategory.orEmpty().trim().uppercase()
@@ -197,10 +215,12 @@ object GeminiAiService {
     }
 
     /**
-     * 颜色校正：
-     * - 如果本来就在 ALLOWED_COLORS 里，直接用
-     * - 如果是别的 HEX 颜色（#RRGGBB），算和每个允许颜色的距离，选最近的
-     * - 解析失败就默认白色
+     * Normalize the color returned by the model.
+     *
+     * - If the original string is already in [ALLOWED_COLORS], return it.
+     * - If it is another valid HEX color (#RRGGBB), compute the distance to each allowed color
+     *   in RGB space and pick the closest one.
+     * - If parsing fails, default to white ("#FFFFFF").
      */
     private fun normalizeColor(rawColor: String?): String {
         val color = rawColor.orEmpty().uppercase().trim()
@@ -224,7 +244,8 @@ object GeminiAiService {
     }
 
     /**
-     * 把 #RRGGBB 转成 Triple(r, g, b)，解析失败返回 null
+     * Parse a `#RRGGBB` hex string into a Triple(r, g, b).
+     * Returns null if the format is invalid.
      */
     private fun parseHexColor(hex: String): Triple<Int, Int, Int>? {
         val cleaned = hex.removePrefix("#")
@@ -240,7 +261,10 @@ object GeminiAiService {
     }
 
     /**
-     * 颜色欧式距离的平方（不需要开方，比较相对大小即可）
+     * Squared Euclidean distance between two colors in RGB space.
+     *
+     * We use the squared distance instead of the real Euclidean distance
+     * because the ordering is the same and avoids calling `sqrt`.
      */
     private fun colorDistanceSq(a: Triple<Int, Int, Int>, b: Triple<Int, Int, Int>): Double {
         val dr = (a.first - b.first).toDouble()

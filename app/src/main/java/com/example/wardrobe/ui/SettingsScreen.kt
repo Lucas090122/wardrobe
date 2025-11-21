@@ -11,11 +11,21 @@ import androidx.compose.ui.unit.dp
 import com.example.wardrobe.data.WardrobeRepository
 import kotlinx.coroutines.launch
 
+/**
+ * Settings screen for the app.
+ *
+ * Currently focuses on:
+ *  - Admin security section
+ *  - Allowing user to change Admin PIN (if one is already set)
+ *
+ * The initial PIN is set when turning on Admin Mode in the drawer.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     repo: WardrobeRepository
 ) {
+    // Observe the stored Admin PIN (null means no PIN has been set yet)
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
 
@@ -41,7 +51,8 @@ fun SettingsScreen(
 
             Button(
                 onClick = { showChangePinDialog = true },
-                enabled = savedPin != null  // 如果还没设置 PIN，则禁用
+                // Disable the button if no PIN has been set yet
+                enabled = savedPin != null
             ) {
                 Text("Change Admin PIN")
             }
@@ -56,7 +67,7 @@ fun SettingsScreen(
         }
     }
 
-    // 修改 PIN 的弹窗
+    // Dialog for changing the Admin PIN
     if (showChangePinDialog) {
         var currentPin by remember { mutableStateOf("") }
         var newPin by remember { mutableStateOf("") }
@@ -115,7 +126,8 @@ fun SettingsScreen(
                     scope.launch {
                         when {
                             savedPin == null -> {
-                                // 理论上不会走到这里，因为没 PIN 时按钮是 disabled 的
+                                // In theory this should never happen, because the Change button
+                                // is disabled when there is no existing PIN.
                                 pinError = "No existing PIN set"
                             }
                             currentPin != savedPin -> {

@@ -21,19 +21,19 @@ import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.WeatherRecommendationCard
 import com.example.wardrobe.viewmodel.ViewType
 import com.example.wardrobe.viewmodel.WardrobeViewModel
-import com.example.wardrobe.ui.util.WeatherRecommender
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     vm: WardrobeViewModel,
-    weather: WeatherInfo?,          // ← 新增参数
+    weather: WeatherInfo?,          // Weather info injected from MainActivity navigation
     onAddClick: () -> Unit,
     onItemClick: (Long) -> Unit
 ) {
     val ui by vm.uiState.collectAsState()
 
+    // Local state that mirrors the search query from the ViewModel.
+    // This prevents cursor jump issues caused by direct two-way binding.
     var queryForTextField by remember { mutableStateOf(ui.query) }
     LaunchedEffect(ui.query) {
         if (queryForTextField != ui.query) {
@@ -41,6 +41,7 @@ fun HomeScreen(
         }
     }
 
+    // Toggle: show only outdated-size items?
     var showOutdatedOnly by remember { mutableStateOf(false) }
     val itemsToShow = remember(ui.items, ui.outdatedItemIds, showOutdatedOnly) {
         if (showOutdatedOnly) {
@@ -48,6 +49,7 @@ fun HomeScreen(
         } else ui.items
     }
 
+    // Toggle: expand / collapse filter section
     var filtersExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -64,6 +66,9 @@ fun HomeScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            // ------------------------------------------------------------
+            // TOP TABS: "In Use" vs "Stored"
+            // ------------------------------------------------------------
             TabRow(selectedTabIndex = ui.currentView.ordinal) {
                 Tab(
                     selected = ui.currentView == ViewType.IN_USE,
@@ -79,15 +84,10 @@ fun HomeScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // ----- 推荐卡片 -----
-//            WeatherRecommendationCard(
-//                weather = weather,
-//                items = ui.items,
-//                onItemClick = onItemClick,
-//                onConfirmOutfit = { outfitItems ->
-//                    vm.markOutfitAsWorn(outfitItems)
-//                }
-//            )
+            // ------------------------------------------------------------
+            // WEATHER RECOMMENDATION CARD
+            // Only shown in "In Use" mode
+            // ------------------------------------------------------------
             if (ui.currentView == ViewType.IN_USE) {
                 WeatherRecommendationCard(
                     weather = weather,
@@ -97,14 +97,14 @@ fun HomeScreen(
                         vm.markOutfitAsWorn(outfitItems)
                     }
                 )
-
                 Spacer(Modifier.height(8.dp))
             }
 
-            // ----------------------
-
             Spacer(Modifier.height(8.dp))
 
+            // ------------------------------------------------------------
+            // FILTER / SEARCH HEADER
+            // ------------------------------------------------------------
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,8 +122,17 @@ fun HomeScreen(
                 }
             }
 
+            // ------------------------------------------------------------
+            // FILTERS SECTION (animated expand / collapse)
+            // Includes:
+            //  - Search bar
+            //  - Tag filter chips
+            //  - Season filter chips
+            // ------------------------------------------------------------
             AnimatedVisibility(visible = filtersExpanded) {
                 Column {
+
+                    // ---------------- SEARCH BAR ----------------
                     OutlinedTextField(
                         value = queryForTextField,
                         onValueChange = {
@@ -152,7 +161,7 @@ fun HomeScreen(
 
                     Spacer(Modifier.height(8.dp))
 
-                    // tags
+                    // ---------------- TAG FILTERS ----------------
                     Column {
                         Row(
                             modifier = Modifier.height(40.dp),
@@ -175,7 +184,7 @@ fun HomeScreen(
 
                     Spacer(Modifier.height(8.dp))
 
-                    // seasons
+                    // ---------------- SEASON FILTERS ----------------
                     Column {
                         Row(
                             modifier = Modifier.height(40.dp),
@@ -192,7 +201,7 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Season.values().forEach { season ->
+                            Season.entries.forEach { season ->
                                 FilterChip(
                                     selected = ui.selectedSeason == season,
                                     onClick = { vm.setSeasonFilter(season) },
@@ -206,6 +215,10 @@ fun HomeScreen(
                 }
             }
 
+            // ------------------------------------------------------------
+            // OUTDATED SIZE NOTIFICATION CHIP
+            // Appears only if the system detects size issues for the member
+            // ------------------------------------------------------------
             if (ui.outdatedCount > 0) {
                 AssistChip(
                     onClick = { showOutdatedOnly = !showOutdatedOnly },
@@ -229,11 +242,18 @@ fun HomeScreen(
 
             Spacer(Modifier.height(4.dp))
 
+            // ------------------------------------------------------------
+            // ITEM LIST
+            // Displays clothing cards for either:
+            //   ▸ all items, or
+            //   ▸ only outdated items (when filtered)
+            // ------------------------------------------------------------
             LazyColumn {
                 items(itemsToShow) { item ->
-                    ClothingCard(item = item, onClick = {
-                        onItemClick(item.itemId)
-                    })
+                    ClothingCard(
+                        item = item,
+                        onClick = { onItemClick(item.itemId) }
+                    )
                     Divider()
                 }
             }

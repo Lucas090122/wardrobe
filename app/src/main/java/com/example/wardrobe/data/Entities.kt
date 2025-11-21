@@ -11,6 +11,10 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.ForeignKey.Companion.SET_NULL
 
+/**
+ * Represents a family member / wardrobe owner.
+ * Each ClothingItem is linked to one Member via ownerMemberId.
+ */
 @Entity
 data class Member(
     @PrimaryKey(autoGenerate = true) val memberId: Long = 0,
@@ -20,18 +24,31 @@ data class Member(
     val birthDate: Long? = null
 )
 
+/**
+ * Represents a global tag such as "Top", "Winter", "Sports".
+ */
 @Entity
 data class Tag(
     @PrimaryKey(autoGenerate = true) val tagId: Long = 0,
     @ColumnInfo(index = true) val name: String
 )
 
+/**
+ * Represents a physical storage location, e.g., “Main Wardrobe”, “Box A”.
+ */
 @Entity
 data class Location(
     @PrimaryKey(autoGenerate = true) val locationId: Long = 0,
     @ColumnInfo(index = true) val name: String
 )
 
+/**
+ * Represents a clothing item owned by a given Member.
+ *
+ * Foreign keys:
+ * - ownerMemberId → Member.memberId (CASCADE delete: deleting a Member deletes their items)
+ * - locationId → Location.locationId (SET_NULL: location can be removed without deleting items)
+ */
 @Entity(
     foreignKeys = [
         ForeignKey(
@@ -58,26 +75,35 @@ data class ClothingItem(
     val locationId: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
 
-    // --- V2.4 新增字段 ---
+    // --- V2.4 added fields (AI-powered recommendation features) ---
 
-    // 核心推荐字段
+    // Core recommended attributes
     @ColumnInfo(defaultValue = "'TOP'")
     val category: String,
 
     @ColumnInfo(defaultValue = "3")
     val warmthLevel: Int,
-    
-    // 存储逗号分隔的字符串，如 "CASUAL,WORK"
-    @ColumnInfo(defaultValue = "'CASUAL'") 
+
+    /**
+     * Comma-separated string (e.g., "CASUAL,WORK").
+     * Room does not support storing lists directly, so we use a single text field.
+     */
+    @ColumnInfo(defaultValue = "'CASUAL'")
     val occasions: String,
 
-    @ColumnInfo(defaultValue = "0") // Room中Boolean以0/1存储
+    /**
+     * Boolean stored as 0/1 in SQLite.
+     */
+    @ColumnInfo(defaultValue = "0")
     val isWaterproof: Boolean,
 
-    // 优化字段
+    // Additional optimized fields
     @ColumnInfo(defaultValue = "'#FFFFFF'")
     val color: String,
 
+    /**
+     * Timestamp of last time this clothing item was marked as worn.
+     */
     @ColumnInfo(defaultValue = "0")
     val lastWornAt: Long,
 
@@ -87,9 +113,18 @@ data class ClothingItem(
     @ColumnInfo(defaultValue = "'SPRING_AUTUMN'")
     val season: Season,
 
+    /**
+     * Optional size label: e.g., "110", "28", "32"
+     */
     val sizeLabel: String? = null
 )
 
+/**
+ * Many-to-many relationship between ClothingItem and Tag.
+ *
+ * Primary key is the pair (itemId, tagId).
+ * CASCADE ensures deleting an Item or Tag cleans up cross-ref rows.
+ */
 @Entity(
     primaryKeys = ["itemId", "tagId"],
     indices = [
@@ -116,6 +151,13 @@ data class ClothingTagCrossRef(
     val tagId: Long
 )
 
+/**
+ * Clothing item along with all associated tags.
+ *
+ * Uses:
+ * - @Embedded for ClothingItem fields
+ * - @Relation + Junction to build ClothingItem ↔ Tag many-to-many relationship
+ */
 data class ClothingWithTags(
     @Embedded val item: ClothingItem,
     @Relation(
@@ -126,12 +168,25 @@ data class ClothingWithTags(
     val tags: List<Tag>
 )
 
+/**
+ * Query result for a Tag along with the number of items using it.
+ */
 data class TagWithCount(
     val tagId: Long,
     val name: String,
     val count: Int
 )
 
+/**
+ * Records history of item transfers between members.
+ *
+ * Foreign keys:
+ * - itemId → ClothingItem
+ * - sourceMemberId → Member
+ * - targetMemberId → Member
+ *
+ * CASCADE ensures transfer logs are removed when related objects are deleted.
+ */
 @Entity(
     foreignKeys = [
         ForeignKey(
@@ -167,6 +222,10 @@ data class TransferHistory(
     val transferTime: Long = System.currentTimeMillis()
 )
 
+/**
+ * Full transfer record containing names and item description,
+ * typically used for UI display.
+ */
 data class TransferHistoryDetails(
     val transferTime: Long,
     val sourceMemberName: String,
@@ -174,6 +233,7 @@ data class TransferHistoryDetails(
     val itemName: String
 )
 
+/** Simple aggregated-count models used in statistics screens. */
 data class NameCount(val name: String, val count: Int)
 data class SeasonCount(val season: Season, val count: Int)
 data class CategoryCount(val category: String, val count: Int)

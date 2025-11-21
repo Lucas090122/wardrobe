@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.wardrobe.data.GrowthSizeTable
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.Location
-import com.example.wardrobe.data.Member // Added import
+import com.example.wardrobe.data.Member
 import com.example.wardrobe.data.Season
-import com.example.wardrobe.data.TransferHistory // Added import
-import com.example.wardrobe.data.TransferHistoryDetails // Added import
+import com.example.wardrobe.data.TransferHistory
+import com.example.wardrobe.data.TransferHistoryDetails
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.components.TagUiModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,30 +17,55 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.firstOrNull // Added import
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/**
+ * Logical view of the main wardrobe list:
+ * - IN_USE: items currently in rotation
+ * - STORED: items stored away (e.g. in boxes)
+ */
 enum class ViewType {
     IN_USE,
     STORED
 }
 
+/**
+ * One-shot dialog effects that the UI should respond to.
+ *
+ * This is used instead of plain booleans to:
+ * - Distinguish different dialogs (delete tag vs location)
+ * - Pass extra information (item count, ids, etc.)
+ */
 sealed class DialogEffect {
     data object Hidden : DialogEffect()
+
     sealed class DeleteLocation : DialogEffect() {
         data class AdminConfirm(val locationId: Long, val itemCount: Int) : DeleteLocation()
         data class PreventDelete(val itemCount: Int) : DeleteLocation()
     }
+
     sealed class DeleteTag : DialogEffect() {
         data class AdminConfirm(val tagId: Long, val itemCount: Int) : DeleteTag()
         data class PreventDelete(val itemCount: Int) : DeleteTag()
     }
 }
 
+/**
+ * Full UI state for the wardrobe screen.
+ *
+ * Aggregates:
+ * - Member info
+ * - Items + filters
+ * - Tags, locations
+ * - Admin mode & AI toggle
+ * - Outdated size warnings
+ * - Dialog effects
+ */
 data class UiState(
     val memberName: String = "",
-    val members: List<Member> = emptyList(), // Added
+    val members: List<Member> = emptyList(),
     val tags: List<TagUiModel> = emptyList(),
     val locations: List<Location> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
@@ -55,6 +80,10 @@ data class UiState(
     val isAiEnabled: Boolean = false
 )
 
+/**
+ * Internal state used to drive item queries.
+ * Keeps only the minimal data needed for flows.
+ */
 private data class VmCoreState(
     val sel: Set<Long>,
     val q: String,
@@ -65,6 +94,9 @@ private data class VmCoreState(
     val isAiEnabled: Boolean
 )
 
+/**
+ * Intermediate settings state built from base flows + settings repository.
+ */
 private data class CoreSettingsState(
     val selectedTagIds: Set<Long>,
     val query: String,
@@ -74,18 +106,36 @@ private data class CoreSettingsState(
     val isAiEnabled: Boolean
 )
 
+/**
+ * Default tags that should not be deletable.
+ */
 private val DEFAULT_TAGS = setOf("Hat", "Top", "Pants", "Shoes")
 
+/**
+ * Main ViewModel for a single member's wardrobe.
+ *
+ * Responsibilities:
+ * - Manage filters (tags, seasons, query, view type)
+ * - Expose combined UI state from repository flows
+ * - Handle admin-only destructive actions with confirmation dialogs
+ * - Compute outdated-size hints based on member age & growth table
+ * - Coordinate transfer history logging
+ */
 class WardrobeViewModel(
     private val repo: WardrobeRepository,
     private val memberId: Long
 ) : ViewModel() {
+
+    // Local filter states
     private val selectedTagIds = MutableStateFlow<Set<Long>>(emptySet())
     private val query = MutableStateFlow("")
     private val currentView = MutableStateFlow(ViewType.IN_USE)
     private val selectedSeason = MutableStateFlow<Season?>(null)
     private val dialogEffect = MutableStateFlow<DialogEffect>(DialogEffect.Hidden)
 
+    /**
+     * Combine basic filter flows with admin mode from SettingsRepository.
+     */
     private val coreSettingsFlow = combine(
         selectedTagIds,
         query,
@@ -103,6 +153,9 @@ class WardrobeViewModel(
         )
     }
 
+    /**
+     * Extend core settings with AI enabled flag from SettingsRepository.
+     */
     private val coreWithAiFlow = combine(
         coreSettingsFlow,
         repo.settings.isAiEnabled
@@ -110,6 +163,15 @@ class WardrobeViewModel(
         core.copy(isAiEnabled = isAiEnabled)
     }
 
+    /**
+     * Public UI state exposed as a hot StateFlow.
+     *
+     * Flow chain:
+     *  coreWithAiFlow + dialogEffect
+     *    → VmCoreState
+     *      → flatMapLatest to item & tag & location & member flows
+     *        → UiState
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState> = combine(
         coreWithAiFlow,
@@ -170,16 +232,21 @@ class WardrobeViewModel(
                 dialogEffect = state.dialogEffect,
                 outdatedItemIds = outdatedIds,
                 outdatedCount = outdatedIds.size,
-                isAiEnabled = state.isAiEnabled      // ✅ 把 AI 状态传到 UiState
+                isAiEnabled = state.isAiEnabled
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
+
     init {
-        // Ensure some default tags exist the first time
+        // Ensure some default tags exist the first time this ViewModel is created
         viewModelScope.launch {
             repo.ensureDefaultTags(DEFAULT_TAGS.toList())
         }
     }
+
+    // --------------------------------------------------------------------
+    // Filter state updates
+    // --------------------------------------------------------------------
 
     fun setViewType(viewType: ViewType) {
         currentView.value = viewType
@@ -215,6 +282,10 @@ class WardrobeViewModel(
         query.value = q
     }
 
+    // --------------------------------------------------------------------
+    // Location & Tag management with admin rules
+    // --------------------------------------------------------------------
+
     fun addLocation(name: String) = viewModelScope.launch {
         repo.addLocation(name)
     }
@@ -226,6 +297,7 @@ class WardrobeViewModel(
             return@launch
         }
 
+        // Location in use: behavior depends on admin mode
         if (uiState.value.isAdminMode) {
             dialogEffect.value = DialogEffect.DeleteLocation.AdminConfirm(locationId, count)
         } else {
@@ -245,6 +317,7 @@ class WardrobeViewModel(
             return@launch
         }
 
+        // Tag in use: behavior depends on admin mode
         if (uiState.value.isAdminMode) {
             dialogEffect.value = DialogEffect.DeleteTag.AdminConfirm(tagId, count)
         } else {
@@ -260,6 +333,10 @@ class WardrobeViewModel(
     fun clearDialogEffect() {
         dialogEffect.value = DialogEffect.Hidden
     }
+
+    // --------------------------------------------------------------------
+    // CRUD operations for clothing items
+    // --------------------------------------------------------------------
 
     fun saveItem(
         itemId: Long? = null,
@@ -306,6 +383,14 @@ class WardrobeViewModel(
         repo.settings.setAdminMode(isAdmin)
     }
 
+    // --------------------------------------------------------------------
+    // Outdated size logic
+    // --------------------------------------------------------------------
+
+    /**
+     * Compute age in years from member data.
+     * Prefer birthDate if present, otherwise fall back to static age.
+     */
     private fun computeAgeYears(member: Member): Int {
         val now = System.currentTimeMillis()
         return if (member.birthDate != null && member.birthDate > 0L) {
@@ -315,6 +400,10 @@ class WardrobeViewModel(
         }
     }
 
+    /**
+     * Determine whether a given clothing item is too small for the member,
+     * based on growth size tables and numeric size extracted from sizeLabel.
+     */
     private fun isItemOutdatedForMember(item: ClothingItem, member: Member): Boolean {
         val ageYears = computeAgeYears(member)
         if (ageYears >= 18) return false
@@ -335,6 +424,13 @@ class WardrobeViewModel(
         }
     }
 
+    // --------------------------------------------------------------------
+    // Transfer & history
+    // --------------------------------------------------------------------
+
+    /**
+     * Transfer an item from one member to another and record the transfer history.
+     */
     fun transferItem(itemId: Long, newOwnerMemberId: Long) = viewModelScope.launch {
         // Get the current item to retrieve its ownerMemberId before transfer
         val currentItem = repo.observeItem(itemId).firstOrNull()?.item
@@ -350,14 +446,20 @@ class WardrobeViewModel(
         )
     }
 
+    /**
+     * Transfer history stream, exposed for history UI.
+     */
     val transferHistory: StateFlow<List<TransferHistoryDetails>> =
         repo.getAllTransferHistoryDetails()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /**
+     * Mark a recommended outfit as worn today.
+     * Delegates to repository which updates lastWornAt.
+     */
     fun markOutfitAsWorn(items: List<ClothingItem>) {
         viewModelScope.launch {
             repo.markItemsAsWorn(items)
         }
     }
-
 }

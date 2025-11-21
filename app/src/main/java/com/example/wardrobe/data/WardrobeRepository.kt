@@ -1,19 +1,38 @@
 package com.example.wardrobe.data
 
-import com.example.wardrobe.data.TransferHistoryDetails // Added import
+import com.example.wardrobe.data.TransferHistoryDetails
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.math.max
 
+/**
+ * Repository layer that sits between the ViewModel and DAO.
+ *
+ * Responsibilities:
+ *  - Provide clean API for UI layer
+ *  - Coordinate multi-table operations (tags, locations, history, items)
+ *  - Maintain business logic (default tags, transfer history, size checks)
+ *  - Manage settings via SettingsRepository
+ *
+ * This class should contain *business meaning* logic, not UI logic.
+ */
 class WardrobeRepository(
     private val dao: ClothesDao,
     val settings: SettingsRepository
 ) {
-    // Member functions
+
+    // ---------------------------------------------------------------------
+    // Member operations
+    // ---------------------------------------------------------------------
+
     fun getAllMembers(): Flow<List<Member>> = dao.getAllMembers()
 
     fun getMember(memberId: Long): Flow<Member?> = dao.getMember(memberId)
 
+    /**
+     * Create a new member.
+     * Owners of clothing items must exist, so inserting a member is a core operation.
+     */
     suspend fun createMember(
         name: String,
         gender: String,
@@ -30,7 +49,10 @@ class WardrobeRepository(
         )
     }
 
-    // Location functions
+    // ---------------------------------------------------------------------
+    // Location operations
+    // ---------------------------------------------------------------------
+
     fun observeLocations(): Flow<List<Location>> = dao.getAllLocations()
 
     suspend fun addLocation(name: String): Long {
@@ -41,16 +63,33 @@ class WardrobeRepository(
         dao.deleteLocation(locationId)
     }
 
+    /**
+     * Count how many items are currently stored under a given location.
+     * Used to prevent accidental deletions in normal mode.
+     */
     suspend fun getItemCountForLocation(locationId: Long): Int {
         return dao.getItemCountForLocation(locationId)
     }
 
-    // Tag functions
+    // ---------------------------------------------------------------------
+    // Tag operations
+    // ---------------------------------------------------------------------
+
     fun observeTags() = dao.allTags()
 
+    /**
+     * Returns tags + usage count for filtering UI.
+     * The 'isStored' flag affects which items are included in counts.
+     */
     fun observeTagsWithCounts(memberId: Long, isStored: Boolean) =
         dao.getTagsWithCounts(memberId, isStored)
 
+    /**
+     * Get or create a tag by name.
+     * Ensures:
+     *  - No duplicates
+     *  - Clean trimmed naming
+     */
     suspend fun getOrCreateTag(name: String): Long {
         val sanitizedName = name.trim()
         if (sanitizedName.isEmpty()) return 0L
@@ -67,22 +106,43 @@ class WardrobeRepository(
         return dao.getItemCountForTag(tagId)
     }
 
-    // Item functions
+    // ---------------------------------------------------------------------
+    // Clothing item operations
+    // ---------------------------------------------------------------------
+
+    /**
+     * Observes item list with filtering:
+     * - Tags
+     * - Search query
+     * - Season
+     *
+     * If no tags are selected, use basic query stream for efficiency.
+     * Otherwise use tag-joined version.
+     */
     fun observeItems(memberId: Long, selectedTagIds: List<Long>, query: String?, season: Season?) =
         if (selectedTagIds.isEmpty()) dao.itemsStream(memberId, query, season?.name)
         else dao.itemsByTagsStream(memberId, selectedTagIds, query, season?.name)
 
     fun observeItem(itemId: Long) = dao.itemWithTags(itemId)
 
+    /**
+     * Create or update a clothing item.
+     *
+     * Steps:
+     *  1. Load existing item (if editing)
+     *  2. Preserve createdAt & lastWornAt
+     *  3. Upsert main item
+     *  4. Replace tag cross-ref entries
+     */
     suspend fun saveItem(
-        memberId: Long, // Required owner
+        memberId: Long,
         itemId: Long?,
         description: String,
         imageUri: String?,
         tagIds: List<Long>,
         stored: Boolean,
         locationId: Long?,
-        // --- V2.4 new fields ---
+        // --- V2.4 additional fields ---
         category: String,
         warmthLevel: Int,
         occasions: String,
@@ -92,12 +152,11 @@ class WardrobeRepository(
         isFavorite: Boolean,
         season: Season
     ): Long {
+
+        // Load existing item if editing
         val existingItem = if (itemId != null && itemId != 0L) {
-            // We need to use firstOrNull() as itemWithTags returns a Flow
             dao.itemWithTags(itemId).firstOrNull()?.item
-        } else {
-            null
-        }
+        } else null
 
         val newClothingItem = ClothingItem(
             itemId = itemId ?: 0,
@@ -108,26 +167,32 @@ class WardrobeRepository(
             locationId = locationId,
             createdAt = existingItem?.createdAt ?: System.currentTimeMillis(),
 
-            // --- V2.4 new fields ---
+            // Additional V2.4 details
             category = category,
             warmthLevel = warmthLevel,
             occasions = occasions,
             isWaterproof = isWaterproof,
             color = color,
-            lastWornAt = existingItem?.lastWornAt ?: 0, // Preserve existing lastWornAt
+            lastWornAt = existingItem?.lastWornAt ?: 0,   // Preserve usage history
             isFavorite = isFavorite,
             season = season,
             sizeLabel = sizeLabel
         )
 
+        // Upsert main item
         val id = dao.upsertItem(newClothingItem)
             .let { if (itemId != null && itemId != 0L) itemId else it }
 
+        // Replace tag relations completely
         dao.clearTagsForItem(id)
         dao.upsertCrossRefs(tagIds.map { ClothingTagCrossRef(id, it) })
+
         return id
     }
 
+    /**
+     * Ensure default predefined tags exist (e.g., "Top", "Pants", etc.)
+     */
     suspend fun ensureDefaultTags(names: List<String>) {
         val existing = dao.tagNamesOnce().toSet()
         names.filter { it !in existing }
@@ -138,6 +203,10 @@ class WardrobeRepository(
         dao.clearTagsForItem(itemId)
         dao.deleteItemById(itemId)
     }
+
+    // ---------------------------------------------------------------------
+    // Item transfer & history
+    // ---------------------------------------------------------------------
 
     suspend fun transferItem(itemId: Long, newOwnerMemberId: Long) {
         dao.updateItemOwner(itemId, newOwnerMemberId)
@@ -151,44 +220,57 @@ class WardrobeRepository(
         return dao.getAllTransferHistoryDetails()
     }
 
+    // ---------------------------------------------------------------------
+    // Outdated size detection (kids outgrew clothes)
+    // ---------------------------------------------------------------------
+
+    /**
+     * Counts how many items for a member are outdated based on:
+     *  - Age detection (from birthDate OR age field)
+     *  - Recommended size table
+     *  - Clothing category restrictions
+     */
     suspend fun countOutdatedItems(memberId: Long): Int {
         val member = dao.getMember(memberId).firstOrNull() ?: return 0
 
         val now = System.currentTimeMillis()
-        val ageYears: Int = try {
 
+        // Determine age using birthDate if possible; fallback to static age field
+        val ageYears: Int = try {
             val birthDateField = Member::class.java.getDeclaredField("birthDate")
             birthDateField.isAccessible = true
             val birthMillis = birthDateField.get(member) as? Long
+
             if (birthMillis != null && birthMillis > 0L) {
                 GrowthSizeTable.ageFromBirthMillis(birthMillis, now)
             } else {
                 member.age
             }
         } catch (e: Exception) {
-
             member.age
         }
 
+        // Adults are not checked for outdated sizing
         if (ageYears >= 18) return 0
 
         val rec = GrowthSizeTable.getRecommendedSize(member.gender, ageYears)
-
         val items = dao.getItemsByMember(memberId)
 
         return items.count { item ->
 
+            // Only size-relevant categories
             if (item.category !in listOf("TOP", "PANTS", "SHOES")) return@count false
-
 
             val sizeLabelField = ClothingItem::class.java.getDeclaredField("sizeLabel")
             sizeLabelField.isAccessible = true
+
             val sizeLabel = sizeLabelField.get(item) as? String
             val numericSize = sizeLabel
                 ?.filter { it.isDigit() }
                 ?.toIntOrNull()
                 ?: return@count false
 
+            // Compare with recommended size
             when (item.category) {
                 "TOP"   -> rec.top   != null && numericSize < rec.top
                 "PANTS" -> rec.pants != null && numericSize < rec.pants
@@ -198,17 +280,28 @@ class WardrobeRepository(
         }
     }
 
-    // 标记一组衣服为“今天穿过”
+    // ---------------------------------------------------------------------
+    // Mark a group of items as “worn today”
+    // ---------------------------------------------------------------------
+
+    /**
+     * Record that a set of items has been worn.
+     * Only updates lastWornAt; does not modify any other fields.
+     */
     suspend fun markItemsAsWorn(items: List<ClothingItem>) {
         val now = System.currentTimeMillis()
         items.forEach { item ->
-            // 只更新 lastWornAt，其它字段保持不变
             dao.upsertItem(item.copy(lastWornAt = now))
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Statistics functions (used by StatisticsScreen)
+    // ---------------------------------------------------------------------
 
     fun getCountByMember(): Flow<List<NameCount>> = dao.getCountByMember()
+
     fun getCountBySeason(): Flow<List<SeasonCount>> = dao.getCountBySeason()
+
     fun getCountByCategory(): Flow<List<CategoryCount>> = dao.getCountByCategory()
 }

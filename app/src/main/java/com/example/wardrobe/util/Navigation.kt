@@ -22,36 +22,60 @@ import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
 import com.example.wardrobe.viewmodel.StatisticsViewModel
 
+/**
+ * Centralized navigation host for all drawer destinations.
+ *
+ * This NavHost controls:
+ *  ▸ Home page
+ *  ▸ Member wardrobe screen (WardrobeApp)
+ *  ▸ Statistics
+ *  ▸ Settings
+ *
+ * Weather is passed through so that the WardrobeApp and recommendations
+ * can use it without recalculating or fetching multiple times.
+ */
 @Composable
 fun Navigation(
     repo: WardrobeRepository,
-    vm : MemberViewModel,
+    vm: MemberViewModel,
     navController: NavController,
     viewModel: MainViewModel,
     statisticsViewModel: StatisticsViewModel,
     pd: PaddingValues,
     weather: WeatherInfo?
-){
+) {
     NavHost(
         navController = navController as NavHostController,
         startDestination = Screen.DrawerScreen.Home.route,
         modifier = Modifier.padding(
-            top = 64.dp,
-            bottom = pd.calculateBottomPadding()
+            top = 64.dp,                         // Offset for top drawer bar
+            bottom = pd.calculateBottomPadding() // Keeps bottom bar safe area
         )
     ) {
-        composable(Screen.DrawerScreen.Home.route){
+        // -------------------------------------------------------------
+        // HOME SCREEN (default)
+        // -------------------------------------------------------------
+        composable(Screen.DrawerScreen.Home.route) {
             Home(repo = repo, vm,weather)
         }
 
+        // -------------------------------------------------------------
+        // MEMBER’S PERSONAL WARDROBE SCREEN
+        //
+        // Navigation example:
+        //   navController.navigate("member/3")
+        //
+        // This opens WardrobeApp with the selected memberId.
+        // -------------------------------------------------------------
         composable(
             route = Screen.DrawerScreen.Member.route,
             arguments = listOf(navArgument("memberId") { type = NavType.LongType })
         ) { backStackEntry ->
             val memberId: Long = backStackEntry.arguments?.getLong("memberId") ?: return@composable
+
             WardrobeApp(
                 memberId = memberId,
-                weather = weather,      // ← 关键传递！
+                weather = weather,      // ← IMPORTANT: propagate weather down
                 onExit = {
                     vm.setCurrentMember(null)
                     navController.popBackStack()
@@ -59,10 +83,16 @@ fun Navigation(
             )
         }
 
+        // -------------------------------------------------------------
+        // STATISTICS SCREEN
+        // -------------------------------------------------------------
         composable(Screen.DrawerScreen.Statistics.route) {
             StatisticsScreen(repo = repo, navController = navController)
         }
 
+        // -------------------------------------------------------------
+        // SETTINGS SCREEN
+        // -------------------------------------------------------------
         composable(Screen.DrawerScreen.Settings.route) {
             SettingsScreen(repo = repo)
         }

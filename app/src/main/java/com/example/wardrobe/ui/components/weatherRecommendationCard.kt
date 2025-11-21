@@ -14,8 +14,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.WeatherInfo
-import com.example.wardrobe.ui.util.WeatherRecommender
+import com.example.wardrobe.util.WeatherRecommender
 
+/**
+ * UI component that displays:
+ * - The daily weather-based clothing recommendation
+ * - A preview of the suggested outfit (top + pants + shoes)
+ * - Buttons to refresh the outfit or confirm it as today's choice
+ *
+ * The card behaves like a "widget":
+ * ▸ If the user has confirmed today's outfit → the card becomes fixed
+ * ▸ If not confirmed → user can refresh or confirm the suggested outfit
+ */
 @Composable
 fun WeatherRecommendationCard(
     weather: WeatherInfo?,
@@ -24,11 +34,15 @@ fun WeatherRecommendationCard(
     onConfirmOutfit: (List<ClothingItem>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 今天是否已经确认了一套穿搭
+    // Whether the user has confirmed today's outfit.
+    // Once confirmed, the UI switches to a "locked" mode.
     var fixedOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
 
-    // “换一套”使用：记住上一套，以便避免重复
+    // Used for “Another one”:
+    // We remember the last outfit to avoid picking it again.
     var lastOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
+
+    // Changing this value re-triggers the recommendation calculation.
     var refreshSeed by remember { mutableStateOf(0) }
 
     Card(
@@ -36,6 +50,7 @@ fun WeatherRecommendationCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
+
             Text(
                 text = "Today's Recommendation",
                 style = MaterialTheme.typography.titleMedium
@@ -43,9 +58,12 @@ fun WeatherRecommendationCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // ---------- 已确认：固定为“今日穿搭” ----------
+            // ----------------------------------------------------------
+            // 1. FIXED MODE — after the user confirms today’s outfit
+            // ----------------------------------------------------------
             if (fixedOutfit != null) {
                 val outfit = fixedOutfit!!
+
                 Text(
                     text = "Today's Outfit (Confirmed)",
                     style = MaterialTheme.typography.bodyMedium
@@ -53,27 +71,33 @@ fun WeatherRecommendationCard(
 
                 Spacer(Modifier.height(8.dp))
 
+                // Ensure we display existing valid items only
                 val outfitItems = listOfNotNull(outfit.top, outfit.pants, outfit.shoes)
+
                 outfitItems.forEachIndexed { index, item ->
                     if (index > 0) {
                         Divider(Modifier.padding(vertical = 4.dp))
                     }
+                    // Using ClothingCard to display with image preview
                     ClothingCard(
                         item = item,
                         onClick = { onItemClick(item.itemId) }
                     )
                 }
 
-                // 此状态下不再出现“换一套 / 确认”按钮，卡片变成当天固定页
+                // Fixed mode ends here — no refresh or confirm buttons
                 return@Column
             }
 
-            // ---------- 还未确认：正常推荐逻辑 ----------
+            // ----------------------------------------------------------
+            // 2. NORMAL MODE — weather-based recommendation
+            // ----------------------------------------------------------
             if (weather == null) {
                 Text("Weather information is unavailable. Recommendations cannot be provided.")
                 return@Column
             }
 
+            // Recalculate recommendation when weather/items/refreshSeed/lastOutfit changes
             val result = remember(weather, items, refreshSeed, lastOutfit) {
                 WeatherRecommender.recommend(
                     weather = weather,
@@ -82,8 +106,8 @@ fun WeatherRecommendationCard(
                 )
             }
 
+            // When no outfit can be generated (missing categories etc.)
             if (result.outfit == null) {
-                // 没有搭配成功的情况：依然展示原因
                 Text(
                     text = "Could not generate an outfit. Please check your clothing items.",
                     style = MaterialTheme.typography.bodyMedium
@@ -101,7 +125,7 @@ fun WeatherRecommendationCard(
             val outfit = result.outfit
             val outfitItems = listOfNotNull(outfit.top, outfit.pants, outfit.shoes)
 
-            // 推荐理由
+            // Display explanation ("Feels like X°C. Avoiding recently worn clothes.")
             Text(
                 text = result.reason,
                 style = MaterialTheme.typography.bodySmall
@@ -109,7 +133,7 @@ fun WeatherRecommendationCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // ---------- 用 ClothingCard 展示图片（解决“推荐不显示图片”） ----------
+            // Display the recommended items with their thumbnails
             outfitItems.forEachIndexed { index, item ->
                 if (index > 0) {
                     Divider(Modifier.padding(vertical = 4.dp))
@@ -122,16 +146,19 @@ fun WeatherRecommendationCard(
 
             Spacer(Modifier.height(12.dp))
 
+            // ----------------------------------------------------------
+            // 3. Buttons row: "Another one" & "Confirm"
+            // ----------------------------------------------------------
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // “换一套”按钮（只有在可刷新时出现）
+                // Show "Another one" only if there is more than 1 candidate outfit
                 if (result.canRefresh) {
                     TextButton(
                         onClick = {
-                            lastOutfit = outfit
-                            refreshSeed++      // 触发重新计算推荐
+                            lastOutfit = outfit     // Remember the previous one
+                            refreshSeed++           // Trigger a new recommendation
                         }
                     ) {
                         Text("Another one")
@@ -140,8 +167,8 @@ fun WeatherRecommendationCard(
 
                 Button(
                     onClick = {
-                        fixedOutfit = outfit      // 之后变成“今日穿搭”固定页
-                        onConfirmOutfit(outfitItems)
+                        fixedOutfit = outfit          // Lock the outfit for today
+                        onConfirmOutfit(outfitItems)  // Notify VM
                     }
                 ) {
                     Text("Confirm for Today")

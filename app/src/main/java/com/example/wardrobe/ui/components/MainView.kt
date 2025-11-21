@@ -59,6 +59,16 @@ import com.example.wardrobe.data.WeatherRepository
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.util.AiModeDrawerItem
 
+/**
+ * Main top-level view that contains:
+ *  - Navigation drawer (home / members / statistics / settings)
+ *  - Theme toggle
+ *  - Admin mode toggle with PIN
+ *  - AI mode toggle with privacy consent
+ *  - Weather fetching and display in the top app bar
+ *
+ * This composable is used as the root of the app after MainActivity.
+ */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,22 +82,27 @@ fun MainView(
 ){
     val members by vm.members.collectAsState()
     val currentMemberName by vm.currentMemberName.collectAsState()
+
+    // Admin mode state from SettingsRepository
     val isAdminMode by repo.settings.isAdminMode.collectAsState(initial = false)
     var showAdminPinDialog by remember { mutableStateOf(false) }
 
+    // AI mode state and privacy dialog
     val isAiEnabled by repo.settings.isAiEnabled.collectAsState(initial = false)
     var showAiPrivacyDialog by remember { mutableStateOf(false) }
 
-    val viewModel : MainViewModel = viewModel()
+    val viewModel: MainViewModel = viewModel()
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
 
     val statsVmFactory = StatisticsViewModelFactory(repo)
     val statisticsViewModel: StatisticsViewModel = viewModel(factory = statsVmFactory)
 
+    // Navigation and current route
     val controller: NavController = rememberNavController()
     val navBackStackEntry by controller.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Dynamic title based on current route and current member
     val title = when (currentRoute) {
         Screen.DrawerScreen.Home.dRoute -> {
             if (currentMemberName.isNotBlank()) {
@@ -108,44 +123,36 @@ fun MainView(
         else -> ""
     }
 
-    val scope : CoroutineScope = rememberCoroutineScope()
+    val scope: CoroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    // ---- 天气状态 ----
+    // ---- Weather state ----
     var weather by remember { mutableStateOf<WeatherInfo?>(null) }
-//    var weatherLoading by remember { mutableStateOf(false) }
-//    var weatherError by remember { mutableStateOf<String?>(null) }
 
-//    fun refreshWeather() {
-//        scope.launch {
-//            try {
-//                weatherLoading = true
-//                weatherError = null
-//                weather = weatherRepo.getCurrentWeather()
-//                if (weather == null) weatherError = "N/A"
-//            } catch (e: Exception) {
-//                weatherError = "N/A"
-//            } finally {
-//                weatherLoading = false
-//            }
-//        }
-//    }
+    // If needed in future, we can re-enable manual refresh with loading/error states:
+    // var weatherLoading by remember { mutableStateOf(false) }
+    // var weatherError by remember { mutableStateOf<String?>(null) }
 
-    // 仅在有权限时加载；权限从 false→true 时也会触发
+    // fun refreshWeather() { ... }
+
+    /**
+     * Fetch weather only when we have permission.
+     * This will also re-trigger if permission changes from false → true.
+     */
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             weather = weatherRepo.getCurrentWeather()
         }
     }
 
-    // -------------------
-
+    // ------------------- Drawer content definition -------------------
     val drawerContent = @Composable {
-        ModalDrawerSheet (
+        ModalDrawerSheet(
             modifier = Modifier
                 .padding(top = 40.dp)
                 .width(280.dp)
-        ){
+        ) {
+            // Home
             SimpleDrawerItem(
                 Screen.DrawerScreen.Home,
                 selected = currentRoute == Screen.DrawerScreen.Home.dRoute,
@@ -153,15 +160,19 @@ fun MainView(
                 scope.launch { drawerState.close() }
                 controller.navigate(Screen.DrawerScreen.Home.dRoute)
             }
+
+            // Members (expandable list)
             ExpandableDrawerItem(
                 item = Screen.DrawerScreen.Member,
                 subItems = members,
                 onItemClicked = { scope.launch { drawerState.close() } },
                 vm = vm,
-                controller,
+                controller = controller,
             )
+
+            // Other screens defined in ScreensInDrawer (Statistics, Settings, etc.)
             LazyColumn {
-                items(ScreensInDrawer){ item ->
+                items(ScreensInDrawer) { item ->
                     SimpleDrawerItem(
                         selected = currentRoute == item.dRoute,
                         item = item,
@@ -172,22 +183,26 @@ fun MainView(
                 }
             }
 
+            // Admin mode toggle that requires PIN when enabling
             AdminModeDrawerItem(
                 isAdmin = isAdminMode,
                 onAdminChange = { enabled ->
                     if (enabled) {
+                        // When turning ON, ask for PIN
                         showAdminPinDialog = true
                     } else {
+                        // Turning OFF does not require PIN
                         scope.launch { repo.settings.setAdminMode(false) }
                     }
                 }
             )
 
+            // AI mode toggle with privacy dialog before enabling
             AiModeDrawerItem(
                 isEnabled = isAiEnabled,
                 onToggle = { enabled ->
                     if (enabled) {
-                        // 先不直接改设置，弹隐私说明
+                        // Do not enable AI immediately; first show privacy notice
                         showAiPrivacyDialog = true
                     } else {
                         scope.launch { repo.settings.setAiEnabled(false) }
@@ -195,10 +210,12 @@ fun MainView(
                 }
             )
 
+            // Theme toggle (light / dark / system, depending on your implementation)
             ToggleDrawerItem(currentTheme = theme) { newTheme -> onThemeChange(newTheme) }
         }
     }
 
+    // ------------------- Main Scaffold with top app bar & navigation -------------------
     ModalNavigationDrawer(
         drawerContent = drawerContent,
         drawerState = drawerState
@@ -235,25 +252,16 @@ fun MainView(
                     actions = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (!hasLocationPermission) {
-                                // 无权限时只显示提示，不弹窗打扰用户
+                                // When location is off, just show a passive text hint.
+                                // We do not pop up dialogs to avoid annoying the user.
                                 Text(
                                     text = "Location off",
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
-//                                IconButton(onClick = { refreshWeather() }) {
-//                                    Icon(
-//                                        imageVector = Icons.Default.Refresh,
-//                                        contentDescription = "Refresh weather",
-//                                        modifier = Modifier.padding(5.dp)
-//                                    )
-//                                }
-//                                val tempText = when {
-//                                    weatherLoading -> "..."
-//                                    weatherError != null -> "N/A"
-//                                    weather != null -> "${weather!!.temperature.toInt()}°"
-//                                    else -> "N/A"
-//                                }
+                                // Manual refresh + error states can be re-enabled later if needed.
+                                // IconButton(onClick = { refreshWeather() }) { ... }
+
                                 val tempText =
                                     if (weather != null) "${weather!!.temperature.toInt()}°" else "N/A"
                                 Text(text = "${weather?.icon ?: ""} $tempText".trim())
@@ -270,11 +278,12 @@ fun MainView(
                     viewModel = viewModel,
                     statisticsViewModel = statisticsViewModel,
                     pd = innerPadding,
-                    weather=weather
+                    weather = weather
                 )
             }
         )
 
+        // ------------------- Admin PIN dialog -------------------
         if (showAdminPinDialog) {
             var pin by remember { mutableStateOf("") }
             var pinError by remember { mutableStateOf<String?>(null) }
@@ -296,22 +305,31 @@ fun MainView(
                         )
                         if (pinError != null) {
                             Spacer(Modifier.height(8.dp))
-                            Text(text = pinError!!, color = MaterialTheme.colorScheme.error)
+                            Text(
+                                text = pinError!!,
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
-                            if (savedPin == null) {
-                                repo.settings.setAdminPin(pin)
-                                repo.settings.setAdminMode(true)
-                                showAdminPinDialog = false
-                            } else if (pin == savedPin) {
-                                repo.settings.setAdminMode(true)
-                                showAdminPinDialog = false
-                            } else {
-                                pinError = "Wrong PIN"
+                            when {
+                                // No PIN set yet → this becomes the initial PIN and enables admin mode.
+                                savedPin == null -> {
+                                    repo.settings.setAdminPin(pin)
+                                    repo.settings.setAdminMode(true)
+                                    showAdminPinDialog = false
+                                }
+                                // Existing PIN → check input before enabling admin mode.
+                                pin == savedPin -> {
+                                    repo.settings.setAdminMode(true)
+                                    showAdminPinDialog = false
+                                }
+                                else -> {
+                                    pinError = "Wrong PIN"
+                                }
                             }
                         }
                     }) { Text("Enter") }
@@ -322,6 +340,7 @@ fun MainView(
             )
         }
 
+        // ------------------- AI privacy notice dialog -------------------
         if (showAiPrivacyDialog) {
             AlertDialog(
                 onDismissRequest = { showAiPrivacyDialog = false },

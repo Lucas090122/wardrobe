@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
         val repo = WardrobeRepository(db.clothesDao(), db.settingsRepository)
         val weatherRepo = WeatherRepository(this)
 
+        // Factory for MemberViewModel (because it requires a custom constructor)
         val memberVmFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
@@ -40,17 +41,19 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 共享偏好，用于永久保存“是否已请求过权限”
+        // Persistent storage for remembering whether we already asked for location permission
         val prefs = getSharedPreferences("wardrobe_prefs", MODE_PRIVATE)
 
         setContent {
             var theme by remember { mutableStateOf(Theme.LIGHT) }
 
-            // ---- 定位权限状态 ----
+            // ----- Location Permission State -----
             var hasLocationPermission by remember { mutableStateOf(false) }
+
+            // Whether the permission request dialog has been shown at least once (saved across app restarts)
             var askedOnce by remember { mutableStateOf(prefs.getBoolean("askedOnce", false)) }
 
-            // 启动时立即检查权限
+            // On app launch: check if the permission is already granted
             LaunchedEffect(Unit) {
                 hasLocationPermission = ContextCompat.checkSelfPermission(
                     this@MainActivity,
@@ -58,39 +61,46 @@ class MainActivity : ComponentActivity() {
                 ) == PackageManager.PERMISSION_GRANTED
             }
 
-            // 权限请求 Launcher
+            // Permission request launcher
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { granted ->
                 hasLocationPermission = granted
             }
 
-            // 仅首次启动时弹窗（状态持久化）
+            // Show permission request ONLY once on first launch
+            // (or after clearing app data)
             LaunchedEffect(hasLocationPermission, askedOnce) {
                 if (!hasLocationPermission && !askedOnce) {
                     askedOnce = true
                     prefs.edit().putBoolean("askedOnce", true).apply()
+
+                    // Trigger permission dialog
                     permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
                 }
             }
 
-            // ✅ 持续监听用户手动更改权限（每 5 秒检查一次）
+            // Continuously monitor whether user manually changed the permission in system settings.
+            // This check runs every 5 seconds while the MainView is active.
             LaunchedEffect(Unit) {
                 while (true) {
                     val granted = ContextCompat.checkSelfPermission(
                         this@MainActivity,
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
+
+                    // Update state only if permission actually changed
                     if (granted != hasLocationPermission) {
                         hasLocationPermission = granted
                     }
                     delay(5000)
                 }
             }
-            // ----------------------------------
+            // -------------------------------------
 
             WardrobeTheme(darkTheme = theme == Theme.DARK) {
                 val memberViewModel: MemberViewModel = viewModel(factory = memberVmFactory)
+
                 MainView(
                     repo = repo,
                     vm = memberViewModel,
@@ -104,9 +114,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// ------------------ 其他部分保持不变 ------------------
+// ------------------ ViewModel factory for WardrobeViewModel ------------------
 
-class WardrobeViewModelFactory(private val repo: WardrobeRepository, private val memberId: Long) : ViewModelProvider.Factory {
+class WardrobeViewModelFactory(private val repo: WardrobeRepository, private val memberId: Long)
+    : ViewModelProvider.Factory {
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(WardrobeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
@@ -117,16 +129,22 @@ class WardrobeViewModelFactory(private val repo: WardrobeRepository, private val
 }
 
 @Composable
-fun WardrobeApp(memberId: Long,weather: WeatherInfo?, onExit: () -> Unit) {
+fun WardrobeApp(memberId: Long, weather: WeatherInfo?, onExit: () -> Unit) {
     val context = LocalContext.current
     val db = AppDatabase.get(context)
     val repo = WardrobeRepository(db.clothesDao(), db.settingsRepository)
+
     val vmFactory = WardrobeViewModelFactory(repo, memberId)
-    val vm: WardrobeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = memberId.toString(), factory = vmFactory)
+    val vm: WardrobeViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel(
+            key = memberId.toString(),
+            factory = vmFactory
+        )
 
     var route by remember { mutableStateOf("home") }
     var currentClothingId by remember { mutableStateOf<Long?>(null) }
 
+    // Custom back-button navigation logic depending on the current route
     BackHandler(enabled = true) {
         when (route) {
             "edit" -> route = if (currentClothingId != null) "detail" else "home"
@@ -135,6 +153,7 @@ fun WardrobeApp(memberId: Long,weather: WeatherInfo?, onExit: () -> Unit) {
         }
     }
 
+    // Simple navigation state machine
     when (route) {
         "home" -> com.example.wardrobe.ui.HomeScreen(
             vm = vm,
@@ -142,12 +161,14 @@ fun WardrobeApp(memberId: Long,weather: WeatherInfo?, onExit: () -> Unit) {
             onAddClick = { currentClothingId = null; route = "edit" },
             onItemClick = { id -> currentClothingId = id; route = "detail" }
         )
+
         "detail" -> com.example.wardrobe.ui.ItemDetailScreen(
             vm = vm,
             itemId = currentClothingId ?: 0L,
             onBack = { route = "home" },
             onEdit = { route = "edit" }
         )
+
         "edit" -> com.example.wardrobe.ui.EditItemScreen(
             vm = vm,
             itemId = currentClothingId,

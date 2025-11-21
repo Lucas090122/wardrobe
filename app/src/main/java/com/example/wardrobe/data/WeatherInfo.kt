@@ -8,7 +8,7 @@ data class WeatherInfo(
     val weatherCode: Int,
     val icon: String
 ) {
-    // UV 等级判定
+    // UV level
     val uvLevel: String
         get() = when {
             uvIndex < 3 -> "Low"
