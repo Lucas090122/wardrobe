@@ -2,6 +2,9 @@ package com.example.wardrobe
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.nfc.NfcAdapter
+import android.nfc.Tag
+import android.nfc.tech.Ndef
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,34 +26,43 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.platform.LocalContext
 import com.example.wardrobe.data.WeatherInfo
+import com.example.wardrobe.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
+
+    private var nfcAdapter: NfcAdapter? = null
+    private lateinit var appRepository: WardrobeRepository
+    private lateinit var mainVm: MainViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val db = AppDatabase.get(this)
-        val repo = WardrobeRepository(db.clothesDao(), db.settingsRepository)
+        appRepository = WardrobeRepository(db.clothesDao(), db.settingsRepository)
         val weatherRepo = WeatherRepository(this)
 
         // Factory for MemberViewModel (because it requires a custom constructor)
         val memberVmFactory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return MemberViewModel(repo) as T
+                return MemberViewModel(appRepository) as T
             }
         }
 
-        // Persistent storage for remembering whether we already asked for location permission
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+
+        // --- Location permission persistence ---
         val prefs = getSharedPreferences("wardrobe_prefs", MODE_PRIVATE)
 
         setContent {
             var theme by remember { mutableStateOf(Theme.LIGHT) }
 
+            val memberViewModel: MemberViewModel = viewModel(factory = memberVmFactory)
+            mainVm = viewModel()
+
             // ----- Location Permission State -----
             var hasLocationPermission by remember { mutableStateOf(false) }
-
-            // Whether the permission request dialog has been shown at least once (saved across app restarts)
             var askedOnce by remember { mutableStateOf(prefs.getBoolean("askedOnce", false)) }
 
             // On app launch: check if the permission is already granted
@@ -96,20 +108,63 @@ class MainActivity : ComponentActivity() {
                     delay(5000)
                 }
             }
-            // -------------------------------------
+
+            // ------------- NFC ReaderMode Setup --------------
+            LaunchedEffect(Unit) {
+                enableNfcReader()
+            }
 
             WardrobeTheme(darkTheme = theme == Theme.DARK) {
                 val memberViewModel: MemberViewModel = viewModel(factory = memberVmFactory)
 
                 MainView(
-                    repo = repo,
+                    repo = appRepository,
                     vm = memberViewModel,
                     theme = theme,
                     onThemeChange = { theme = it },
                     weatherRepo = weatherRepo,
-                    hasLocationPermission = hasLocationPermission
+                    hasLocationPermission = hasLocationPermission,
+                    mainVm = viewModel()
                 )
             }
+        }
+    }
+
+    // -------------------- NFC Reader Mode ---------------------
+    private fun enableNfcReader() {
+        nfcAdapter?.enableReaderMode(
+            this,
+            this,
+            NfcAdapter.FLAG_READER_NFC_A or
+                    NfcAdapter.FLAG_READER_NFC_B or
+                    NfcAdapter.FLAG_READER_NFC_F or
+                    NfcAdapter.FLAG_READER_NFC_V or
+                    NfcAdapter.FLAG_READER_NFC_BARCODE or
+                    NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
+            null
+        )
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcAdapter?.disableReaderMode(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enableNfcReader()
+    }
+
+    // ---------------------- Tag Scan ----------------------
+    override fun onTagDiscovered(tag: Tag?) {
+        if (tag == null) return
+
+        val idBytes = tag.id
+        val tagId = idBytes.joinToString("") { "%02X".format(it) } // 转 HEX 字符串
+
+        // Handle tagId in MainViewModel
+        mainVm.onTagScanned(tagId) { scannedId ->
+            appRepository.getLocationForTag(scannedId)?.locationId
         }
     }
 }

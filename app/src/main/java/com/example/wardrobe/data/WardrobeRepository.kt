@@ -296,6 +296,61 @@ class WardrobeRepository(
     }
 
     // ---------------------------------------------------------------------
+    // NFC Tag → Location Binding
+    // ---------------------------------------------------------------------
+
+    /**
+     * Bind an NFC tag to a specific storage Location.
+     *
+     * If the tag already exists, its bound Location is replaced.
+     * If the tag is new, it is created with the given locationId.
+     *
+     * NFC tag IDs come from Tag.id (byte array) converted to hex strings
+     * such as "04AABB2299FF".
+     */
+    suspend fun bindNfcTagToLocation(tagId: String, locationId: Long) {
+        dao.upsertNfcTag(NfcTagEntity(tagId = tagId, locationId = locationId))
+    }
+
+    /**
+     * Look up the Location bound to a given NFC tag.
+     *
+     * Returns:
+     *  - The Location object if the tag is known
+     *  - null if the tag is not bound to any location
+     */
+    suspend fun getLocationForTag(tagId: String): Location? {
+        val record = dao.getNfcTag(tagId) ?: return null
+        return dao.getLocationById(record.locationId)
+    }
+
+    /**
+     * Remove an NFC tag binding.
+     * Typically used when a user wants to unbind or rebind a tag.
+     */
+    suspend fun deleteNfcTag(tagId: String) {
+        dao.deleteNfcTag(tagId)
+    }
+
+    // ---------------------------------------------------------------------
+    // NFC helpers: resolve items for a given location
+    // ---------------------------------------------------------------------
+
+    /**
+     * Returns all clothing items stored under the given location.
+     */
+    suspend fun getItemsByLocation(locationId: Long): List<ClothingItem> {
+        return dao.getItemsByLocation(locationId)
+    }
+
+    /**
+     * Returns the Location row for the given id, or null if not found.
+     */
+    suspend fun getLocationById(locationId: Long): Location? {
+        return dao.getLocationById(locationId)
+    }
+
+    // ---------------------------------------------------------------------
     // Statistics functions (used by StatisticsScreen)
     // ---------------------------------------------------------------------
 

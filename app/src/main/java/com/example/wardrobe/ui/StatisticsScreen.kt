@@ -31,13 +31,7 @@ fun StatisticsScreen(
     repo: WardrobeRepository,
     navController: NavController
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Statistics") }
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)

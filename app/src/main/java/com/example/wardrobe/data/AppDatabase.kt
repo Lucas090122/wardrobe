@@ -9,8 +9,16 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [Member::class, ClothingItem::class, Tag::class, ClothingTagCrossRef::class, Location::class, TransferHistory::class],
-    version = 7, // Incremented version
+    entities = [
+        Member::class,
+        ClothingItem::class,
+        Tag::class,
+        ClothingTagCrossRef::class,
+        Location::class,
+        TransferHistory::class,
+        NfcTagEntity::class
+    ],
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(SeasonConverter::class) // Add TypeConverter
@@ -37,7 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "wardrobe.db"
                 )
-                    .addMigrations(MIGRATION_6_7) // Add migration
+                    .addMigrations(MIGRATION_6_7, MIGRATION_7_8) // Add migration
                     .build()
                     .also {
                         it.settingsRepository = SettingsRepository(context.applicationContext)
@@ -87,6 +95,22 @@ abstract class AppDatabase : RoomDatabase() {
                         tagCursor.close()
                     }
                 }
+            }
+        }
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create table for NFC tag bindings
+                db.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS `NfcTag` (
+                `tagId` TEXT NOT NULL,
+                `locationId` INTEGER NOT NULL,
+                PRIMARY KEY(`tagId`),
+                FOREIGN KEY(`locationId`) REFERENCES `Location`(`locationId`) ON DELETE CASCADE
+            )
+            """.trimIndent()
+                )
+
             }
         }
     }
