@@ -333,6 +333,24 @@ class WardrobeRepository(
     }
 
     // ---------------------------------------------------------------------
+    // NFC helpers: resolve items for a given location
+    // ---------------------------------------------------------------------
+
+    /**
+     * Returns all clothing items stored under the given location.
+     */
+    suspend fun getItemsByLocation(locationId: Long): List<ClothingItem> {
+        return dao.getItemsByLocation(locationId)
+    }
+
+    /**
+     * Returns the Location row for the given id, or null if not found.
+     */
+    suspend fun getLocationById(locationId: Long): Location? {
+        return dao.getLocationById(locationId)
+    }
+
+    // ---------------------------------------------------------------------
     // Statistics functions (used by StatisticsScreen)
     // ---------------------------------------------------------------------
 

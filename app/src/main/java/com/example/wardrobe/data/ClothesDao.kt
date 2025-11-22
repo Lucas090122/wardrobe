@@ -143,4 +143,9 @@ interface ClothesDao {
 
     @Query("DELETE FROM NfcTag WHERE tagId = :tagId")
     suspend fun deleteNfcTag(tagId: String)
+
+    // --- Location-based item queries for NFC ---
+
+    @Query("SELECT * FROM ClothingItem WHERE locationId = :locationId ORDER BY createdAt DESC")
+    suspend fun getItemsByLocation(locationId: Long): List<ClothingItem>
 }

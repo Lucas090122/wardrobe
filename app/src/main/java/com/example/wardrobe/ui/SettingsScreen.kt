@@ -361,19 +361,20 @@ fun SettingsScreen(
                                 return@launch
                             }
 
-                            // Persist tag → location binding
-                            repo.bindNfcTagToLocation(tagId, locId)
-
-                            // Show success feedback
-                            snackbarHostState.showSnackbar(
-                                message = "Sticker bound to ${selectedLocationName.ifBlank { "location" }}",
-                            )
-
                             // Reset local UI + leave bind mode
                             selectedLocationId = null
                             selectedLocationName = ""
                             nfcError = null
                             mainVm.onLocationBound()
+
+                            // Persist tag → location binding
+                            scope.launch {
+                                repo.bindNfcTagToLocation(tagId, locId)
+
+                                snackbarHostState.showSnackbar(
+                                    message = "Sticker bound to ${selectedLocationName.ifBlank { "location" }}",
+                                )
+                            }
                         }
                     }
                 ) {

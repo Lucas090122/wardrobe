@@ -1,6 +1,7 @@
 package com.example.wardrobe.ui.components
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,7 @@ import com.example.wardrobe.Screen
 import com.example.wardrobe.ScreensInDrawer
 import com.example.wardrobe.ui.theme.Theme
 import com.example.wardrobe.data.WardrobeRepository
+import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.ui.theme.appBarColor
 import com.example.wardrobe.util.AdminModeDrawerItem
 import com.example.wardrobe.util.ExpandableDrawerItem
@@ -50,6 +52,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.input.KeyboardType
@@ -58,6 +61,18 @@ import androidx.compose.foundation.text.KeyboardOptions
 import com.example.wardrobe.data.WeatherRepository
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.util.AiModeDrawerItem
+import coil.compose.AsyncImage
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.ContentScale
+import androidx.core.net.toUri
+
+/**
+ * Simple UI model for "items stored in a location", used by NFC dialog.
+ */
+data class NfcLocationItemsUi(
+    val locationName: String,
+    val items: List<ClothingItem>
+)
 
 /**
  * Main top-level view that contains:
@@ -125,6 +140,23 @@ fun MainView(
 
     val scope: CoroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    // ---- NFC navigation: when a known tag is scanned in Idle mode ----
+    val navigateLocationId by mainVm.navigateToLocationId
+    var nfcLocationDialogState by remember { mutableStateOf<NfcLocationItemsUi?>(null) }
+
+    LaunchedEffect(navigateLocationId) {
+        val targetId = navigateLocationId ?: return@LaunchedEffect
+
+        // Load location + items from repository
+        val location = repo.getLocationById(targetId)
+        val items = repo.getItemsByLocation(targetId)
+
+        nfcLocationDialogState = NfcLocationItemsUi(
+            locationName = location?.name ?: "Unknown location",
+            items = items
+        )
+    }
 
     // ---- Weather state ----
     var weather by remember { mutableStateOf<WeatherInfo?>(null) }
@@ -369,6 +401,77 @@ fun MainView(
                         }
                     ) {
                         Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        // ------------------- NFC location items dialog -------------------
+        val nfcDialogData = nfcLocationDialogState
+        if (nfcDialogData != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    nfcLocationDialogState = null
+                    mainVm.clearNavigationRequest()
+                },
+                title = {
+                    Text("Items in ${nfcDialogData.locationName}")
+                },
+                text = {
+                    if (nfcDialogData.items.isEmpty()) {
+                        Text(
+                            "No items are stored at this location yet.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            nfcDialogData.items.forEach { item ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    // Thumbnail on the left
+                                    AsyncImage(
+                                        model = item.imageUri?.toUri(),
+                                        contentDescription = item.description,
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+
+                                    Spacer(Modifier.width(12.dp))
+
+                                    // Text block on the right
+                                    Column {
+                                        Text(
+                                            text = item.description,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        if (!item.sizeLabel.isNullOrBlank()) {
+                                            Text(
+                                                text = "Size: ${item.sizeLabel}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            nfcLocationDialogState = null
+                            mainVm.clearNavigationRequest()
+                        }
+                    ) {
+                        Text("Close")
                     }
                 }
             )
