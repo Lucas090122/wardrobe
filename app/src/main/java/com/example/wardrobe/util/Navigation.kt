@@ -18,6 +18,8 @@ import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.ui.Home
 import com.example.wardrobe.ui.SettingsScreen
 import com.example.wardrobe.ui.StatisticsScreen
+import com.example.wardrobe.ui.ClothingInventoryScreen
+import com.example.wardrobe.ui.TransferHistoryScreen
 import com.example.wardrobe.viewmodel.MainViewModel
 import com.example.wardrobe.viewmodel.MemberViewModel
 import com.example.wardrobe.viewmodel.StatisticsViewModel
@@ -101,6 +103,13 @@ fun Navigation(
                 repo = repo,
                 mainVm = viewModel     // pass global MainViewModel for NFC binding
             )
+        }
+
+        composable(Screen.TransferHistory.route) {
+            TransferHistoryScreen(repo = repo, navController = navController)
+        }
+        composable(Screen.ClothingInventory.route) {
+            ClothingInventoryScreen(vm = statisticsViewModel, navController = navController)
         }
     }
 }
