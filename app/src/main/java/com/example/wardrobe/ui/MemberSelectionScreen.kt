@@ -159,8 +159,8 @@ fun AddMemberDialog(
     val genderOptions = listOf("Male", "Female")
 
     // Convert age text to integer safely
-    val ageInt = ageText.toIntOrNull() ?: 0
-    val isMinor = ageInt in 0 until 18
+    val ageInt = ageText.toIntOrNull()
+    val isMinor = ageInt != null && ageInt in 0 until 18
 
     // Birthday picker state
     var showDatePicker by remember { mutableStateOf(false) }
@@ -247,7 +247,7 @@ fun AddMemberDialog(
                             onSave(
                                 name,
                                 gender,
-                                ageInt,
+                                ageInt!!,
                                 if (isMinor) birthDateMillis else null
                             )
                         },
