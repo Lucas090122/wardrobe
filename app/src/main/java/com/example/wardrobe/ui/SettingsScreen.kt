@@ -9,20 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.wardrobe.R
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
-/**
- * Settings screen for the app.
- *
- * Sections:
- *  - Security: change Admin PIN
- *  - NFC Storage Stickers: bind NFC stickers to Locations
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -30,27 +25,22 @@ fun SettingsScreen(
     mainVm: MainViewModel
 ) {
     val scope = rememberCoroutineScope()
-
-    // Admin PIN state (null → not set)
     val savedPin by repo.settings.adminPin.collectAsState(initial = null)
 
-    // NFC mode and scanned tag ID
     val nfcMode by mainVm.nfcMode
     val pendingTagId by mainVm.pendingTagIdForBinding
 
-    // All locations for NFC binding
     val locations by repo.observeLocations().collectAsState(initial = emptyList())
 
     var showChangePinDialog by remember { mutableStateOf(false) }
 
-    // Local UI state for NFC dropdown (used inside dialog)
     var selectedLocationId by remember { mutableStateOf<Long?>(null) }
     var selectedLocationName by remember { mutableStateOf("") }
     var locationDropdownExpanded by remember { mutableStateOf(false) }
     var nfcError by remember { mutableStateOf<String?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Auto pre-select first location when a new tag is detected
     LaunchedEffect(pendingTagId, locations) {
         if (pendingTagId != null && locations.isNotEmpty() && selectedLocationId == null) {
             val first = locations.first()
@@ -59,11 +49,7 @@ fun SettingsScreen(
         }
     }
 
-    // Show NFC binding dialog only when:
-    //  - We are in BindLocation mode
-    //  - A tag has been detected
-    val showNfcBindDialog =
-        nfcMode == MainViewModel.NfcMode.BindLocation && pendingTagId != null
+    val showNfcBindDialog = nfcMode == MainViewModel.NfcMode.BindLocation && pendingTagId != null
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -75,68 +61,50 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // ---------------- Security ----------------
-            Text(
-                text = "Security",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(stringResource(R.string.settings_security), style = MaterialTheme.typography.titleMedium)
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(enabled = savedPin != null) {
-                        showChangePinDialog = true
-                    }
+                    .clickable(enabled = savedPin != null) { showChangePinDialog = true }
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Change Admin PIN",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Text(stringResource(R.string.settings_change_admin_pin), style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = if (savedPin != null) {
-                                "Update the existing 4-digit Admin PIN."
-                            } else {
-                                "Admin PIN is not set yet. Enable Admin Mode from the drawer first."
-                            },
+                            text = if (savedPin != null)
+                                stringResource(R.string.settings_change_admin_pin_desc)
+                            else
+                                stringResource(R.string.settings_admin_pin_not_set_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (savedPin != null) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = "Change PIN"
-                        )
+                        Icon(Icons.Default.ArrowForward, stringResource(R.string.settings_change_admin_pin))
                     }
                 }
             }
 
             if (savedPin == null) {
                 Text(
-                    text = "No Admin PIN set. Turn on Admin Mode in the drawer to set one.",
+                    stringResource(R.string.settings_admin_pin_not_set_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
 
-            // ---------------- NFC Storage Stickers ----------------
-            Text(
-                text = "NFC Storage Stickers",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(stringResource(R.string.settings_nfc_stickers), style = MaterialTheme.typography.titleMedium)
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        // Enter binding mode and wait for a tag scan
                         nfcError = null
                         selectedLocationId = null
                         selectedLocationName = ""
@@ -148,29 +116,22 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Add new NFC sticker",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Text(stringResource(R.string.settings_add_nfc_sticker), style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "Scan a new sticker and bind it to a storage location.",
+                            stringResource(R.string.settings_add_nfc_sticker_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "Add NFC sticker"
-                    )
+                    Icon(Icons.Default.ArrowForward, stringResource(R.string.settings_add_nfc_sticker))
                 }
             }
 
-            // Small hint below card when waiting for a scan
             if (nfcMode == MainViewModel.NfcMode.BindLocation && pendingTagId == null) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Hold a new NFC sticker near your phone to register it.",
+                    stringResource(R.string.settings_nfc_scan_prompt),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -178,7 +139,7 @@ fun SettingsScreen(
         }
     }
 
-    // --------------- Change Admin PIN dialog ---------------
+    // -------- Change PIN dialog --------
     if (showChangePinDialog) {
         var currentPin by remember { mutableStateOf("") }
         var newPin by remember { mutableStateOf("") }
@@ -187,67 +148,50 @@ fun SettingsScreen(
 
         AlertDialog(
             onDismissRequest = { showChangePinDialog = false },
-            title = { Text("Change Admin PIN") },
+            title = { Text(stringResource(R.string.settings_change_admin_pin)) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = currentPin,
-                        onValueChange = { v ->
-                            currentPin = v.take(4)
-                            pinError = null
-                        },
-                        label = { Text("Current PIN") },
+                        onValueChange = { currentPin = it.take(4); pinError = null },
+                        label = { Text(stringResource(R.string.settings_current_pin)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation()
                     )
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = newPin,
-                        onValueChange = { v ->
-                            newPin = v.take(4)
-                            pinError = null
-                        },
-                        label = { Text("New PIN") },
+                        onValueChange = { newPin = it.take(4); pinError = null },
+                        label = { Text(stringResource(R.string.settings_new_pin)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation()
                     )
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = confirmPin,
-                        onValueChange = { v ->
-                            confirmPin = v.take(4)
-                            pinError = null
-                        },
-                        label = { Text("Confirm New PIN") },
+                        onValueChange = { confirmPin = it.take(4); pinError = null },
+                        label = { Text(stringResource(R.string.settings_confirm_new_pin)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation()
                     )
                     if (pinError != null) {
                         Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = pinError!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        Text(pinError!!, color = MaterialTheme.colorScheme.error)
                     }
                 }
             },
             confirmButton = {
+                val errorNoPin = stringResource(R.string.settings_error_no_pin)
+                val errorIncorrectPin = stringResource(R.string.settings_error_incorrect_pin)
+                val errorPinLength = stringResource(R.string.settings_error_pin_length)
+                val errorPinMismatch = stringResource(R.string.settings_error_pin_mismatch)
                 TextButton(onClick = {
                     scope.launch {
                         when {
-                            savedPin == null -> {
-                                pinError = "No existing PIN set"
-                            }
-                            currentPin != savedPin -> {
-                                pinError = "Current PIN is incorrect"
-                            }
-                            newPin.length < 4 -> {
-                                pinError = "New PIN must be 4 digits"
-                            }
-                            newPin != confirmPin -> {
-                                pinError = "New PINs do not match"
-                            }
+                            savedPin == null -> pinError = errorNoPin
+                            currentPin != savedPin -> pinError = errorIncorrectPin
+                            newPin.length < 4 -> pinError = errorPinLength
+                            newPin != confirmPin -> pinError = errorPinMismatch
                             else -> {
                                 repo.settings.setAdminPin(newPin)
                                 showChangePinDialog = false
@@ -255,38 +199,37 @@ fun SettingsScreen(
                         }
                     }
                 }) {
-                    Text("Change")
+                    Text(stringResource(R.string.change))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showChangePinDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
     }
 
-    // --------------- NFC bind dialog ---------------
+    // -------- NFC bind dialog --------
     if (showNfcBindDialog) {
         AlertDialog(
             onDismissRequest = {
-                // User closes dialog → leave bind mode
                 selectedLocationId = null
                 selectedLocationName = ""
                 nfcError = null
                 mainVm.cancelBindLocationMode()
             },
-            title = { Text("Bind NFC sticker") },
+            title = { Text(stringResource(R.string.settings_bind_nfc_sticker)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Sticker detected: ${pendingTagId ?: ""}",
+                        stringResource(R.string.settings_nfc_detected, pendingTagId ?: ""),
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     if (locations.isEmpty()) {
                         Text(
-                            text = "No locations available. Please create at least one storage location first.",
+                            stringResource(R.string.settings_no_locations_error),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -296,23 +239,13 @@ fun SettingsScreen(
                             onExpandedChange = { locationDropdownExpanded = !locationDropdownExpanded }
                         ) {
                             OutlinedTextField(
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
+                                modifier = Modifier.menuAnchor().fillMaxWidth(),
                                 readOnly = true,
                                 value = selectedLocationName,
                                 onValueChange = {},
-                                label = { Text("Bind to Location") },
-                                placeholder = {
-                                    if (selectedLocationName.isEmpty()) {
-                                        Text("Select a location")
-                                    }
-                                },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = locationDropdownExpanded
-                                    )
-                                }
+                                label = { Text(stringResource(R.string.settings_bind_to_location)) },
+                                placeholder = { if (selectedLocationName.isEmpty()) Text(stringResource(R.string.settings_select_location)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = locationDropdownExpanded) }
                             )
 
                             ExposedDropdownMenu(
@@ -334,63 +267,64 @@ fun SettingsScreen(
 
                         if (nfcError != null) {
                             Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = nfcError!!,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Text(nfcError!!, color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
             },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            val tagId = pendingTagId
-                            val locId = selectedLocationId
+                val errorStickerMissing = stringResource(R.string.settings_error_sticker_missing)
+                val errorSelectLocation = stringResource(R.string.settings_error_select_location)
+                val boundMsg = stringResource(
+                    R.string.settings_snackbar_sticker_bound,
+                    selectedLocationName.ifBlank { "" }
+                )
+                /*
+                val boundMsg = remember(selectedLocationName) {
+                    context.getString(
+                        R.string.settings_snackbar_sticker_bound,
+                        selectedLocationName.ifBlank { context.getString(R.string.settings_location_unknown) }
+                    )
+                }*/
 
-                            if (locations.isEmpty()) return@launch
+                TextButton(onClick = {
+                    scope.launch {
+                        val tagId = pendingTagId
+                        val locId = selectedLocationId
 
-                            if (tagId == null) {
-                                nfcError = "Sticker is no longer detected, please scan again."
-                                return@launch
-                            }
-                            if (locId == null) {
-                                nfcError = "Please select a location first."
-                                return@launch
-                            }
-
-                            // Reset local UI + leave bind mode
-                            selectedLocationId = null
-                            selectedLocationName = ""
-                            nfcError = null
-                            mainVm.onLocationBound()
-
-                            // Persist tag → location binding
-                            scope.launch {
-                                repo.bindNfcTagToLocation(tagId, locId)
-
-                                snackbarHostState.showSnackbar(
-                                    message = "Sticker bound to ${selectedLocationName.ifBlank { "location" }}",
-                                )
-                            }
+                        if (locations.isEmpty()) return@launch
+                        if (tagId == null) {
+                            nfcError = errorStickerMissing
+                            return@launch
                         }
-                    }
-                ) {
-                    Text("Bind")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
+                        if (locId == null) {
+                            nfcError = errorSelectLocation
+                            return@launch
+                        }
+
                         selectedLocationId = null
                         selectedLocationName = ""
                         nfcError = null
-                        mainVm.cancelBindLocationMode()
+                        mainVm.onLocationBound()
+
+                        repo.bindNfcTagToLocation(tagId, locId)
+
+                        snackbarHostState.showSnackbar(
+                            message = boundMsg
+                        )
                     }
-                ) {
-                    Text("Cancel")
+                }) {
+                    Text(stringResource(R.string.bind))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    selectedLocationId = null
+                    selectedLocationName = ""
+                    nfcError = null
+                    mainVm.cancelBindLocationMode()
+                }) {
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

@@ -1,2 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="app_name">Vaatekaappi</string>
+    <string name="screen_home">Koti</string>
+    <string name="screen_member">Jäsen</string>
+    <string name="screen_statistics">Tilastot</string>
+    <string name="screen_settings">Asetukset</string>
+    <string name="screen_theme">Teema</string>
+    <string name="screen_transfer_history">Siirtolohistoria</string>
+    <string name="screen_clothing_inventory">Vaateinventaario</string>
+
+    <string name="drawer_dark_mode">Tumma tila</string>
+    <string name="drawer_admin_mode">Ylläpitotila</string>
+    <string name="drawer_ai_mode">AI-tila</string>
+    <string name="drawer_add_member">Lisää jäsen</string>
+    <string name="drawer_expand">Laajenna</string>
+    <string name="drawer_collapse">Kutista</string>
+
+    <string name="drawer_open">Avaa valikko</string>
+    <string name="drawer_location_off">Sijainti pois käytöstä</string>
+    <string name="wardrobe_title">%1$s:n vaatekaappi</string>
+
+    <string name="admin_set_pin">Aseta ylläpitäjän PIN</string>
+    <string name="admin_enter_pin">Syötä ylläpitäjän PIN</string>
+    <string name="admin_pin_label">4-numeroinen PIN</string>
+    <string name="admin_pin_wrong">Väärä PIN</string>
+    <string name="admin_enter">Syötä</string>
+    <string name="cancel">Peruuta</string>
+
+    <string name="ai_title">Ota AI-tila käyttöön?</string>
+    <string name="ai_description">
+        Kun AI-tila on käytössä, vaatekuvat lähetetään Googlen Gemini-palveluun
+        tietojen automaattista täyttöä varten. Lisää vain kuvia, joiden jakamiseen olet suostuvainen.
+    </string>
+    <string name="ai_agree">Hyväksy ja ota käyttöön</string>
+
+    <string name="nfc_items_in">Tavarat sijainnissa %1$s</string>
+    <string name="nfc_no_items">Täällä ei ole vielä tavaroita.</string>
+    <string name="close">Sulje</string>
+    <string name="size_label">Koko: %1$s</string>
+
+    <string name="press_back_exit">Paina takaisin uudelleen poistuaksesi</string>
+    <string name="delete">Poista</string>
+
+    <string name="weather_title_recommendation">Päivän asusuositus</string>
+    <string name="weather_title_confirmed">Tämän päivän asu (vahvistettu)</string>
+    <string name="weather_unavailable">Säätietoja ei saatavilla. Suositusta ei voida antaa.</string>
+    <string name="weather_cannot_generate">Asua ei voitu muodostaa. Tarkista vaatteesi.</string>
+    <string name="weather_button_another_one">Uusi vaihtoehto</string>
+    <string name="weather_button_confirm_today">Vahvista tälle päivälle</string>
+    <string name="weather_no_match">Mitkään vaatteet eivät sovi tämän päivän säähän.</string>
+
+    <string name="inventory_title">Vaateinventaario</string>
+    <string name="back">Takaisin</string>
+    <string name="inventory_by_member">Jäsenittäin</string>
+    <string name="inventory_by_season">Vuodenaikojen mukaan</string>
+    <string name="inventory_by_category">Luokittain</string>
+    <string name="inventory_no_data">Ei näytettävää tietoa.</string>
+    <string name="inventory_details">Tiedot</string>
+
+    <string name="add_item">Lisää tuote</string>
+    <string name="edit_item">Muokkaa tuotetta</string>
+    <string name="save">Tallenna</string>
+    <string name="ai_analyzing">Analysoidaan vaatteita tekoälyllä…</string>
+    <string name="description_hint">Kuvaus (esim. sininen untuvatakki 110 cm)</string>
+    <string name="recommendation_attributes">Suositusominaisuudet</string>
+    <string name="season">Vuodenaika</string>
+    <string name="warmth_level">Lämmöntaso: %1$d</string>
+    <string name="occasions">Tilaisuudet</string>
+    <string name="waterproof">Vedenpitävä</string>
+    <string name="color">Väri</string>
+    <string name="favorite">Suosikki</string>
+    <string name="tags">Tunnisteet</string>
+    <string name="size_hint">Koko (esim. 110, 28, 32)</string>
+    <string name="tap_select_image">Napauta valitaksesi kuvan</string>
+    <string name="take_photo">Ota kuva</string>
+    <string name="choose_from_album">Valitse albumista</string>
+    <string name="new_tag_name">Uuden tunnisteen nimi</string>
+    <string name="add">Lisää</string>
+    <string name="stored">Varastossa</string>
+    <string name="storage_location">Säilytyspaikka</string>
+    <string name="delete_location">Poista paikka</string>
+    <string name="new_location_name">Uuden paikan nimi</string>
+    <string name="dialog_confirm_delete">Vahvista poisto</string>
+    <string name="dialog_location_delete_msg">Haluatko varmasti poistaa tämän paikan? %1$d tuotetta jää ilman sijaintia.</string>
+    <string name="dialog_delete">Poista</string>
+    <string name="dialog_cancel">Peruuta</string>
+    <string name="dialog_action_not_allowed">Toiminto ei sallittu</string>
+    <string name="dialog_location_prevent_delete_msg">Paikkaa käyttää %1$d tuotetta — sitä ei voi poistaa normaalitilassa.</string>
+    <string name="ok">OK</string>
+    <string name="dialog_tag_delete_msg">Haluatko varmasti poistaa tämän tunnisteen? Sitä käyttää %1$d tuotetta.</string>
+    <string name="dialog_tag_prevent_delete_msg">Tunnistetta käyttää %1$d tuotetta — sitä ei voi poistaa normaalitilassa.</string>
+
+    <string name="cat_top">Yläosa</string>
+    <string name="cat_pants">Housut</string>
+    <string name="cat_shoes">Kengät</string>
+    <string name="cat_hat">Hattu</string>
+    <string name="occ_casual">Arkinen</string>
+    <string name="occ_school">Koulu</string>
+    <string name="occ_sport">Urheilu</string>
+    <string name="occ_formal">Juhlava</string>
+    <string name="occ_work">Työ</string>
+
+    <string name="tab_in_use">Käytössä</string>
+    <string name="tab_stored">Varastossa</string>
+    <string name="filters_search">Suodattimet ja haku</string>
+    <string name="filters_show">Näytä</string>
+    <string name="filters_hide">Piilota</string>
+    <string name="search_hint">Hae kuvauksesta…</string>
+    <string name="clear_search">Tyhjennä haku</string>
+    <string name="filter_by_tags">Suodata tunnisteilla</string>
+    <string name="clear">Tyhjennä</string>
+    <string name="filter_by_seasons">Suodata vuodenaikojen mukaan</string>
+    <string name="outdated_items_showing">%1$d tuotetta saattaa olla liian pieni (näytetään)</string>
+    <string name="outdated_items_filter">%1$d tuotetta saattaa olla liian pieni (napauta suodattaaksesi)</string>
+
+    <string name="title_item_details">Tuotteen tiedot</string>
+    <string name="action_back">Takaisin</string>
+    <string name="action_transfer">Siirrä</string>
+    <string name="action_share">Jaa</string>
+    <string name="action_edit">Muokkaa</string>
+    <string name="action_delete">Poista</string>
+    <string name="loading">Ladataan...</string>
+    <string name="dialog_delete_message">Haluatko varmasti poistaa tämän tuotteen? Toimintoa ei voi perua.</string>
+    <string name="dialog_transfer_title">Siirrä tuote</string>
+    <string name="dialog_transfer_select_member">Valitse jäsen, jolle siirretään:</string>
+    <string name="dialog_transfer_placeholder">Valitse jäsen</string>
+    <string name="dialog_transfer_confirm_title">Vahvista siirto</string>
+    <string name="dialog_transfer_confirm_message">Haluatko varmasti siirtää tämän tuotteen käyttäjälle %1$s?</string>
+    <string name="confirm">Vahvista</string>
+
+    <string name="poster_brand_name">Vaatekaappi</string>
+    <string name="poster_season">Vuodenaika: %1$s</string>
+    <string name="poster_size">Koko: %1$s</string>
+    <string name="poster_stored_in">Säilytetään: %1$s</string>
+    <string name="poster_stored_in_unprovided">Säilytetään: Ei määritelty</string>
+    <string name="poster_tags">Tunnisteet</string>
+    <string name="share_via">Jaa sovelluksella</string>
+
+    <string name="add_new_member">Lisää uusi jäsen</string>
+    <string name="no_members_yet">Jäseniä ei vielä ole. Lisää jäsen ylhäältä!</string>
+    <string name="outdated_items_chip">%1$d tuotetta saattaa olla liian pieni</string>
+    <string name="name">Nimi</string>
+    <string name="gender">Sukupuoli</string>
+    <string name="gender_male">Mies</string>
+    <string name="gender_female">Nainen</string>
+    <string name="age">Ikä</string>
+    <string name="birthday">Syntymäpäivä</string>
+    <string name="select_birthday">Valitse syntymäpäivä</string>
+    <string name="selected_birthday">Valittu: %1$s</string>
+
+    <string name="settings_security">Tietoturva</string>
+    <string name="settings_change_admin_pin">Vaihda ylläpitäjän PIN</string>
+    <string name="settings_change_admin_pin_desc">Päivitä nykyinen 4-numeroinen ylläpitäjän PIN.</string>
+    <string name="settings_admin_pin_not_set_desc">Ylläpitäjän PIN ei ole asetettu. Ota ylläpitotila käyttöön valikosta ensin.</string>
+    <string name="settings_admin_pin_not_set_hint">Ei PIN-koodia asetettu. Laita ylläpitotila päälle asettaaksesi PIN-koodin.</string>
+    <string name="settings_nfc_stickers">NFC-säilytystarrat</string>
+    <string name="settings_add_nfc_sticker">Lisää uusi NFC-tarra</string>
+    <string name="settings_add_nfc_sticker_desc">Skannaa uusi tarra ja yhdistä se säilytyspaikkaan.</string>
+    <string name="settings_nfc_scan_prompt">Pidä uusi NFC-tarra lähellä puhelinta rekisteröidäksesi sen.</string>
+
+    <string name="settings_current_pin">Nykyinen PIN</string>
+    <string name="settings_new_pin">Uusi PIN</string>
+    <string name="settings_confirm_new_pin">Vahvista uusi PIN</string>
+    <string name="settings_error_no_pin">Ei aikaisempaa PIN-koodia</string>
+    <string name="settings_error_incorrect_pin">Nykyinen PIN on virheellinen</string>
+    <string name="settings_error_pin_length">PINin täytyy olla 4 numeroa</string>
+    <string name="settings_error_pin_mismatch">PIN-koodit eivät täsmää</string>
+
+    <string name="settings_bind_nfc_sticker">Yhdistä NFC-tarra</string>
+    <string name="settings_nfc_detected">Tarra havaittu: %1$s</string>
+    <string name="settings_no_locations_error">Ei säilytyspaikkoja. Luo vähintään yksi ensin.</string>
+    <string name="settings_bind_to_location">Yhdistä säilytyspaikkaan</string>
+    <string name="settings_select_location">Valitse säilytyspaikka</string>
+    <string name="settings_error_sticker_missing">Tarra ei ole enää havaittavissa. Skannaa uudelleen.</string>
+    <string name="settings_error_select_location">Valitse säilytyspaikka ensin.</string>
+    <string name="settings_snackbar_sticker_bound">Tarra yhdistetty paikkaan %1$s</string>
+
+    <string name="change">Vaihda</string>
+    <string name="bind">Yhdistä</string>
+
+    <string name="statistics_transfer_history">Siirtolohistoria</string>
+    <string name="statistics_clothing_inventory">Vaateinventaario</string>
+    <string name="statistics_cd_transfer_history">Siirry siirtolohistoriaan</string>
+    <string name="statistics_cd_clothing_inventory">Siirry vaateinventaarioon</string>
+
+    <string name="transfer_history_title">Siirtolohistoria</string>
+    <string name="transfer_history_empty">Ei siirtolohistoriaa.</string>
+    <string name="transfer_history_record">%1$s siirsi tuotteen %2$s käyttäjälle %3$s päivänä %4$s.</string>
+    <string name="cd_back">Takaisin</string>
+
+    <string name="weather_no_matching_items">Mitkään vaatteet eivät sovi tämän päivän säähän.</string>
+    <string name="weather_missing_category">Asua ei voida muodostaa — tarvitaan yläosa, housut ja kengät.</string>
+    <string name="weather_no_combinations">Kelvollisia asuyhdistelmiä ei löytynyt.</string>
+    <string name="weather_reason_no_match">Säähän sopivia vaatteita ei ole saatavilla.</string>
+    <string name="weather_reason_missing_category">Vaatekaapista puuttuu tarvittavia vaatekategorioita asun muodostamiseen.</string>
+    <string name="weather_reason_no_combinations">Kelvollisia asukokonaisuuksia ei löytynyt.</string>
+    <string name="weather_reason_basic">Tuntuu kuin %1$d°C.</string>
+    <string name="weather_reason_avoiding_recent">Tuntuu kuin %1$d°C. Vältetään äskettäin käytettyjä vaatteita.</string>
+</resources>

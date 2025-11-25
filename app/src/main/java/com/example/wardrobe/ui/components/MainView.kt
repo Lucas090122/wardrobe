@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -64,8 +63,9 @@ import com.example.wardrobe.util.AiModeDrawerItem
 import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
-
+import com.example.wardrobe.R
 /**
  * Simple UI model for "items stored in a location", used by NFC dialog.
  */
@@ -119,22 +119,25 @@ fun MainView(
 
     // Dynamic title based on current route and current member
     val title = when (currentRoute) {
-        Screen.DrawerScreen.Home.dRoute -> {
+        Screen.DrawerScreen.Home.route -> {
             if (currentMemberName.isNotBlank()) {
-                "${currentMemberName}'s Wardrobe"
+                stringResource(R.string.wardrobe_title, currentMemberName)
             } else {
-                Screen.DrawerScreen.Home.dTitle
+                stringResource(Screen.DrawerScreen.Home.titleId)
             }
         }
-        Screen.DrawerScreen.Member.dRoute -> {
+        Screen.DrawerScreen.Member.route -> {
             if (currentMemberName.isNotBlank()) {
-                "${currentMemberName}'s Wardrobe"
+                stringResource(R.string.wardrobe_title, currentMemberName)
             } else {
-                Screen.DrawerScreen.Member.dTitle
+                stringResource(Screen.DrawerScreen.Member.titleId)
             }
         }
-        Screen.DrawerScreen.Statistics.dRoute -> Screen.DrawerScreen.Statistics.dTitle
-        Screen.DrawerScreen.Settings.dRoute -> Screen.DrawerScreen.Settings.dTitle
+        Screen.DrawerScreen.Statistics.route ->
+            stringResource(Screen.DrawerScreen.Statistics.titleId)
+
+        Screen.DrawerScreen.Settings.route ->
+            stringResource(Screen.DrawerScreen.Settings.titleId)
         else -> ""
     }
 
@@ -187,10 +190,10 @@ fun MainView(
             // Home
             SimpleDrawerItem(
                 Screen.DrawerScreen.Home,
-                selected = currentRoute == Screen.DrawerScreen.Home.dRoute,
+                selected = currentRoute == Screen.DrawerScreen.Home.route,
             ) {
                 scope.launch { drawerState.close() }
-                controller.navigate(Screen.DrawerScreen.Home.dRoute)
+                controller.navigate(Screen.DrawerScreen.Home.route)
             }
 
             // Members (expandable list)
@@ -206,11 +209,11 @@ fun MainView(
             LazyColumn {
                 items(ScreensInDrawer) { item ->
                     SimpleDrawerItem(
-                        selected = currentRoute == item.dRoute,
+                        selected = currentRoute == item.route,
                         item = item,
                     ) {
                         scope.launch { drawerState.close() }
-                        controller.navigate(item.dRoute)
+                        controller.navigate(item.route)
                     }
                 }
             }
@@ -276,7 +279,7 @@ fun MainView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
-                                contentDescription = "Open Drawer",
+                                contentDescription = stringResource(R.string.drawer_open),
                                 modifier = Modifier.padding(5.dp)
                             )
                         }
@@ -287,7 +290,7 @@ fun MainView(
                                 // When location is off, just show a passive text hint.
                                 // We do not pop up dialogs to avoid annoying the user.
                                 Text(
-                                    text = "Location off",
+                                    text = stringResource(R.string.drawer_location_off),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             } else {
@@ -322,7 +325,14 @@ fun MainView(
 
             AlertDialog(
                 onDismissRequest = { showAdminPinDialog = false },
-                title = { Text(if (savedPin == null) "Set Admin PIN" else "Enter Admin PIN") },
+                title = {
+                    Text(
+                        if (savedPin == null)
+                            stringResource(R.string.admin_set_pin)
+                        else
+                            stringResource(R.string.admin_enter_pin)
+                    )
+                },
                 text = {
                     Column {
                         OutlinedTextField(
@@ -331,7 +341,7 @@ fun MainView(
                                 pin = v.take(4)
                                 pinError = null
                             },
-                            label = { Text("4-digit PIN") },
+                            label = { Text(stringResource(R.string.admin_pin_label)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                             visualTransformation = PasswordVisualTransformation()
                         )
@@ -345,6 +355,7 @@ fun MainView(
                     }
                 },
                 confirmButton = {
+                    pinError = stringResource(R.string.admin_pin_wrong)
                     TextButton(onClick = {
                         scope.launch {
                             when {
@@ -360,14 +371,14 @@ fun MainView(
                                     showAdminPinDialog = false
                                 }
                                 else -> {
-                                    pinError = "Wrong PIN"
+                                    pinError
                                 }
                             }
                         }
-                    }) { Text("Enter") }
+                    }) { Text(stringResource(R.string.admin_enter)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showAdminPinDialog = false }) { Text("Cancel") }
+                    TextButton(onClick = { showAdminPinDialog = false }) { Text(stringResource(R.string.cancel)) }
                 }
             )
         }
@@ -376,14 +387,8 @@ fun MainView(
         if (showAiPrivacyDialog) {
             AlertDialog(
                 onDismissRequest = { showAiPrivacyDialog = false },
-                title = { Text("Enable AI mode?") },
-                text = {
-                    Text(
-                        "When AI mode is enabled, your clothing photos will be sent to Google's Gemini service " +
-                                "for analysis in order to auto-fill item details. " +
-                                "Please only upload photos you are comfortable sharing."
-                    )
-                },
+                title = { Text(stringResource(R.string.ai_title)) },
+                text = { Text(stringResource(R.string.ai_description)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -391,7 +396,7 @@ fun MainView(
                             scope.launch { repo.settings.setAiEnabled(true) }
                         }
                     ) {
-                        Text("Agree and enable")
+                        Text(stringResource(R.string.ai_agree))
                     }
                 },
                 dismissButton = {
@@ -400,7 +405,7 @@ fun MainView(
                             showAiPrivacyDialog = false
                         }
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )
@@ -415,12 +420,12 @@ fun MainView(
                     mainVm.clearNavigationRequest()
                 },
                 title = {
-                    Text("Items in ${nfcDialogData.locationName}")
+                    Text(stringResource(R.string.nfc_items_in, nfcDialogData.locationName))
                 },
                 text = {
                     if (nfcDialogData.items.isEmpty()) {
                         Text(
-                            "No items are stored at this location yet.",
+                            stringResource(R.string.nfc_no_items),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     } else {
@@ -453,7 +458,7 @@ fun MainView(
                                         )
                                         if (!item.sizeLabel.isNullOrBlank()) {
                                             Text(
-                                                text = "Size: ${item.sizeLabel}",
+                                                text = stringResource(R.string.size_label, item.sizeLabel),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -471,7 +476,7 @@ fun MainView(
                             mainVm.clearNavigationRequest()
                         }
                     ) {
-                        Text("Close")
+                        Text(stringResource(R.string.close))
                     }
                 }
             )

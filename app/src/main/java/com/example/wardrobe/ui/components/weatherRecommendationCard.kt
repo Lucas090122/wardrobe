@@ -10,11 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.util.WeatherRecommender
+import com.example.wardrobe.R
 
 /**
  * UI component that displays:
@@ -52,7 +54,7 @@ fun WeatherRecommendationCard(
         Column(Modifier.padding(16.dp)) {
 
             Text(
-                text = "Today's Recommendation",
+                text = stringResource(R.string.weather_title_recommendation),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -65,7 +67,7 @@ fun WeatherRecommendationCard(
                 val outfit = fixedOutfit!!
 
                 Text(
-                    text = "Today's Outfit (Confirmed)",
+                    text = stringResource(R.string.weather_title_confirmed),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -93,7 +95,7 @@ fun WeatherRecommendationCard(
             // 2. NORMAL MODE — weather-based recommendation
             // ----------------------------------------------------------
             if (weather == null) {
-                Text("Weather information is unavailable. Recommendations cannot be provided.")
+                Text(stringResource(R.string.weather_unavailable))
                 return@Column
             }
 
@@ -109,12 +111,12 @@ fun WeatherRecommendationCard(
             // When no outfit can be generated (missing categories etc.)
             if (result.outfit == null) {
                 Text(
-                    text = "Could not generate an outfit. Please check your clothing items.",
+                    text = stringResource(R.string.weather_cannot_generate),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = result.reason,
+                    text = result.localizedMessage(),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis
@@ -127,7 +129,7 @@ fun WeatherRecommendationCard(
 
             // Display explanation ("Feels like X°C. Avoiding recently worn clothes.")
             Text(
-                text = result.reason,
+                text = result.localizedMessage(),
                 style = MaterialTheme.typography.bodySmall
             )
 
@@ -161,7 +163,7 @@ fun WeatherRecommendationCard(
                             refreshSeed++           // Trigger a new recommendation
                         }
                     ) {
-                        Text("Another one")
+                        Text(stringResource(R.string.weather_button_another_one))
                     }
                 }
 
@@ -171,9 +173,28 @@ fun WeatherRecommendationCard(
                         onConfirmOutfit(outfitItems)  // Notify VM
                     }
                 ) {
-                    Text("Confirm for Today")
+                    Text(stringResource(R.string.weather_button_confirm_today))
                 }
             }
         }
     }
 }
+
+@Composable
+fun WeatherRecommender.Result.localizedMessage(): String =
+    when (reasonCode) {
+        WeatherRecommender.ReasonCode.BASIC ->
+            stringResource(R.string.weather_reason_basic, temperatureRounded)
+
+        WeatherRecommender.ReasonCode.AVOIDING_RECENT ->
+            stringResource(R.string.weather_reason_avoiding_recent, temperatureRounded)
+
+        WeatherRecommender.ReasonCode.NO_MATCH ->
+            stringResource(R.string.weather_reason_no_match)
+
+        WeatherRecommender.ReasonCode.MISSING_CATEGORY ->
+            stringResource(R.string.weather_reason_missing_category)
+
+        WeatherRecommender.ReasonCode.NO_COMBINATIONS ->
+            stringResource(R.string.weather_reason_no_combinations)
+    }

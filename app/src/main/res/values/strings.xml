@@ -1,4 +1,229 @@
 <resources>
     <string name="app_name">Wardrobe</string>
+    <string name="screen_home">Home</string>
+    <string name="screen_member">Member</string>
+    <string name="screen_statistics">Statistics</string>
+    <string name="screen_settings">Settings</string>
+    <string name="screen_theme">Theme</string>
+    <string name="screen_transfer_history">Transfer History</string>
+    <string name="screen_clothing_inventory">Clothing Inventory</string>
+
+    <string name="drawer_dark_mode">Dark Mode</string>
+    <string name="drawer_admin_mode">Admin Mode</string>
+    <string name="drawer_ai_mode">AI Mode</string>
+    <string name="drawer_add_member">Add Member</string>
+    <string name="drawer_expand">Expand</string>
+    <string name="drawer_collapse">Collapse</string>
+
+    <!-- Drawer -->
+    <string name="drawer_open">Open Drawer</string>
+    <string name="drawer_location_off">Location off</string>
+    <string name="wardrobe_title">%1$s\'s Wardrobe</string>
+
+    <!-- Admin Mode dialog -->
+    <string name="admin_set_pin">Set Admin PIN</string>
+    <string name="admin_enter_pin">Enter Admin PIN</string>
+    <string name="admin_pin_label">4-digit PIN</string>
+    <string name="admin_pin_wrong">Wrong PIN</string>
+    <string name="admin_enter">Enter</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- AI privacy -->
+    <string name="ai_title">Enable AI mode?</string>
+    <string name="ai_description">
+        When AI mode is enabled, your clothing photos will be sent to Google\'s Gemini
+        service for analysis to auto-fill item details. Please only upload photos
+        you are comfortable sharing.
+    </string>
+    <string name="ai_agree">Agree and enable</string>
+
+    <!-- NFC -->
+    <string name="nfc_items_in">Items in %1$s</string>
+    <string name="nfc_no_items">No items are stored at this location yet.</string>
+    <string name="close">Close</string>
+    <string name="size_label">Size: %1$s</string>
+
+    <!-- Home Screen -->
+    <string name="press_back_exit">Press back again to exit</string>
+
+    <!-- Tag Chips Screen -->
+    <string name="delete">Delete</string>
+
+    <!-- Weather Recommendation -->
+    <string name="weather_title_recommendation">Today\'s Recommendation</string>
+    <string name="weather_title_confirmed">Today\'s Outfit (Confirmed)</string>
+    <string name="weather_unavailable">Weather information is unavailable. Recommendations cannot be provided.</string>
+    <string name="weather_cannot_generate">Could not generate an outfit. Please check your clothing items.</string>
+    <string name="weather_button_another_one">Another one</string>
+    <string name="weather_button_confirm_today">Confirm for Today</string>
+    <!-- Detailed explanations -->
+    <string name="weather_no_match">No clothes match today\'s weather conditions.</string>
+
+
+    <!-- Clothing Inventory Screen -->
+    <string name="inventory_title">Clothing Inventory</string>
+    <string name="back">Back</string>
+    <string name="inventory_by_member">By Member</string>
+    <string name="inventory_by_season">By Season</string>
+    <string name="inventory_by_category">By Category</string>
+    <string name="inventory_no_data">No data to display.</string>
+    <string name="inventory_details">Details</string>
+
+    <!-- Edit Item Screen -->
+    <string name="add_item">Add Item</string>
+    <string name="edit_item">Edit Item</string>
+    <string name="save">Save</string>
+    <string name="ai_analyzing">Analyzing clothes with AI…</string>
+    <string name="description_hint">Description (e.g., Blue down jacket 110cm)</string>
+    <string name="recommendation_attributes">Recommendation Attributes</string>
+    <string name="season">Season</string>
+    <string name="warmth_level">Warmth Level: %1$d</string>
+    <string name="occasions">Occasions</string>
+    <string name="waterproof">Waterproof</string>
+    <string name="color">Color</string>
+    <string name="favorite">Favorite</string>
+    <string name="tags">Tags</string>
+    <string name="size_hint">Size (e.g. 110, 28, 32)</string>
+    <string name="tap_select_image">Tap to select image</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="choose_from_album">Choose from Album</string>
+    <string name="new_tag_name">New Tag Name</string>
+    <string name="add">Add</string>
+    <string name="stored">Stored</string>
+    <string name="storage_location">Storage Location</string>
+    <string name="delete_location">Delete location</string>
+    <string name="new_location_name">New location name</string>
+    <string name="dialog_confirm_delete">Confirm Deletion</string>
+    <string name="dialog_location_delete_msg">Are you sure you want to delete this location? %1$d items will become unassigned.</string>
+    <string name="dialog_delete">Delete</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_action_not_allowed">Action Not Allowed</string>
+    <string name="dialog_location_prevent_delete_msg">This location is in use by %1$d items and cannot be deleted in Normal Mode.</string>
+    <string name="ok">OK</string>
+    <string name="dialog_tag_delete_msg">Are you sure you want to delete this tag? It is used by %1$d items.</string>
+    <string name="dialog_tag_prevent_delete_msg">This tag is in use by %1$d items and cannot be deleted in Normal Mode.</string>
+
+    <string name="cat_top">Top</string>
+    <string name="cat_pants">Pants</string>
+    <string name="cat_shoes">Shoes</string>
+    <string name="cat_hat">Hat</string>
+    <string name="occ_casual">Casual</string>
+    <string name="occ_school">School</string>
+    <string name="occ_sport">Sport</string>
+    <string name="occ_formal">Formal</string>
+    <string name="occ_work">Work</string>
+
+    <!-- Home Main Screen -->
+    <string name="tab_in_use">In Use</string>
+    <string name="tab_stored">Stored</string>
+    <string name="filters_search">Filters &amp; search</string>
+    <string name="filters_show">Show</string>
+    <string name="filters_hide">Hide</string>
+    <string name="search_hint">Search description...</string>
+    <string name="clear_search">Clear search</string>
+    <string name="filter_by_tags">Filter by tags</string>
+    <string name="clear">Clear</string>
+    <string name="filter_by_seasons">Filter by seasons</string>
+    <string name="outdated_items_showing">%1$d items may be too small (showing)</string>
+    <string name="outdated_items_filter">%1$d items may be too small (tap to filter)</string>
+
+    <!-- Item Detail Screen -->
+    <string name="title_item_details">Item Details</string>
+    <string name="action_back">Back</string>
+    <string name="action_transfer">Transfer</string>
+    <string name="action_share">Share</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="loading">Loading...</string>
+    <string name="dialog_delete_title">Confirm Deletion</string>
+    <string name="dialog_delete_message">Are you sure you want to delete this item? This action cannot be undone.</string>
+    <string name="dialog_transfer_title">Transfer Item</string>
+    <string name="dialog_transfer_select_member">Select a member to transfer this item to:</string>
+    <string name="dialog_transfer_placeholder">Select Member</string>
+    <string name="dialog_transfer_confirm_title">Confirm Transfer</string>
+    <string name="dialog_transfer_confirm_message">Are you sure you want to transfer this item to %1$s?</string>
+    <string name="confirm">Confirm</string>
+    <!-- Item poster card -->
+    <string name="poster_brand_name">Wardrobe</string>
+    <string name="poster_season">Season: %1$s</string>
+    <string name="poster_size">Size: %1$s</string>
+    <string name="poster_stored_in">Stored in: %1$s</string>
+    <string name="poster_stored_in_unprovided">Stored in: Unprovided</string>
+    <string name="poster_tags">Tags</string>
+    <string name="share_via">Share via</string>
+
+    <!-- Member Selection Screen -->
+    <string name="add_new_member">Add New Member</string>
+    <string name="no_members_yet">No members yet. Add one above!</string>
+    <string name="outdated_items_chip">%1$d items may be too small</string>
+    <!-- Add Member Dialog -->
+    <string name="name">Name</string>
+    <string name="gender">Gender</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="age">Age</string>
+    <string name="birthday">Birthday</string>
+    <string name="select_birthday">Select birthday</string>
+    <string name="selected_birthday">Selected: %1$s</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_security">Security</string>
+    <string name="settings_change_admin_pin">Change Admin PIN</string>
+    <string name="settings_change_admin_pin_desc">Update the existing 4-digit Admin PIN.</string>
+    <string name="settings_admin_pin_not_set_desc">Admin PIN is not set yet. Enable Admin Mode from the drawer first.</string>
+    <string name="settings_admin_pin_not_set_hint">No Admin PIN set. Turn on Admin Mode in the drawer to set one.</string>
+    <string name="settings_nfc_stickers">NFC Storage Stickers</string>
+    <string name="settings_add_nfc_sticker">Add new NFC sticker</string>
+    <string name="settings_add_nfc_sticker_desc">Scan a new sticker and bind it to a storage location.</string>
+    <string name="settings_nfc_scan_prompt">Hold a new NFC sticker near your phone to register it.</string>
+    <!-- Change PIN dialog -->
+    <string name="settings_current_pin">Current PIN</string>
+    <string name="settings_new_pin">New PIN</string>
+    <string name="settings_confirm_new_pin">Confirm New PIN</string>
+    <string name="settings_error_no_pin">No existing PIN set</string>
+    <string name="settings_error_incorrect_pin">Current PIN is incorrect</string>
+    <string name="settings_error_pin_length">New PIN must be 4 digits</string>
+    <string name="settings_error_pin_mismatch">New PINs do not match</string>
+    <!-- NFC binding -->
+    <string name="settings_bind_nfc_sticker">Bind NFC sticker</string>
+    <string name="settings_nfc_detected">Sticker detected: %1$s</string>
+    <string name="settings_no_locations_error">No locations available. Please create at least one storage location first.</string>
+    <string name="settings_bind_to_location">Bind to Location</string>
+    <string name="settings_select_location">Select a location</string>
+    <string name="settings_error_sticker_missing">Sticker is no longer detected. Please scan again.</string>
+    <string name="settings_error_select_location">Please select a location first.</string>
+    <string name="settings_snackbar_sticker_bound">Sticker bound to %1$s</string>
+    <!-- Buttons -->
+    <string name="change">Change</string>
+    <string name="bind">Bind</string>
+
+    <!-- Statistics Screen -->
+    <string name="statistics_transfer_history">Transfer History</string>
+    <string name="statistics_clothing_inventory">Clothing Inventory</string>
+    <!-- ContentDescriptions -->
+    <string name="statistics_cd_transfer_history">Go to Transfer History</string>
+    <string name="statistics_cd_clothing_inventory">Go to Clothing Inventory</string>
+
+    <!-- transfer History Screen -->
+    <string name="transfer_history_title">Transfer History</string>
+    <string name="transfer_history_empty">No transfer history found.</string>
+    <!-- Record sentence formatting: %1$s = source, %2$s = item, %3$s = target, %4$s = date -->
+    <string name="transfer_history_record">%1$s transferred %2$s to %3$s on %4$s.</string>
+    <!-- Content descriptions -->
+    <string name="cd_back">Back</string>
+
+    <!-- Weather Recommendations -->
+    <string name="weather_no_matching_items">No clothes match today\'s weather.</string>
+    <string name="weather_missing_category">Not enough clothing to form an outfit (need top, pants and shoes).</string>
+    <string name="weather_no_combinations">No valid outfit combinations found.</string>
+    <string name="weather_reason_no_match">No suitable clothes available for today’s weather.</string>
+    <string name="weather_reason_missing_category">Wardrobe missing required clothing categories to form an outfit.</string>
+    <string name="weather_reason_no_combinations">No valid outfit combinations found.</string>
+    <string name="weather_reason_basic">Feels like %1$d°C.</string>
+    <string name="weather_reason_avoiding_recent">Feels like %1$d°C. Avoiding recently worn clothes.</string>
+
+
+
+
 
 </resources>

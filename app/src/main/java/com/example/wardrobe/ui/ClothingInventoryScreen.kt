@@ -46,6 +46,8 @@ import me.bytebeats.views.charts.bar.render.label.SimpleLabelDrawer
 import me.bytebeats.views.charts.pie.PieChart
 import me.bytebeats.views.charts.pie.PieChartData
 import me.bytebeats.views.charts.pie.PieChartData.Slice
+import androidx.compose.ui.res.stringResource
+import com.example.wardrobe.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -57,7 +59,7 @@ fun ClothingInventoryScreen(vm: StatisticsViewModel, navController: NavControlle
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Clothing Inventory") },
+                title = { Text(stringResource(R.string.inventory_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -83,9 +85,10 @@ fun ClothingInventoryScreen(vm: StatisticsViewModel, navController: NavControlle
                         .padding(vertical = 16.dp)
                 ) {
                     when (page) {
-                        0 -> StatsCard("By Member", countByMember.map { it.name to it.count })
-                        1 -> StatsCard("By Season", countBySeason.map { it.season.name.replace('_', '/') to it.count })
-                        2 -> StatsCard("By Category", countByCategory.map { it.category to it.count })
+                        0 -> StatsCard(stringResource(R.string.inventory_by_member), countByMember.map { it.name to it.count })
+                        1 -> StatsCard(stringResource(R.string.inventory_by_season), countBySeason.map { it.season.name.replace('_', '/') to it.count })
+                        2 -> StatsCard(stringResource(R.string.inventory_by_category), countByCategory.map { it.category to it.count })
+
                     }
                 }
             }
@@ -124,7 +127,7 @@ fun StatsCard(title: String, data: List<Pair<String, Int>>) {
                         .fillParentMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No data to display.")
+                    Text(stringResource(R.string.inventory_no_data))
                 }
             }
             return@LazyColumn
@@ -172,7 +175,7 @@ fun StatsCard(title: String, data: List<Pair<String, Int>>) {
 
         // Manual Legend for Pie Chart
         item {
-            Text("Details", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.inventory_details), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
         }
         val total = data.sumOf { it.second }

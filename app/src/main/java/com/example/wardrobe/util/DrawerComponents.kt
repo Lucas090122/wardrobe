@@ -25,8 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.wardrobe.R
 import com.example.wardrobe.Screen
 import com.example.wardrobe.data.Member
 import com.example.wardrobe.ui.theme.Theme
@@ -52,12 +54,9 @@ fun SimpleDrawerItem(
             Modifier.padding(end = 8.dp, top = 4.dp)
         )*/
         Text(
-            text = item.dTitle,
+            text = stringResource(id = item.titleId),
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.onSurface
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -75,7 +74,7 @@ fun ToggleDrawerItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Dark Mode",
+            text = stringResource(R.string.drawer_dark_mode),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
         )
@@ -101,7 +100,7 @@ fun AdminModeDrawerItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Admin Mode",
+            text = stringResource(R.string.drawer_admin_mode),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
         )
@@ -127,7 +126,7 @@ fun AiModeDrawerItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "AI Mode",
+            text = stringResource(R.string.drawer_ai_mode),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
         )
@@ -162,13 +161,13 @@ fun ExpandableDrawerItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = item.dTitle,
+                text = stringResource(id = item.titleId),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (expanded) "Collapse" else "Expand"
+                contentDescription = stringResource(if (expanded) R.string.drawer_collapse else R.string.drawer_expand)
             )
         }
 
@@ -207,7 +206,7 @@ fun ExpandableDrawerItem(
                     verticalAlignment = Alignment.CenterVertically,
 
                     ){
-                    Text("Add Member")
+                    Text(stringResource(R.string.drawer_add_member))
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add member"

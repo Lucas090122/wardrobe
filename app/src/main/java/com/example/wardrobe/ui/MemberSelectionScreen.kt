@@ -9,19 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.wardrobe.R
 import com.example.wardrobe.data.Member
 import com.example.wardrobe.viewmodel.MemberViewModel
 
-/**
- * Screen shown before entering any wardrobe.
- * Allows the user to:
- *  - select an existing member
- *  - add a new member
- *  - view outdated clothing count badges per member
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemberSelectionScreen(
@@ -29,7 +24,7 @@ fun MemberSelectionScreen(
     onMemberSelected: (Long) -> Unit
 ) {
     val members by vm.members.collectAsState()
-    val outdatedMap by vm.outdatedCounts.collectAsState()   // map: memberId → outdated item count
+    val outdatedMap by vm.outdatedCounts.collectAsState()
     var showAddMemberDialog by remember { mutableStateOf(false) }
 
     Scaffold { padding ->
@@ -39,32 +34,27 @@ fun MemberSelectionScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Button to create a new member
             Button(onClick = { showAddMemberDialog = true }) {
-                Text("Add New Member")
+                Text(stringResource(R.string.add_new_member))
             }
 
             Spacer(Modifier.height(16.dp))
             Divider()
             Spacer(Modifier.height(16.dp))
 
-            // If no members exist yet
             if (members.isEmpty()) {
-                Text("No members yet. Add one above!")
+                Text(stringResource(R.string.no_members_yet))
             } else {
-                // List all members
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(members) { member ->
                         val outdated = outdatedMap[member.memberId] ?: 0
-
                         MemberCard(
                             member = member,
                             outdatedCount = outdated,
                             onClick = {
-                                // Persist current member selection in ViewModel
                                 vm.setCurrentMember(member.memberId)
                                 onMemberSelected(member.memberId)
                             }
@@ -75,7 +65,6 @@ fun MemberSelectionScreen(
         }
     }
 
-    // Add Member Popup Dialog
     if (showAddMemberDialog) {
         AddMemberDialog(
             onDismiss = { showAddMemberDialog = false },
@@ -87,10 +76,6 @@ fun MemberSelectionScreen(
     }
 }
 
-/**
- * A simple card representing a family member.
- * Shows name, gender, age and — if a minor — outdated item count chip.
- */
 @Composable
 fun MemberCard(
     member: Member,
@@ -107,24 +92,16 @@ fun MemberCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = member.name,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = "${member.gender}, ${member.age}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(member.name, style = MaterialTheme.typography.titleMedium)
+                Text("${member.gender}, ${member.age}", style = MaterialTheme.typography.bodyMedium)
             }
 
-            // Show outdated-size notification only for minors
             if (member.age < 18 && outdatedCount > 0) {
                 AssistChip(
-                    onClick = {
-                        // No action needed for now: purely informational.
-                        // Could later navigate to a "size issues" detail view.
+                    onClick = {},
+                    label = {
+                        Text(stringResource(R.string.outdated_items_chip, outdatedCount))
                     },
-                    label = { Text("$outdatedCount items may be too small") },
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         labelColor = MaterialTheme.colorScheme.onErrorContainer
@@ -135,17 +112,6 @@ fun MemberCard(
     }
 }
 
-
-/**
- * Popup dialog for adding a new member.
- * Includes:
- *  - name
- *  - gender selection (Male / Female)
- *  - age
- *  - birthday (required only for minors)
- *
- * Birthday is collected using Material3 date picker.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMemberDialog(
@@ -156,21 +122,17 @@ fun AddMemberDialog(
     var gender by remember { mutableStateOf("") }
     var ageText by remember { mutableStateOf("") }
 
-    val genderOptions = listOf("Male", "Female")
+    val genderOptions = listOf(
+        stringResource(R.string.gender_male),
+        stringResource(R.string.gender_female)
+    )
 
-    // Convert age text to integer safely
     val ageInt = ageText.toIntOrNull()
     val isMinor = ageInt != null && ageInt in 0 until 18
 
-    // Birthday picker state
     var showDatePicker by remember { mutableStateOf(false) }
     var birthDateMillis by remember { mutableStateOf<Long?>(null) }
 
-    /**
-     * Save is only enabled when:
-     *  - all fields completed
-     *  - if minor → birthday must be chosen
-     */
     val isSaveEnabled =
         name.isNotBlank() &&
                 gender.isNotBlank() &&
@@ -183,19 +145,17 @@ fun AddMemberDialog(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Add New Member", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.add_new_member), style = MaterialTheme.typography.titleLarge)
 
-                // Name input
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.name)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Gender selection
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Gender", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.gender), style = MaterialTheme.typography.bodyLarge)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         genderOptions.forEach { option ->
                             FilterChip(
@@ -207,79 +167,70 @@ fun AddMemberDialog(
                     }
                 }
 
-                // Age input
                 OutlinedTextField(
                     value = ageText,
                     onValueChange = { ageText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Age") },
+                    label = { Text(stringResource(R.string.age)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
-                // If minor: require birthday
                 if (isMinor) {
                     Column {
-                        Text("Birthday", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.birthday), style = MaterialTheme.typography.bodyLarge)
                         TextButton(onClick = { showDatePicker = true }) {
                             Text(
                                 if (birthDateMillis != null)
-                                    "Selected: ${
+                                    stringResource(
+                                        R.string.selected_birthday,
                                         java.text.SimpleDateFormat("yyyy-MM-dd")
                                             .format(java.util.Date(birthDateMillis!!))
-                                    }"
-                                else "Select birthday"
+                                    )
+                                else stringResource(R.string.select_birthday)
                             )
                         }
                     }
                 }
 
-                // Save / Cancel buttons
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                     Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            onSave(
-                                name,
-                                gender,
-                                ageInt!!,
-                                if (isMinor) birthDateMillis else null
-                            )
-                        },
-                        enabled = isSaveEnabled
-                    ) {
-                        Text("Save")
+                    Button(onClick = {
+                        onSave(
+                            name,
+                            gender,
+                            ageInt!!,
+                            if (isMinor) birthDateMillis else null
+                        )
+                    }, enabled = isSaveEnabled) {
+                        Text(stringResource(R.string.save))
                     }
                 }
             }
         }
     }
 
-    // Birthday date picker dialog
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState()
-
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
                         val selected = datePickerState.selectedDateMillis
-                        if (selected != null) {
-                            birthDateMillis = selected
-                        }
+                        if (selected != null) birthDateMillis = selected
                         showDatePicker = false
                     }
-                ) { Text("OK") }
+                ) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         ) {

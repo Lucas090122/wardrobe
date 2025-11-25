@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.wardrobe.data.Season
 import com.example.wardrobe.data.WeatherInfo
@@ -21,6 +22,7 @@ import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.WeatherRecommendationCard
 import com.example.wardrobe.viewmodel.ViewType
 import com.example.wardrobe.viewmodel.WardrobeViewModel
+import com.example.wardrobe.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,12 +75,12 @@ fun HomeScreen(
                 Tab(
                     selected = ui.currentView == ViewType.IN_USE,
                     onClick = { vm.setViewType(ViewType.IN_USE) },
-                    text = { Text("In Use") }
+                    text = { Text(stringResource(R.string.tab_in_use)) }
                 )
                 Tab(
                     selected = ui.currentView == ViewType.STORED,
                     onClick = { vm.setViewType(ViewType.STORED) },
-                    text = { Text("Stored") }
+                    text = { Text(stringResource(R.string.tab_stored)) }
                 )
             }
 
@@ -112,9 +114,10 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Filters & search")
+                Text(stringResource(R.string.filters_search))
                 TextButton(onClick = { filtersExpanded = !filtersExpanded }) {
-                    Text(if (filtersExpanded) "Hide" else "Show")
+                    Text(if (filtersExpanded) stringResource(R.string.filters_hide)
+                    else stringResource(R.string.filters_show))
                     Icon(
                         imageVector = if (filtersExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = null
@@ -143,7 +146,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp),
-                        placeholder = { Text("Search description...") },
+                        placeholder = { Text(stringResource(R.string.search_hint)) },
                         trailingIcon = {
                             if (queryForTextField.isNotEmpty()) {
                                 IconButton(onClick = {
@@ -152,7 +155,7 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         Icons.Default.Clear,
-                                        contentDescription = "Clear search"
+                                        contentDescription = stringResource(R.string.clear_search)
                                     )
                                 }
                             }
@@ -167,10 +170,10 @@ fun HomeScreen(
                             modifier = Modifier.height(40.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Filter by tags", modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.filter_by_tags), modifier = Modifier.weight(1f))
                             if (ui.selectedTagIds.isNotEmpty()) {
                                 TextButton(onClick = vm::clearTagSelection) {
-                                    Text("Clear")
+                                    Text(stringResource(R.string.clear))
                                 }
                             }
                         }
@@ -190,10 +193,10 @@ fun HomeScreen(
                             modifier = Modifier.height(40.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Filter by seasons", modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.filter_by_seasons), modifier = Modifier.weight(1f))
                             if (ui.selectedSeason != null) {
                                 TextButton(onClick = vm::clearSeasonFilter) {
-                                    Text("Clear")
+                                    Text(stringResource(R.string.clear))
                                 }
                             }
                         }
@@ -224,9 +227,9 @@ fun HomeScreen(
                     onClick = { showOutdatedOnly = !showOutdatedOnly },
                     label = {
                         val text = if (showOutdatedOnly) {
-                            "${ui.outdatedCount} items may be too small (showing)"
+                            stringResource(R.string.outdated_items_showing, ui.outdatedCount)
                         } else {
-                            "${ui.outdatedCount} items may be too small (tap to filter)"
+                            stringResource(R.string.outdated_items_filter, ui.outdatedCount)
                         }
                         Text(text)
                     },

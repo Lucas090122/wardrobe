@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.example.wardrobe.R
 import com.example.wardrobe.WardrobeApp
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.data.WeatherInfo
@@ -28,7 +30,9 @@ fun Home(
             return MemberViewModel(repo) as T
         }
     }*/
+
     var selectedMemberId by remember { mutableStateOf<Long?>(null) }
+    val pressBackMsg = stringResource(R.string.press_back_exit)
     if (selectedMemberId == null) {
         // This is the root screen, handle app exit here
         var lastBackTime by remember { mutableLongStateOf(0L) }
@@ -40,7 +44,7 @@ fun Home(
                 activity?.finish() // Exit the app
             } else {
                 lastBackTime = now
-                Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, pressBackMsg, Toast.LENGTH_SHORT).show()
             }
         }
 

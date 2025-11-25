@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.core.content.FileProvider
@@ -49,6 +50,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 import kotlin.math.max
+import com.example.wardrobe.R
 
 // Globally remember the last automatically-synced tagIds.
 // This allows us to remove previously auto-added tags when new AI suggestions come in.
@@ -197,11 +199,14 @@ fun EditItemScreen(
         }
     }
 
+    val titleText = if (itemId == null) stringResource(R.string.add_item)
+    else stringResource(R.string.edit_item)
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (itemId == null) "Add Item" else "Edit Item") },
-                navigationIcon = { TextButton(onClick = onDone) { Text("Back") } },
+                title = { Text(titleText) },
+                navigationIcon = { TextButton(onClick = onDone) { Text(stringResource(R.string.back)) } },
                 actions = {
                     TextButton(onClick = {
                         // Persist image into app storage if it is not already a file Uri
@@ -230,7 +235,7 @@ fun EditItemScreen(
                             season = season
                         )
                         onDone()
-                    }) { Text("Save") }
+                    }) { Text(stringResource(R.string.save)) }
                 }
             )
         }
@@ -261,28 +266,35 @@ fun EditItemScreen(
                         strokeWidth = 2.dp
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Analyzing clothes with AI…")
+                    Text(stringResource(R.string.ai_analyzing))
                 }
             }
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description (e.g., Blue down jacket 110cm)") },
+                label = { Text(stringResource(R.string.description_hint)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
             // Section: recommendation attributes
-            Text("Recommendation Attributes", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.recommendation_attributes), style = MaterialTheme.typography.titleMedium)
 
             // Category chips
-            val categories = listOf("TOP", "PANTS", "SHOES", "HAT")
+            val categoryLabel = mapOf(
+                "TOP" to stringResource(R.string.cat_top),
+                "PANTS" to stringResource(R.string.cat_pants),
+                "SHOES" to stringResource(R.string.cat_shoes),
+                "HAT" to stringResource(R.string.cat_hat)
+            )
+
+            //val categories = listOf("TOP", "PANTS", "SHOES", "HAT")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                categories.forEach { c ->
+                categoryLabel.forEach { (value, label) ->
                     FilterChip(
-                        selected = (category == c),
+                        selected = (category == value),
                         onClick = {
-                            category = c
+                            category = value
                             // Re-sync tags whenever the category changes
                             syncTagsFromAttributes(
                                 vm,
@@ -294,8 +306,8 @@ fun EditItemScreen(
                                 scope
                             )
                         },
-                        label = { Text(c) },
-                        leadingIcon = { if (category == c) Icon(Icons.Default.Check, null) }
+                        label = { Text(label) },
+                        leadingIcon = { if (category == value) Icon(Icons.Default.Check, null) }
                     )
                 }
             }
@@ -306,13 +318,13 @@ fun EditItemScreen(
                 OutlinedTextField(
                     value = sizeText,
                     onValueChange = { sizeText = it },
-                    label = { Text("Size (e.g. 110, 28, 32)") },
+                    label = { Text(stringResource(R.string.size_hint)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Spacer(Modifier.height(12.dp))
-            Text("Season", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.season), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Season.values().forEach { s ->
                     FilterChip(
@@ -325,7 +337,7 @@ fun EditItemScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-            Text("Warmth Level: $warmthLevel")
+            Text(stringResource(R.string.warmth_level, warmthLevel))
             Slider(
                 value = warmthLevel.toFloat(),
                 onValueChange = {
@@ -353,14 +365,23 @@ fun EditItemScreen(
             )
 
             Spacer(Modifier.height(12.dp))
-            Text("Occasions", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.occasions), style = MaterialTheme.typography.titleSmall)
+
+            val occasionLabel = mapOf(
+                "CASUAL" to stringResource(R.string.occ_casual),
+                "SCHOOL" to stringResource(R.string.occ_school),
+                "SPORT" to stringResource(R.string.occ_sport),
+                "FORMAL" to stringResource(R.string.occ_formal),
+                "WORK" to stringResource(R.string.occ_work)
+            )
+
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                allOccasions.forEach { occ ->
-                    val checked = occasionSet.contains(occ)
+                occasionLabel.forEach { (value, label) ->
+                    val checked = occasionSet.contains(value)
                     FilterChip(
                         selected = checked,
                         onClick = {
-                            if (checked) occasionSet.remove(occ) else occasionSet.add(occ)
+                            if (checked) occasionSet.remove(value) else occasionSet.add(value)
                             // Occasion also affects tag suggestions
                             syncTagsFromAttributes(
                                 vm,
@@ -372,7 +393,7 @@ fun EditItemScreen(
                                 scope
                             )
                         },
-                        label = { Text(occ) },
+                        label = { Text(label) },
                         leadingIcon = { if (checked) Icon(Icons.Default.Check, null) }
                     )
                 }
@@ -381,7 +402,7 @@ fun EditItemScreen(
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Waterproof",
+                    stringResource(R.string.waterproof),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f)
                 )
@@ -405,7 +426,7 @@ fun EditItemScreen(
 
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Color",
+                text = stringResource(R.string.color),
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(start = 4.dp)
             )
@@ -447,7 +468,7 @@ fun EditItemScreen(
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Favorite",
+                    stringResource(R.string.favorite),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f)
                 )
@@ -536,21 +557,23 @@ private fun HandleDialogEffects(vm: WardrobeViewModel, effect: DialogEffect) {
         is DialogEffect.DeleteLocation.AdminConfirm -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
-                title = { Text("Confirm Deletion") },
+                title = { Text(stringResource(R.string.dialog_confirm_delete)) },
                 text = {
                     Text(
-                        "Are you sure you want to delete this location? " +
-                                "${effect.itemCount} items will become unassigned."
+                        stringResource(
+                            R.string.dialog_location_delete_msg,
+                            effect.itemCount
+                        )
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = { vm.forceDeleteLocation(effect.locationId) }) {
-                        Text("Delete")
+                        Text(stringResource(R.string.dialog_delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { vm.clearDialogEffect() }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.dialog_cancel))
                     }
                 }
             )
@@ -559,16 +582,18 @@ private fun HandleDialogEffects(vm: WardrobeViewModel, effect: DialogEffect) {
         is DialogEffect.DeleteLocation.PreventDelete -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
-                title = { Text("Action Not Allowed") },
+                title = { Text(stringResource(R.string.dialog_action_not_allowed)) },
                 text = {
                     Text(
-                        "This location is in use by ${effect.itemCount} items " +
-                                "and cannot be deleted in Normal Mode."
+                        stringResource(
+                            R.string.dialog_location_prevent_delete_msg,
+                            effect.itemCount
+                        )
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = { vm.clearDialogEffect() }) {
-                        Text("OK")
+                        Text(stringResource(R.string.ok))
                     }
                 }
             )
@@ -577,21 +602,23 @@ private fun HandleDialogEffects(vm: WardrobeViewModel, effect: DialogEffect) {
         is DialogEffect.DeleteTag.AdminConfirm -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
-                title = { Text("Confirm Deletion") },
+                title = { Text(stringResource(R.string.dialog_confirm_delete)) },
                 text = {
                     Text(
-                        "Are you sure you want to delete this tag? " +
-                                "It is used by ${effect.itemCount} items."
+                        stringResource(
+                            R.string.dialog_tag_delete_msg,
+                            effect.itemCount
+                        )
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = { vm.forceDeleteTag(effect.tagId) }) {
-                        Text("Delete")
+                        Text(stringResource(R.string.dialog_delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { vm.clearDialogEffect() }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.dialog_cancel))
                     }
                 }
             )
@@ -600,16 +627,18 @@ private fun HandleDialogEffects(vm: WardrobeViewModel, effect: DialogEffect) {
         is DialogEffect.DeleteTag.PreventDelete -> {
             AlertDialog(
                 onDismissRequest = { vm.clearDialogEffect() },
-                title = { Text("Action Not Allowed") },
+                title = { Text(stringResource(R.string.dialog_action_not_allowed)) },
                 text = {
                     Text(
-                        "This tag is in use by ${effect.itemCount} items " +
-                                "and cannot be deleted in Normal Mode."
+                        stringResource(
+                            R.string.dialog_tag_prevent_delete_msg,
+                            effect.itemCount
+                        )
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = { vm.clearDialogEffect() }) {
-                        Text("OK")
+                        Text(stringResource(R.string.ok))
                     }
                 }
             )
@@ -630,7 +659,7 @@ private fun TagsSection(
     val scope = rememberCoroutineScope()
 
     Column {
-        Text("Tags", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.tags), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
 
         // Existing tags with chip selection
@@ -656,7 +685,7 @@ private fun TagsSection(
             OutlinedTextField(
                 value = newTagName,
                 onValueChange = { newTagName = it },
-                label = { Text("New Tag Name") },
+                label = { Text(stringResource(R.string.new_tag_name)) },
                 modifier = Modifier.weight(1f)
             )
             Button(onClick = {
@@ -670,7 +699,7 @@ private fun TagsSection(
                         newTagName = ""
                     }
                 }
-            }) { Text("Add") }
+            }) { Text(stringResource(R.string.add)) }
         }
     }
 }
@@ -690,7 +719,7 @@ private fun StorageSection(
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Stored",
+                stringResource(R.string.stored),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
@@ -699,7 +728,7 @@ private fun StorageSection(
 
         if (isStored) {
             Spacer(Modifier.height(16.dp))
-            Text("Storage Location", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.storage_location), style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
 
             // Existing locations as selectable chips, each with a delete icon (admin-aware)
@@ -718,7 +747,7 @@ private fun StorageSection(
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Delete location",
+                                    contentDescription = stringResource(R.string.delete_location),
                                     modifier = Modifier
                                         .size(18.dp)
                                         .clickable { vm.deleteLocation(location.locationId) }
@@ -739,7 +768,7 @@ private fun StorageSection(
                 OutlinedTextField(
                     value = newLocationName,
                     onValueChange = { newLocationName = it },
-                    label = { Text("New location name") },
+                    label = { Text(stringResource(R.string.new_location_name)) },
                     modifier = Modifier.weight(1f)
                 )
                 Button(onClick = {
@@ -748,7 +777,7 @@ private fun StorageSection(
                         vm.addLocation(name)
                         newLocationName = ""
                     }
-                }) { Text("Add") }
+                }) { Text(stringResource(R.string.add)) }
             }
         }
     }
@@ -807,7 +836,7 @@ private fun ImageAndCameraSection(
                     .background(Color(0x11FFFFFF)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Tap to select image")
+                Text(stringResource(R.string.tap_select_image))
             }
         }
     }
@@ -820,7 +849,7 @@ private fun ImageAndCameraSection(
             val contentUri =
                 FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             takePicture.launch(contentUri)
-        }) { Text("Take Photo") }
+        }) { Text(stringResource(R.string.take_photo)) }
 
         OutlinedButton(onClick = {
             galleryPicker.launch(
@@ -828,7 +857,7 @@ private fun ImageAndCameraSection(
                     ActivityResultContracts.PickVisualMedia.ImageOnly
                 )
             )
-        }) { Text("Choose from Album") }
+        }) { Text(stringResource(R.string.choose_from_album)) }
     }
 }
 

@@ -7,6 +7,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -18,6 +19,8 @@ fun ClothingCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val formattedDate = android.text.format.DateFormat.getDateFormat(LocalContext.current)
+        .format(item.createdAt)
     ListItem(
         headlineContent = {
             Text(
@@ -27,7 +30,7 @@ fun ClothingCard(
             )
         },
         supportingContent = {
-            Text(android.text.format.DateFormat.format("yyyy-MM-dd", item.createdAt).toString())
+            Text(formattedDate)
         },
         leadingContent = {
             val uri = item.imageUri?.let { Uri.parse(it) }

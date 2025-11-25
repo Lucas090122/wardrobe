@@ -1,29 +1,20 @@
 package com.example.wardrobe.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.wardrobe.R
 import com.example.wardrobe.data.WardrobeRepository
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +27,13 @@ fun TransferHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Transfer History") },
+                title = { Text(stringResource(R.string.transfer_history_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 }
             )
@@ -52,14 +46,23 @@ fun TransferHistoryScreen(
                 .padding(16.dp)
         ) {
             if (transferHistory.isEmpty()) {
-                Text(text = "No transfer history found.")
+                Text(text = stringResource(R.string.transfer_history_empty))
             } else {
                 LazyColumn {
                     items(transferHistory) { record ->
-                        val formattedDate = SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH).format(Date(record.transferTime))
+                        val formattedDate = SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH)
+                            .format(Date(record.transferTime))
+
                         Text(
-                            text = "${record.sourceMemberName} transferred ${record.itemName} to ${record.targetMemberName} on $formattedDate.",
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            text = stringResource(
+                                R.string.transfer_history_record,
+                                record.sourceMemberName,
+                                record.itemName,
+                                record.targetMemberName,
+                                formattedDate
+                            ),
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }

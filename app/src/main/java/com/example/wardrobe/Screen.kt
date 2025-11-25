@@ -2,44 +2,27 @@ package com.example.wardrobe
 
 
 
-sealed class Screen(
-    val title:String,
-    val route: String,
-){  //<-- To enable future development in case bottom panel is required!
-    sealed class DrawerScreen(
-        val dTitle: String,
-        val dRoute: String,
-    ): Screen(dTitle, dRoute){
+sealed class Screen(val route: String, val titleId: Int) {
 
-        object Home: DrawerScreen(
-            dTitle = "Home",
-            dRoute = "home"
-        )
+    sealed class DrawerScreen(route: String, titleId: Int) :
+        Screen(route, titleId) {
 
-        object Member : DrawerScreen(
-            dTitle = "Member",
-            dRoute = "member/{memberId}"
-        ) {
+        data object Home : DrawerScreen("home", R.string.screen_home)
+
+        data object Member : DrawerScreen("member/{memberId}", R.string.screen_member) {
             fun createRoute(memberId: Long) = "member/$memberId"
         }
 
-        object Statistics: DrawerScreen(
-            dTitle = "Statistics",
-            dRoute = "statistics",
-        )
-
-        object Settings: DrawerScreen(
-            dTitle = "Settings",
-            dRoute = "settings",
-        )
-
-        object Theme: DrawerScreen(
-            dTitle = "Theme",
-            dRoute = "theme",
-        )
+        data object Statistics : DrawerScreen("statistics", R.string.screen_statistics)
+        data object Settings : DrawerScreen("settings", R.string.screen_settings)
+        data object Theme : DrawerScreen("theme", R.string.screen_theme)
     }
-    object TransferHistory: Screen("Transfer History", "transfer_history")
-    object ClothingInventory: Screen("Clothing Inventory", "clothing_inventory")
+
+    data object TransferHistory :
+        Screen("transfer_history", R.string.screen_transfer_history)
+
+    data object ClothingInventory :
+        Screen("clothing_inventory", R.string.screen_clothing_inventory)
 }
 
 val ScreensInDrawer = listOf(
