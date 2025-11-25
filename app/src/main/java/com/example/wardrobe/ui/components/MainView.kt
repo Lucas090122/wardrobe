@@ -187,66 +187,66 @@ fun MainView(
                 .padding(top = 40.dp)
                 .width(280.dp)
         ) {
-            // Home
-            SimpleDrawerItem(
-                Screen.DrawerScreen.Home,
-                selected = currentRoute == Screen.DrawerScreen.Home.route,
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
             ) {
-                scope.launch { drawerState.close() }
-                controller.navigate(Screen.DrawerScreen.Home.route)
-            }
+                // Home
+                SimpleDrawerItem(
+                    Screen.DrawerScreen.Home,
+                    selected = currentRoute == Screen.DrawerScreen.Home.route
+                ) {
+                    scope.launch { drawerState.close() }
+                    controller.navigate(Screen.DrawerScreen.Home.route)
+                }
 
-            // Members (expandable list)
-            ExpandableDrawerItem(
-                item = Screen.DrawerScreen.Member,
-                subItems = members,
-                onItemClicked = { scope.launch { drawerState.close() } },
-                vm = vm,
-                controller = controller,
-            )
+                // Members (expandable list)
+                ExpandableDrawerItem(
+                    item = Screen.DrawerScreen.Member,
+                    subItems = members,
+                    onItemClicked = { scope.launch { drawerState.close() } },
+                    vm = vm,
+                    controller = controller,
+                )
 
-            // Other screens defined in ScreensInDrawer (Statistics, Settings, etc.)
-            LazyColumn {
-                items(ScreensInDrawer) { item ->
+                // Statistics, Settings
+                ScreensInDrawer.forEach { item ->
                     SimpleDrawerItem(
                         selected = currentRoute == item.route,
-                        item = item,
+                        item = item
                     ) {
                         scope.launch { drawerState.close() }
                         controller.navigate(item.route)
                     }
                 }
+
+//                Spacer(Modifier.height(8.dp))
+
+                AdminModeDrawerItem(
+                    isAdmin = isAdminMode,
+                    onAdminChange = { enabled ->
+                        if (enabled) showAdminPinDialog = true
+                        else scope.launch { repo.settings.setAdminMode(false) }
+                    }
+                )
+
+                AiModeDrawerItem(
+                    isEnabled = isAiEnabled,
+                    onToggle = { enabled ->
+                        if (enabled) {
+                            showAiPrivacyDialog = true
+                        } else {
+                            scope.launch { repo.settings.setAiEnabled(false) }
+                        }
+                    }
+                )
+
+                ToggleDrawerItem(
+                    currentTheme = theme,
+                    onThemeChange = onThemeChange
+                )
             }
-
-            // Admin mode toggle that requires PIN when enabling
-            AdminModeDrawerItem(
-                isAdmin = isAdminMode,
-                onAdminChange = { enabled ->
-                    if (enabled) {
-                        // When turning ON, ask for PIN
-                        showAdminPinDialog = true
-                    } else {
-                        // Turning OFF does not require PIN
-                        scope.launch { repo.settings.setAdminMode(false) }
-                    }
-                }
-            )
-
-            // AI mode toggle with privacy dialog before enabling
-            AiModeDrawerItem(
-                isEnabled = isAiEnabled,
-                onToggle = { enabled ->
-                    if (enabled) {
-                        // Do not enable AI immediately; first show privacy notice
-                        showAiPrivacyDialog = true
-                    } else {
-                        scope.launch { repo.settings.setAiEnabled(false) }
-                    }
-                }
-            )
-
-            // Theme toggle (light / dark / system, depending on your implementation)
-            ToggleDrawerItem(currentTheme = theme) { newTheme -> onThemeChange(newTheme) }
         }
     }
 

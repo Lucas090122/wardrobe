@@ -35,6 +35,13 @@ import com.example.wardrobe.ui.theme.Theme
 import com.example.wardrobe.ui.AddMemberDialog
 import com.example.wardrobe.viewmodel.MemberViewModel
 
+private val DrawerTextItemModifier = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = 16.dp, vertical = 12.dp)
+
+private val DrawerSwitchItemModifier = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = 16.dp, vertical = 6.dp)
 @Composable
 fun SimpleDrawerItem(
     item : Screen.DrawerScreen,
@@ -42,11 +49,7 @@ fun SimpleDrawerItem(
     onItemClicked: () -> Unit
 ){
     Row(
-        Modifier.fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 16.dp)
-            .clickable {
-                onItemClicked()
-            }
+        modifier = DrawerTextItemModifier.clickable { onItemClicked() },
     ) {
         /*Icon(
             painter = painterResource(id = item.icon),
@@ -67,9 +70,7 @@ fun ToggleDrawerItem(
     onThemeChange: (theme:Theme) -> Unit
 ){
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 16.dp),
+        modifier = DrawerSwitchItemModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -93,9 +94,7 @@ fun AdminModeDrawerItem(
     onAdminChange: (Boolean) -> Unit
 ){
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 16.dp),
+        modifier = DrawerSwitchItemModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -119,9 +118,7 @@ fun AiModeDrawerItem(
     onToggle: (Boolean) -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 16.dp),
+        modifier = DrawerSwitchItemModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -153,10 +150,7 @@ fun ExpandableDrawerItem(
     Column(modifier = Modifier.fillMaxWidth()) {
         // Header Row
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(horizontal = 8.dp, 16.dp),
+            modifier = DrawerTextItemModifier.clickable { expanded = !expanded },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
