@@ -1,7 +1,14 @@
 package com.example.wardrobe.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -15,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.wardrobe.R
 import com.example.wardrobe.data.Season
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.ui.components.ClothingCard
@@ -22,7 +30,6 @@ import com.example.wardrobe.ui.components.TagChips
 import com.example.wardrobe.ui.components.WeatherRecommendationCard
 import com.example.wardrobe.viewmodel.ViewType
 import com.example.wardrobe.viewmodel.WardrobeViewModel
-import com.example.wardrobe.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +104,8 @@ fun HomeScreen(
                     onItemClick = onItemClick,
                     onConfirmOutfit = { outfitItems ->
                         vm.markOutfitAsWorn(outfitItems)
-                    }
+                    },
+                    confirmedOutfit = ui.confirmedOutfit
                 )
                 Spacer(Modifier.height(8.dp))
             }

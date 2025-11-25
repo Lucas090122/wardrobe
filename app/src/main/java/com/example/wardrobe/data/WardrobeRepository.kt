@@ -125,6 +125,8 @@ class WardrobeRepository(
 
     fun observeItem(itemId: Long) = dao.itemWithTags(itemId)
 
+    suspend fun getItemsByIds(ids: Set<Long>): List<ClothingItem> = dao.getItemsByIds(ids)
+
     /**
      * Create or update a clothing item.
      *

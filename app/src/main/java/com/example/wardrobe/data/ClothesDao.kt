@@ -100,6 +100,9 @@ interface ClothesDao {
     @Query("SELECT * FROM ClothingItem WHERE ownerMemberId = :memberId")
     suspend fun getItemsByMember(memberId: Long): List<ClothingItem>
 
+    @Query("SELECT * FROM ClothingItem WHERE itemId IN (:ids)")
+    suspend fun getItemsByIds(ids: Set<Long>): List<ClothingItem>
+
     @Query("SELECT createdAt FROM ClothingItem WHERE itemId = :itemId")
     suspend fun getCreatedAt(itemId: Long): Long?
 
