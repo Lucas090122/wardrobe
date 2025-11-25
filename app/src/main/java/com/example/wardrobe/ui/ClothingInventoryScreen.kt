@@ -2,9 +2,9 @@ package com.example.wardrobe.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+//import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+//import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,8 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -36,9 +34,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+//import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.wardrobe.R
+import com.example.wardrobe.data.Season
 import com.example.wardrobe.viewmodel.StatisticsViewModel
 import me.bytebeats.views.charts.bar.BarChart
 import me.bytebeats.views.charts.bar.BarChartData
@@ -46,8 +47,6 @@ import me.bytebeats.views.charts.bar.render.label.SimpleLabelDrawer
 import me.bytebeats.views.charts.pie.PieChart
 import me.bytebeats.views.charts.pie.PieChartData
 import me.bytebeats.views.charts.pie.PieChartData.Slice
-import androidx.compose.ui.res.stringResource
-import com.example.wardrobe.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -85,10 +84,23 @@ fun ClothingInventoryScreen(vm: StatisticsViewModel, navController: NavControlle
                         .padding(vertical = 16.dp)
                 ) {
                     when (page) {
-                        0 -> StatsCard(stringResource(R.string.inventory_by_member), countByMember.map { it.name to it.count })
-                        1 -> StatsCard(stringResource(R.string.inventory_by_season), countBySeason.map { it.season.name.replace('_', '/') to it.count })
-                        2 -> StatsCard(stringResource(R.string.inventory_by_category), countByCategory.map { it.category to it.count })
+                        // Inventory by member: member names are user-facing, no localization needed
+                        0 -> StatsCard(
+                            title = stringResource(R.string.inventory_by_member),
+                            data = countByMember.map { it.name to it.count }
+                        )
 
+                        // Inventory by season: use localized labels
+                        1 -> StatsCard(
+                            title = stringResource(R.string.inventory_by_season),
+                            data = countBySeason.map { statsLocalizeSeason(it.season) to it.count }
+                        )
+
+                        // Inventory by category: use localized category labels
+                        2 -> StatsCard(
+                            title = stringResource(R.string.inventory_by_category),
+                            data = countByCategory.map { statsLocalizeCategory(it.category) to it.count }
+                        )
                     }
                 }
             }
@@ -197,5 +209,34 @@ fun StatsCard(title: String, data: List<Pair<String, Int>>) {
                 )
             }
         }
+    }
+}
+
+/**
+ * Localizes Season enum values for the statistics screen.
+ * The Season enum itself is language-independent; only labels are localized.
+ */
+@Composable
+private fun statsLocalizeSeason(season: Season): String {
+    return when (season) {
+        Season.SPRING_AUTUMN -> stringResource(R.string.season_spring_autumn)
+        Season.SUMMER        -> stringResource(R.string.season_summer)
+        Season.WINTER        -> stringResource(R.string.season_winter)
+        else -> season.name.replace('_', '/')
+    }
+}
+
+/**
+ * Localizes internal category codes used in statistics (e.g. "TOP", "PANTS")
+ * to user-facing labels. The raw codes remain language-independent.
+ */
+@Composable
+private fun statsLocalizeCategory(category: String): String {
+    return when (category) {
+        "TOP"   -> stringResource(R.string.cat_top)
+        "PANTS" -> stringResource(R.string.cat_pants)
+        "SHOES" -> stringResource(R.string.cat_shoes)
+        "HAT"   -> stringResource(R.string.cat_hat)
+        else    -> category
     }
 }
