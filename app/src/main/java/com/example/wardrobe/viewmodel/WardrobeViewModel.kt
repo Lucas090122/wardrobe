@@ -2,11 +2,12 @@ package com.example.wardrobe.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.wardrobe.data.GrowthSizeTable
 import com.example.wardrobe.data.ClothingItem
+import com.example.wardrobe.data.GrowthSizeTable
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Member
 import com.example.wardrobe.data.Season
+import com.example.wardrobe.data.TagWithCount
 import com.example.wardrobe.data.TransferHistory
 import com.example.wardrobe.data.TransferHistoryDetails
 import com.example.wardrobe.data.WardrobeRepository
@@ -16,8 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -77,7 +79,8 @@ data class UiState(
     val dialogEffect: DialogEffect = DialogEffect.Hidden,
     val outdatedItemIds: Set<Long> = emptySet(),
     val outdatedCount: Int = 0,
-    val isAiEnabled: Boolean = false
+    val isAiEnabled: Boolean = false,
+    val confirmedOutfit: List<ClothingItem>? = null
 )
 
 /**
@@ -132,6 +135,16 @@ class WardrobeViewModel(
     private val currentView = MutableStateFlow(ViewType.IN_USE)
     private val selectedSeason = MutableStateFlow<Season?>(null)
     private val dialogEffect = MutableStateFlow<DialogEffect>(DialogEffect.Hidden)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val confirmedOutfitFlow: StateFlow<List<ClothingItem>?> =
+        repo.settings.todaysConfirmedOutfitIds.mapLatest { ids ->
+            if (ids.isNullOrEmpty()) {
+                null
+            } else {
+                repo.getItemsByIds(ids)
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     /**
      * Combine basic filter flows with admin mode from SettingsRepository.
@@ -190,13 +203,17 @@ class WardrobeViewModel(
         val itemsFlow = repo.observeItems(memberId, state.sel.toList(), state.q, state.season)
         val tagsFlow = repo.observeTagsWithCounts(memberId, state.view == ViewType.STORED)
 
-        combine(
-            itemsFlow,
-            repo.getMember(memberId),
-            tagsFlow,
-            repo.observeLocations(),
-            repo.getAllMembers()
-        ) { items, member, tagsWithCount, locations, allMembers ->
+        val flow1 = combine(itemsFlow, repo.getMember(memberId), tagsFlow) {
+            items, member, tags -> Triple(items, member, tags)
+        }
+        val flow2 = combine(repo.observeLocations(), repo.getAllMembers(), confirmedOutfitFlow) {
+            locations, allMembers, confirmed -> Triple(locations, allMembers, confirmed)
+        }
+
+        combine(flow1, flow2) { triple1, triple2 ->
+            val (items, member, tagsWithCount) = triple1
+            val (locations, allMembers, confirmed) = triple2
+
             val filteredItems = items.filter { item ->
                 if (state.view == ViewType.IN_USE) !item.stored else item.stored
             }
@@ -232,7 +249,8 @@ class WardrobeViewModel(
                 dialogEffect = state.dialogEffect,
                 outdatedItemIds = outdatedIds,
                 outdatedCount = outdatedIds.size,
-                isAiEnabled = state.isAiEnabled
+                isAiEnabled = state.isAiEnabled,
+                confirmedOutfit = confirmed
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
@@ -459,6 +477,7 @@ class WardrobeViewModel(
      */
     fun markOutfitAsWorn(items: List<ClothingItem>) {
         viewModelScope.launch {
+            repo.settings.setConfirmedOutfit(items)
             repo.markItemsAsWorn(items)
         }
     }

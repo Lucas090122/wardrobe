@@ -6,9 +6,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // At the top level of your kotlin file:
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -19,6 +23,31 @@ class SettingsRepository(private val context: Context) {
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
         val IS_AI_ENABLED = booleanPreferencesKey("is_ai_enabled")
+        val CONFIRMED_OUTFIT_DATE = stringPreferencesKey("confirmed_outfit_date")
+        val CONFIRMED_OUTFIT_IDS = stringSetPreferencesKey("confirmed_outfit_ids")
+    }
+
+    private val todayDateString: String
+        get() {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            return sdf.format(Date())
+        }
+
+    val todaysConfirmedOutfitIds: Flow<Set<Long>?> = context.dataStore.data
+        .map { preferences ->
+            val savedDate = preferences[Keys.CONFIRMED_OUTFIT_DATE]
+            if (savedDate == todayDateString) {
+                preferences[Keys.CONFIRMED_OUTFIT_IDS]?.map { it.toLong() }?.toSet()
+            } else {
+                null
+            }
+        }
+
+    suspend fun setConfirmedOutfit(items: List<ClothingItem>) {
+        context.dataStore.edit {
+            it[Keys.CONFIRMED_OUTFIT_DATE] = todayDateString
+            it[Keys.CONFIRMED_OUTFIT_IDS] = items.map { item -> item.itemId.toString() }.toSet()
+        }
     }
 
     val isAdminMode: Flow<Boolean> = context.dataStore.data
