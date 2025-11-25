@@ -211,4 +211,7 @@
     <string name="weather_reason_no_combinations">没有可用的穿搭组合。</string>
     <string name="weather_reason_basic">体感温度 %1$d°C。</string>
     <string name="weather_reason_avoiding_recent">体感温度 %1$d°C，避免使用最近穿过的衣物。</string>
+    <string name="season_spring_autumn">春秋</string>
+    <string name="season_summer">夏季</string>
+    <string name="season_winter">冬季</string>
 </resources>

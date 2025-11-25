@@ -198,4 +198,7 @@
     <string name="weather_reason_no_combinations">Kelvollisia asukokonaisuuksia ei löytynyt.</string>
     <string name="weather_reason_basic">Tuntuu kuin %1$d°C.</string>
     <string name="weather_reason_avoiding_recent">Tuntuu kuin %1$d°C. Vältetään äskettäin käytettyjä vaatteita.</string>
+    <string name="season_spring_autumn">Kevät/syksy</string>
+    <string name="season_summer">Kesä</string>
+    <string name="season_winter">Talvi</string>
 </resources>

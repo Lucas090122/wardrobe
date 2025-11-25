@@ -67,20 +67,3 @@ fun TagChips(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-private fun TagChipsPreview() {
-    val demoTags = listOf(
-        TagUiModel(id = 1, name = "Winter", count = 5, isDeletable = false),
-        TagUiModel(id = 2, name = "Summer", count = 0, isDeletable = false),
-        TagUiModel(id = 3, name = "Custom Tag", count = 12),
-        TagUiModel(id = 4, name = "Another Custom")
-    )
-    TagChips(
-        tags = demoTags,
-        selectedIds = setOf(1L, 4L),
-        onToggle = {},
-        onDelete = {}
-    )
-}

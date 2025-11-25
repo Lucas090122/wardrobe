@@ -278,9 +278,12 @@ fun EditItemScreen(
             )
 
             // Section: recommendation attributes
-            Text(stringResource(R.string.recommendation_attributes), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.recommendation_attributes),
+                style = MaterialTheme.typography.titleMedium
+            )
 
-            // Category chips
+            // Category chips (internal codes -> localized labels)
             val categoryLabel = mapOf(
                 "TOP" to stringResource(R.string.cat_top),
                 "PANTS" to stringResource(R.string.cat_pants),
@@ -288,7 +291,6 @@ fun EditItemScreen(
                 "HAT" to stringResource(R.string.cat_hat)
             )
 
-            //val categories = listOf("TOP", "PANTS", "SHOES", "HAT")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 categoryLabel.forEach { (value, label) ->
                     FilterChip(
@@ -330,7 +332,7 @@ fun EditItemScreen(
                     FilterChip(
                         selected = (season == s),
                         onClick = { season = s },
-                        label = { Text(s.name.replace('_', '/')) },
+                        label = { Text(localizeSeasonLabel(s)) },
                         leadingIcon = { if (season == s) Icon(Icons.Default.Check, null) }
                     )
                 }
@@ -501,7 +503,7 @@ fun EditItemScreen(
     HandleDialogEffects(vm, ui.dialogEffect)
 }
 
-// ----------- Smart tag sync logic (updated version) -----------
+// ----------- Smart tag sync logic -----------
 /**
  * Automatically syncs tags based on clothing attributes (category, warmth, occasions, waterproof).
  * This function:
@@ -509,6 +511,10 @@ fun EditItemScreen(
  *  2. Ensures those tags exist in DB (creating them if necessary).
  *  3. Removes previously auto-added tags that are no longer relevant.
  *  4. Adds new tags that should now be attached.
+ *
+ * NOTE: Here we use English-like internal names ("Top", "Waterproof", "CASUAL")
+ * as language-independent keys stored in the database. UI localization is done
+ * separately when rendering tags.
  */
 private fun syncTagsFromAttributes(
     vm: WardrobeViewModel,
@@ -521,9 +527,11 @@ private fun syncTagsFromAttributes(
 ) {
     val tagNames = mutableSetOf<String>()
 
-    // Map internal category codes to human-readable tag names
+    // Map internal category codes to tag keys
     val categoryMap = mapOf(
-        "TOP" to "Top", "PANTS" to "Pants", "SHOES" to "Shoes",
+        "TOP" to "Top",
+        "PANTS" to "Pants",
+        "SHOES" to "Shoes",
         "HAT" to "Hat"
     )
     categoryMap[category]?.let { tagNames.add(it) }
@@ -662,9 +670,14 @@ private fun TagsSection(
         Text(stringResource(R.string.tags), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
 
+        // Localize built-in tag names for display, while keeping IDs and keys intact.
+        val localizedTags = ui.tags.map { tag ->
+            tag.copy(name = localizeTagName(tag.name))
+        }
+
         // Existing tags with chip selection
         TagChips(
-            tags = ui.tags,
+            tags = localizedTags,
             selectedIds = selectedTagIds.toSet(),
             onToggle = { id ->
                 if (selectedTagIds.contains(id)) selectedTagIds.remove(id)
@@ -677,7 +690,7 @@ private fun TagsSection(
 
         Spacer(Modifier.height(16.dp))
 
-        // Add new custom tag by name
+        // Add new custom tag by name (user-defined tags are not localized)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -701,6 +714,47 @@ private fun TagsSection(
                 }
             }) { Text(stringResource(R.string.add)) }
         }
+    }
+}
+
+/**
+ * Maps internal tag keys stored in the database to localized labels
+ * for display in the UI. User-defined tags fall back to the original name.
+ */
+@Composable
+private fun localizeTagName(raw: String): String {
+    return when (raw) {
+        // Categories
+        "Top"   -> stringResource(R.string.cat_top)
+        "Pants" -> stringResource(R.string.cat_pants)
+        "Shoes" -> stringResource(R.string.cat_shoes)
+        "Hat"   -> stringResource(R.string.cat_hat)
+
+        // Attributes
+        "Waterproof" -> stringResource(R.string.waterproof)
+
+        // Occasions (match the internal codes used in syncTagsFromAttributes / occasions)
+        "CASUAL" -> stringResource(R.string.occ_casual)
+        "SCHOOL" -> stringResource(R.string.occ_school)
+        "SPORT"  -> stringResource(R.string.occ_sport)
+        "FORMAL" -> stringResource(R.string.occ_formal)
+        "WORK"   -> stringResource(R.string.occ_work)
+
+        else -> raw // User-created tags remain as-is
+    }
+}
+
+/**
+ * Maps internal season enum values to localized labels.
+ * The Season enum itself is language-independent; only UI strings are localized.
+ */
+@Composable
+private fun localizeSeasonLabel(season: Season): String {
+    return when (season) {
+        Season.SPRING_AUTUMN -> stringResource(R.string.season_spring_autumn)
+        Season.SUMMER        -> stringResource(R.string.season_summer)
+        Season.WINTER        -> stringResource(R.string.season_winter)
+        else -> season.name.replace('_', '/')
     }
 }
 

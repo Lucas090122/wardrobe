@@ -16,8 +16,25 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -124,8 +141,10 @@ fun HomeScreen(
             ) {
                 Text(stringResource(R.string.filters_search))
                 TextButton(onClick = { filtersExpanded = !filtersExpanded }) {
-                    Text(if (filtersExpanded) stringResource(R.string.filters_hide)
-                    else stringResource(R.string.filters_show))
+                    Text(
+                        if (filtersExpanded) stringResource(R.string.filters_hide)
+                        else stringResource(R.string.filters_show)
+                    )
                     Icon(
                         imageVector = if (filtersExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = null
@@ -185,8 +204,15 @@ fun HomeScreen(
                                 }
                             }
                         }
+
+                        // Localize built-in tag names for display (filters),
+                        // while keeping IDs and internal keys intact.
+                        val localizedTags = ui.tags.map { tag ->
+                            tag.copy(name = homeLocalizeTagName(tag.name))
+                        }
+
                         TagChips(
-                            tags = ui.tags,
+                            tags = localizedTags,
                             selectedIds = ui.selectedTagIds,
                             onToggle = vm::toggleTag,
                             modifier = Modifier.fillMaxWidth()
@@ -216,7 +242,7 @@ fun HomeScreen(
                                 FilterChip(
                                     selected = ui.selectedSeason == season,
                                     onClick = { vm.setSeasonFilter(season) },
-                                    label = { Text(season.name.replace('_', '/')) }
+                                    label = { Text(homeLocalizeSeason(season)) }
                                 )
                             }
                         }
@@ -265,9 +291,53 @@ fun HomeScreen(
                         item = item,
                         onClick = { onItemClick(item.itemId) }
                     )
-                    Divider()
+                    androidx.compose.material3.Divider()
                 }
             }
         }
+    }
+}
+
+/**
+ * Localizes built-in tag names for the HomeScreen filter chips.
+ *
+ * NOTE:
+ *  - The database stores language-independent keys ("Top", "CASUAL", etc.).
+ *  - Here we only convert those keys into localized labels for display.
+ *  - User-created tags fall back to the original name.
+ */
+@Composable
+private fun homeLocalizeTagName(raw: String): String {
+    return when (raw) {
+        // Categories (match the internal tag keys used in EditItemScreen)
+        "Top"   -> stringResource(R.string.cat_top)
+        "Pants" -> stringResource(R.string.cat_pants)
+        "Shoes" -> stringResource(R.string.cat_shoes)
+        "Hat"   -> stringResource(R.string.cat_hat)
+
+        // Attributes
+        "Waterproof" -> stringResource(R.string.waterproof)
+
+        // Occasions (same codes as in EditItemScreen / syncTagsFromAttributes)
+        "CASUAL" -> stringResource(R.string.occ_casual)
+        "SCHOOL" -> stringResource(R.string.occ_school)
+        "SPORT"  -> stringResource(R.string.occ_sport)
+        "FORMAL" -> stringResource(R.string.occ_formal)
+        "WORK"   -> stringResource(R.string.occ_work)
+
+        else -> raw // User-defined tags remain as-is
+    }
+}
+
+/**
+ * Localizes Season enum values for filters on the HomeScreen.
+ */
+@Composable
+private fun homeLocalizeSeason(season: Season): String {
+    return when (season) {
+        Season.SPRING_AUTUMN -> stringResource(R.string.season_spring_autumn)
+        Season.SUMMER        -> stringResource(R.string.season_summer)
+        Season.WINTER        -> stringResource(R.string.season_winter)
+        else -> season.name.replace('_', '/')
     }
 }

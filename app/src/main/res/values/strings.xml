@@ -221,9 +221,9 @@
     <string name="weather_reason_no_combinations">No valid outfit combinations found.</string>
     <string name="weather_reason_basic">Feels like %1$d°C.</string>
     <string name="weather_reason_avoiding_recent">Feels like %1$d°C. Avoiding recently worn clothes.</string>
-
-
-
+    <string name="season_spring_autumn">Spring/Autumn</string>
+    <string name="season_summer">Summer</string>
+    <string name="season_winter">Winter</string>
 
 
 </resources>
