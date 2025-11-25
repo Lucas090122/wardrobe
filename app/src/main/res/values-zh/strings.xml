@@ -114,7 +114,7 @@
     <string name="filters_search">筛选与搜索</string>
     <string name="filters_show">显示</string>
     <string name="filters_hide">隐藏</string>
-    <string name="search_hint">搜索描述...</string>
+    <string name="search_hint">搜索描述…</string>
     <string name="clear_search">清除搜索</string>
     <string name="filter_by_tags">按标签筛选</string>
     <string name="clear">清除</string>
@@ -129,7 +129,8 @@
     <string name="action_share">分享</string>
     <string name="action_edit">编辑</string>
     <string name="action_delete">删除</string>
-    <string name="loading">加载中...</string>
+    <string name="loading">加载中…</string>
+    <string name="dialog_delete_title">确认删除</string>
     <string name="dialog_delete_message">确定删除此物品？此操作不可撤销。</string>
     <string name="dialog_transfer_title">转移物品</string>
     <string name="dialog_transfer_select_member">选择要转移的成员：</string>

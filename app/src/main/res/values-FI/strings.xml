@@ -120,7 +120,8 @@
     <string name="action_share">Jaa</string>
     <string name="action_edit">Muokkaa</string>
     <string name="action_delete">Poista</string>
-    <string name="loading">Ladataan...</string>
+    <string name="loading">Ladataan…</string>
+    <string name="dialog_delete_title">Vahvista poisto</string>
     <string name="dialog_delete_message">Haluatko varmasti poistaa tämän tuotteen? Toimintoa ei voi perua.</string>
     <string name="dialog_transfer_title">Siirrä tuote</string>
     <string name="dialog_transfer_select_member">Valitse jäsen, jolle siirretään:</string>
