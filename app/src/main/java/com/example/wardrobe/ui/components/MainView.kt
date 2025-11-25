@@ -198,6 +198,7 @@ fun MainView(
                     selected = currentRoute == Screen.DrawerScreen.Home.route
                 ) {
                     scope.launch { drawerState.close() }
+                    vm.clearCurrentMember()
                     controller.navigate(Screen.DrawerScreen.Home.route)
                 }
 

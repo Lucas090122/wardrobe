@@ -57,4 +57,8 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
     fun setCurrentMember(id: Long?) {
         _currentMemberId.value = id
     }
+
+    fun clearCurrentMember() {
+        _currentMemberId.value = null
+    }
 }
