@@ -322,6 +322,7 @@ fun MainView(
         if (showAdminPinDialog) {
             var pin by remember { mutableStateOf("") }
             var pinError by remember { mutableStateOf<String?>(null) }
+            val wrongPinText = stringResource(R.string.admin_pin_wrong)
 
             AlertDialog(
                 onDismissRequest = { showAdminPinDialog = false },
@@ -355,7 +356,7 @@ fun MainView(
                     }
                 },
                 confirmButton = {
-                    pinError = stringResource(R.string.admin_pin_wrong)
+//                    pinError = stringResource(R.string.admin_pin_wrong)
                     TextButton(onClick = {
                         scope.launch {
                             when {
@@ -371,7 +372,7 @@ fun MainView(
                                     showAdminPinDialog = false
                                 }
                                 else -> {
-                                    pinError
+                                    pinError = wrongPinText
                                 }
                             }
                         }
