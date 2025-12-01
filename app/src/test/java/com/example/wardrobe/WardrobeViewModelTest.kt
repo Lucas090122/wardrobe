@@ -3,26 +3,29 @@ package com.example.wardrobe
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.ClothingWithTags
 import com.example.wardrobe.data.Season
+import com.example.wardrobe.data.TransferHistoryDetails
 import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.viewmodel.WardrobeViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
 class WardrobeViewModelTest {
 
-    private lateinit var viewModel: WardrobeViewModel
     private lateinit var repository: WardrobeRepository
     private val testDispatcher = StandardTestDispatcher()
 
@@ -30,8 +33,6 @@ class WardrobeViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         repository = mockk(relaxed = true)
-        // Assuming memberId 1L for tests
-        viewModel = WardrobeViewModel(repository, 1L)
     }
 
     @After
@@ -61,19 +62,34 @@ class WardrobeViewModelTest {
             sizeLabel = null
         )
         val clothingWithTags = ClothingWithTags(item = clothingItem, tags = emptyList())
-
-        // Mock the repository call to get the item's original owner
         coEvery { repository.observeItem(itemId) } returns flowOf(clothingWithTags)
 
         // When
+        val viewModel = WardrobeViewModel(repository, originalOwnerId)
         viewModel.transferItem(itemId, newOwnerId)
         testDispatcher.scheduler.advanceUntilIdle() // Execute the coroutine
 
         // Then
-        // Verify that the repository's transferItem method was called
         coVerify { repository.transferItem(itemId, newOwnerId) }
-
-        // Verify that the repository's recordTransferHistory method was called
         coVerify { repository.recordTransferHistory(any()) }
+    }
+
+    @Test
+    fun `transferHistory flow should expose data from repository`() = runTest {
+        // Given
+        val fakeHistory = listOf(
+            TransferHistoryDetails(System.currentTimeMillis(), "Alice", "Bob", "T-Shirt"),
+            TransferHistoryDetails(System.currentTimeMillis() - 10000, "Bob", "Charlie", "Jeans")
+        )
+        every { repository.getAllTransferHistoryDetails() } returns flowOf(fakeHistory)
+
+        // When
+        val viewModel = WardrobeViewModel(repository, 1L)
+        // The `stateIn` with WhileSubscribed needs a collector to be active.
+        // We collect the flow here and wait for the first non-empty list to be emitted.
+        val result = viewModel.transferHistory.first { it.isNotEmpty() }
+
+        // Then
+        assertEquals(fakeHistory, result)
     }
 }
