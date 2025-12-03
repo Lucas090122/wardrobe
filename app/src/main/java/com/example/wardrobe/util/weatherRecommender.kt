@@ -5,34 +5,36 @@ import com.example.wardrobe.data.Season
 import com.example.wardrobe.data.WeatherInfo
 import kotlin.math.roundToInt
 
+// --- Data classes moved to top-level for better accessibility and code structure ---
+
+data class Outfit(
+    val top: ClothingItem?,
+    val pants: ClothingItem?,
+    val shoes: ClothingItem?
+)
+
+/** UI will use this to select localized message */
+enum class ReasonCode {
+    BASIC,
+    AVOIDING_RECENT,
+    NO_MATCH,
+    MISSING_CATEGORY,
+    NO_COMBINATIONS
+}
+
+data class Result(
+    val outfit: Outfit?,
+    val reasonCode: ReasonCode,
+    val temperatureRounded: Int,
+    val canRefresh: Boolean,
+    val debugLog: String
+)
+
 object WeatherRecommender {
 
     private const val RECENT_WINDOW_DAYS = 3
     private const val RECENT_WINDOW_MS =
         RECENT_WINDOW_DAYS * 24 * 60 * 60 * 1000L
-
-    data class Outfit(
-        val top: ClothingItem?,
-        val pants: ClothingItem?,
-        val shoes: ClothingItem?
-    )
-
-    /** UI will use this to select localized message */
-    enum class ReasonCode {
-        BASIC,
-        AVOIDING_RECENT,
-        NO_MATCH,
-        MISSING_CATEGORY,
-        NO_COMBINATIONS
-    }
-
-    data class Result(
-        val outfit: Outfit?,
-        val reasonCode: ReasonCode,
-        val temperatureRounded: Int,
-        val canRefresh: Boolean,
-        val debugLog: String
-    )
 
     fun recommend(
         weather: WeatherInfo,
