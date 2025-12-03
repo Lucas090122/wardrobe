@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 val localProps = Properties().apply {
     val file = rootProject.file("local.properties")
@@ -15,6 +16,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
+    id("jacoco")
 }
 
 android {
@@ -59,6 +61,54 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val fileFilter = listOf(
+        "**/ui/**",
+        "**/theme/**",
+        "**/MainActivity*",
+        "**/Navigation*",
+        "**/data/**",
+
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*\$Companion*"
+    )
+
+    val javaTree = fileTree("${buildDir}/intermediates/javac/debug/classes") {
+        exclude(fileFilter)
+    }
+
+    val kotlinTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+
+    classDirectories.setFrom(files(javaTree, kotlinTree))
+
+    sourceDirectories.setFrom(
+        files(
+            "src/main/java",
+            "src/main/kotlin"
+        )
+    )
+
+    executionData.setFrom(
+        files("${buildDir}/jacoco/testDebugUnitTest.exec")
+    )
 }
 
 dependencies {
