@@ -15,7 +15,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import com.example.wardrobe.R
 import com.example.wardrobe.data.ClothingItem
 import com.example.wardrobe.data.WeatherInfo
+import com.example.wardrobe.util.Outfit
+import com.example.wardrobe.util.ReasonCode
+import com.example.wardrobe.util.Result
 import com.example.wardrobe.util.WeatherRecommender
 
 /**
@@ -55,7 +58,7 @@ fun WeatherRecommendationCard(
 
     // Used for “Another one”:
     // We remember the last outfit to avoid picking it again.
-    var lastOutfit by remember { mutableStateOf<WeatherRecommender.Outfit?>(null) }
+    var lastOutfit by remember { mutableStateOf<Outfit?>(null) }
 
     // Changing this value re-triggers the recommendation calculation.
     var refreshSeed by remember { mutableStateOf(0) }
@@ -102,7 +105,7 @@ fun WeatherRecommendationCard(
 
                         confirmedOutfit.forEachIndexed { index, item ->
                             if (index > 0) {
-                                Divider(Modifier.padding(vertical = 4.dp))
+                                HorizontalDivider(Modifier.padding(vertical = 4.dp))
                             }
                             // Using ClothingCard to display with image preview
                             ClothingCard(
@@ -162,7 +165,7 @@ fun WeatherRecommendationCard(
                     // Display the recommended items with their thumbnails
                     outfitItems.forEachIndexed { index, item ->
                         if (index > 0) {
-                            Divider(Modifier.padding(vertical = 4.dp))
+                            HorizontalDivider(Modifier.padding(vertical = 4.dp))
                         }
                         ClothingCard(
                             item = item,
@@ -206,20 +209,20 @@ fun WeatherRecommendationCard(
 }
 
 @Composable
-fun WeatherRecommender.Result.localizedMessage(): String =
+fun Result.localizedMessage(): String =
     when (reasonCode) {
-        WeatherRecommender.ReasonCode.BASIC ->
+        ReasonCode.BASIC ->
             stringResource(R.string.weather_reason_basic, temperatureRounded)
 
-        WeatherRecommender.ReasonCode.AVOIDING_RECENT ->
+        ReasonCode.AVOIDING_RECENT ->
             stringResource(R.string.weather_reason_avoiding_recent, temperatureRounded)
 
-        WeatherRecommender.ReasonCode.NO_MATCH ->
+        ReasonCode.NO_MATCH ->
             stringResource(R.string.weather_reason_no_match)
 
-        WeatherRecommender.ReasonCode.MISSING_CATEGORY ->
+        ReasonCode.MISSING_CATEGORY ->
             stringResource(R.string.weather_reason_missing_category)
 
-        WeatherRecommender.ReasonCode.NO_COMBINATIONS ->
+        ReasonCode.NO_COMBINATIONS ->
             stringResource(R.string.weather_reason_no_combinations)
     }
