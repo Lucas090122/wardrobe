@@ -74,7 +74,7 @@ For a complete step-by-step tutorial on how to use the Wardrobe app (adding item
 ##  Project Management
 
 ### **Trello Board**
-[🔗 Trello Backlog & Sprint Plan](https://trello.com/b/ymbal9w5/backlog))
+[Trello Backlog & Sprint Plan](https://trello.com/b/ymbal9w5/backlog))
 
 Each sprint includes clear tasks and acceptance criteria following the Agile Scrum methodology.
 
@@ -135,7 +135,7 @@ Each sprint includes clear tasks and acceptance criteria following the Agile Scr
 We implemented unit tests for all core business logic components (ViewModels and utilities).  
 Android framework code, UI Composables, Room DAO, and remote API components were intentionally excluded because they belong to instrumented tests.
 
-➡️ **Full testing documentation is available [HERE](./TESTING.md)**  
+**Full testing documentation is available [HERE](./TESTING.md)**  
 
 ---
 
