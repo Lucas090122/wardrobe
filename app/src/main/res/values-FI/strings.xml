@@ -18,7 +18,7 @@
 
     <string name="drawer_open">Avaa valikko</string>
     <string name="drawer_location_off">Sijainti pois käytöstä</string>
-    <string name="wardrobe_title">%1$s:n vaatekaappi</string>
+    <string name="wardrobe_title">%1$sn vaatekaappi</string>
 
     <string name="admin_set_pin">Aseta ylläpitäjän PIN</string>
     <string name="admin_enter_pin">Syötä ylläpitäjän PIN</string>
