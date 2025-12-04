@@ -125,7 +125,7 @@ Each sprint includes clear tasks and acceptance criteria following the Agile Scr
 We implemented unit tests for all core business logic components (ViewModels and utilities).  
 Android framework code, UI Composables, Room DAO, and remote API components were intentionally excluded because they belong to instrumented tests.
 
-➡️ **Full testing documentation is available here: [TESTING.md](./TESTING.md)**  
+➡️ **Full testing documentation is available [HERE](./TESTING.md)**  
 
 ---
 
