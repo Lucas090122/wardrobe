@@ -1,6 +1,6 @@
 #  Wardrobe – Smart Family Clothing Organizer
 
-###  Overview
+##  Overview
 **Wardrobe** is a mobile application designed to help families manage and organize their clothes efficiently.  
 Users can create multiple members, upload or photograph clothing items, categorize them with tags, and track seasonal storage.  
 The app also supports weather-based outfit recommendations and localization for different languages.
