@@ -19,6 +19,16 @@ The app also supports weather-based outfit recommendations and localization for 
 
 ---
 
+## User Tutorial
+
+For a complete step-by-step tutorial on how to use the Wardrobe app (adding items, NFC scanning, AI recognition, navigation, statistics, etc.), see:
+
+- **[English Tutorial](./TUTORIAL.md)**
+- **[中文版使用教程](./TUTORIAL_ZH.md)**
+- **[Suomenkielinen käyttöopas](./TUTORIAL_FI.md)**
+
+---
+
 ##  Tech Stack
 
 | Category | Technology |
