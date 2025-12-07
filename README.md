@@ -74,18 +74,18 @@ For a complete step-by-step tutorial on how to use the Wardrobe app (adding item
 ##  Project Management
 
 ### **Trello Board**
-[🔗 Trello Backlog & Sprint Plan](https://trello.com/b/ymbal9w5/backlog))
+[Trello Backlog & Sprint Plan](https://trello.com/b/ymbal9w5/backlog))
 
 Each sprint includes clear tasks and acceptance criteria following the Agile Scrum methodology.
 
-#### **Sprint 1 Focus**
+#### **Sprint 1**
 - Establish basic family member system (weak login)
 - Improve search & filter logic
 - Implement tag statistics
 - Add in-use vs stored item categorization
 - Create initial Figma design prototype
 
-#### **Sprint 2 Focus**
+#### **Sprint 2**
 - Responsive UI layout & light/dark theme
 - Transfer items between members with history
 - Bluetooth sharing as a generated image
@@ -93,19 +93,29 @@ Each sprint includes clear tasks and acceptance criteria following the Agile Scr
 - Storage location tracking
 - Implement navigation drawer (MD3)
 
-#### **Sprint 3 Focus**
+#### **Sprint 3**
 - Research image recognition for auto-tagging
 - Weather-based outfit recommendations
 - Smart growth notifications for children
 - Statistics and charts
 - Photo AI prototype for auto-tag & category suggestions
 
-#### **Sprint 4 Focus**
+#### **Sprint 4**
 - Research Android NFC integration methods
 - Research Material Design 3 UI patterns
 - NFC-based smart storage prototype
 - Localization & multilingual support
 - Overall app optimization (UI, recommendation accuracy, user flow)
+
+#### **Sprint 5**
+- Write unit tests for core modules  
+- Conduct user testing and collect feedback  
+- Create onboarding tutorial  
+- Write technical documentation  
+
+#### **Sprint 6**
+- Prepare final demo and presentation slides  
+- Make code clean and clear  
 
 ---
 
@@ -125,7 +135,7 @@ Each sprint includes clear tasks and acceptance criteria following the Agile Scr
 We implemented unit tests for all core business logic components (ViewModels and utilities).  
 Android framework code, UI Composables, Room DAO, and remote API components were intentionally excluded because they belong to instrumented tests.
 
-➡️ **Full testing documentation is available [HERE](./TESTING.md)**  
+**Full testing documentation is available [HERE](./TESTING.md)**  
 
 ---
 
