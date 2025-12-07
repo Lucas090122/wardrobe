@@ -18,6 +18,9 @@ interface ClothesDao {
     @Query("DELETE FROM Member WHERE memberId = :memberId")
     suspend fun deleteMemberById(memberId: Long)
 
+    @Update
+    suspend fun updateMember(member: Member)
+
     // Location operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLocation(location: Location): Long

@@ -149,6 +149,12 @@
     <string name="birthday">Syntymäpäivä</string>
     <string name="select_birthday">Valitse syntymäpäivä</string>
     <string name="selected_birthday">Valittu: %1$s</string>
+    <string name="edit_member">Muokkaa jäsentä</string>
+
+    <string name="delete_member">Poista jäsen</string>
+    <string name="delete_member_confirmation">Haluatko varmasti poistaa ”%1$s”? Kaikki hänen vaatetietonsa poistetaan samalla.</string>
+    <string name="action_not_allowed">Toiminto ei sallittu</string>
+    <string name="admin_only_delete_warning">Vain ylläpitotila voi poistaa jäseniä.</string>
 
     <string name="settings_security">Tietoturva</string>
     <string name="settings_change_admin_pin">Vaihda ylläpitäjän PIN</string>

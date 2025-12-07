@@ -53,6 +53,24 @@ class WardrobeRepository(
         dao.deleteMemberById(memberId)
     }
 
+    suspend fun updateMember(
+        memberId: Long,
+        name: String,
+        gender: String,
+        age: Int,
+        birthDate: Long?
+    ) {
+        dao.updateMember(
+            Member(
+                memberId = memberId,
+                name = name,
+                gender = gender,
+                age = age,
+                birthDate = birthDate
+            )
+        )
+    }
+
     // ---------------------------------------------------------------------
     // Location operations
     // ---------------------------------------------------------------------

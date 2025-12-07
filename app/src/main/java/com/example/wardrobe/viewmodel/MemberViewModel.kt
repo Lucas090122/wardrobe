@@ -71,4 +71,16 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
             repo.deleteMember(memberId)
         }
     }
+
+    fun updateMember(
+        memberId: Long,
+        name: String,
+        gender: String,
+        age: Int,
+        birthDate: Long?
+    ) {
+        viewModelScope.launch {
+            repo.updateMember(memberId, name, gender, age, birthDate)
+        }
+    }
 }

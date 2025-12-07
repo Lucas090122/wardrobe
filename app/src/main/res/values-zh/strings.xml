@@ -158,6 +158,12 @@
     <string name="birthday">生日</string>
     <string name="select_birthday">选择生日</string>
     <string name="selected_birthday">已选择：%1$s</string>
+    <string name="edit_member">编辑成员</string>
+
+    <string name="delete_member">删除成员</string>
+    <string name="delete_member_confirmation">确定要删除“%1$s”吗？他/她的所有衣物记录也会被一并删除。</string>
+    <string name="action_not_allowed">操作不允许</string>
+    <string name="admin_only_delete_warning">只有管理员模式才能删除成员。</string>
 
     <!-- Settings Screen -->
     <string name="settings_security">安全</string>
