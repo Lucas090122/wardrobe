@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import kotlin.math.pow
+import java.util.Locale
 
 private const val TAG = "GeminiAiService"
 
@@ -60,6 +61,7 @@ object GeminiAiService {
     suspend fun analyzeClothing(bitmap: Bitmap): GeminiClothingResult? =
         withContext(Dispatchers.IO) {
             try {
+                val locale = getSystemLocale()
                 val prompt = content {
                     // Provide the image for multimodal analysis
                     image(bitmap)
@@ -69,6 +71,11 @@ object GeminiAiService {
                         """
                         You are an assistant for a wardrobe app.
                         Look at the clothing item in the photo and extract structured information.
+                        
+                        IMPORTANT:
+                        - The user's system language is: $locale
+                        - The "description" field MUST be written in this language ONLY.
+                        - Other fields (category, warmthLevel, colorHex) MUST stay in English.
 
                         Return ONLY a single strict JSON object.
                         - No markdown.
@@ -79,7 +86,7 @@ object GeminiAiService {
 
                         JSON fields:
                         - category: one of ["TOP", "PANTS", "SHOES", "HAT"]
-                        - description: a short English description of the main clothing item
+                        - description: a short description of the main clothing item in the user's language ($locale)
                         - warmthLevel: an integer from 1 to 5 
                           (1 = very thin / summer, 5 = very thick / winter)
                         - colorHex: the closest color from this list:
@@ -271,5 +278,10 @@ object GeminiAiService {
         val dg = (a.second - b.second).toDouble()
         val db = (a.third - b.third).toDouble()
         return dr.pow(2) + dg.pow(2) + db.pow(2)
+    }
+
+    private fun getSystemLocale(): String {
+        val loc = Locale.getDefault()
+        return "${loc.language}-${loc.country}"   // zh-CN / en-US / fi-FI
     }
 }
