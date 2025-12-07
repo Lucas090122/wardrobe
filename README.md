@@ -150,15 +150,77 @@ Android framework code, UI Composables, Room DAO, and remote API components were
 
 ---
 
-##  How to Run
+## How to Run
 
-1. Clone the repository:  
-   ```bash
-   git clone https://github.com/Lucas090122/wardrobe.git
-   cd wardrobe
-2.	Open the project in Android Studio.
-3.	Sync Gradle and run on an emulator or physical device.
-4.	(Optional) Add your OpenWeather API key in local.properties or environment variables.
+### 1. Clone the repository
+```bash
+git clone https://github.com/Lucas090122/wardrobe.git
+cd wardrobe
+```
+
+### 2. Open the project in Android Studio
+Open the folder in Android Studio (Hedgehog or newer).
+
+### 3. Sync Gradle & Run
+Gradle will sync automatically.  
+Run the app on an emulator or a physical Android device.
+
+---
+
+## 4. (Optional) Enable AI auto-tagging using Google Gemini
+
+The app supports automatic clothing analysis (category, color, warmth, tags, and localized description) powered by Google Gemini Flash.
+
+Follow these steps to enable the AI features:
+
+---
+
+### Step 1 — Create a Gemini API key
+
+1. Visit Google AI Studio:  
+   https://aistudio.google.com/
+2. Sign in with your Google account  
+3. Open 'API Keys' from the left sidebar  
+4. Click 'Create API key'  
+5. Copy the generated key
+
+---
+
+### Step 2 — Add your API key to the project
+
+Inside the project root, create or edit a file named:
+```bash
+local.properties
+```
+Add this line:
+```bash
+GEMINI_API_KEY=your_api_key_here
+```
+Note: Do NOT commit this file. 'local.properties' is already in '.gitignore'.
+
+---
+
+### Step 3 — Rebuild the project
+
+Android Studio will automatically inject your API key into:
+```bash
+BuildConfig.GEMINI_API_KEY
+```
+---
+
+### Step 4 — Enable AI inside the app
+
+1. Open the Wardrobe app  
+2. Open the **Drawer**
+3. Turn on the AI-mode toggle  
+
+When enabled, the app will automatically analyze photos and fill:
+
+- description (in your system language)  
+- category  
+- tags  
+- warmth level  
+- dominant color  
 
 ---
 
