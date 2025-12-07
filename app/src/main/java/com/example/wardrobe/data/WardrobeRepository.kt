@@ -49,6 +49,10 @@ class WardrobeRepository(
         )
     }
 
+    suspend fun deleteMember(memberId: Long) {
+        dao.deleteMemberById(memberId)
+    }
+
     // ---------------------------------------------------------------------
     // Location operations
     // ---------------------------------------------------------------------

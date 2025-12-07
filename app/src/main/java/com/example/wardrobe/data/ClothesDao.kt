@@ -15,6 +15,9 @@ interface ClothesDao {
     @Query("SELECT * FROM Member WHERE memberId = :memberId")
     fun getMember(memberId: Long): Flow<Member?>
 
+    @Query("DELETE FROM Member WHERE memberId = :memberId")
+    suspend fun deleteMemberById(memberId: Long)
+
     // Location operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLocation(location: Location): Long

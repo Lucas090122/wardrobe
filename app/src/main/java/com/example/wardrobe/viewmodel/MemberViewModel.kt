@@ -18,6 +18,10 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
     val members: StateFlow<List<Member>> = repo.getAllMembers()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val isAdminMode: StateFlow<Boolean> =
+        repo.settings.isAdminMode
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private val _outdatedCounts = MutableStateFlow<Map<Long, Int>>(emptyMap())
     val outdatedCounts: StateFlow<Map<Long, Int>> = _outdatedCounts.asStateFlow()
 
@@ -60,5 +64,11 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
 
     fun clearCurrentMember() {
         _currentMemberId.value = null
+    }
+
+    fun deleteMember(memberId: Long) {
+        viewModelScope.launch {
+            repo.deleteMember(memberId)
+        }
     }
 }

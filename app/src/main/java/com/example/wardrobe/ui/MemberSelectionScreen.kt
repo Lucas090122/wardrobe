@@ -2,10 +2,16 @@ package com.example.wardrobe.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +32,8 @@ fun MemberSelectionScreen(
     val members by vm.members.collectAsState()
     val outdatedMap by vm.outdatedCounts.collectAsState()
     var showAddMemberDialog by remember { mutableStateOf(false) }
+    val isAdminMode by vm.isAdminMode.collectAsState()
+    var deleteTarget by remember { mutableStateOf<Member?>(null) }
 
     Scaffold { padding ->
         Column(
@@ -49,16 +57,59 @@ fun MemberSelectionScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(members) { member ->
+                    items(members, key = { it.memberId }) { member ->
                         val outdated = outdatedMap[member.memberId] ?: 0
-                        MemberCard(
-                            member = member,
-                            outdatedCount = outdated,
-                            onClick = {
-                                vm.setCurrentMember(member.memberId)
-                                onMemberSelected(member.memberId)
-                            }
-                        )
+
+                        if (isAdminMode) {
+                            // ----- Swipe to delete -----
+                            val dismissState = rememberSwipeToDismissBoxState(
+                                confirmValueChange = { value ->
+                                    if (value == SwipeToDismissBoxValue.EndToStart) {
+                                        deleteTarget = member
+                                    }
+                                    false
+                                }
+                            )
+
+                            SwipeToDismissBox(
+                                state = dismissState,
+                                backgroundContent = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(MaterialTheme.colorScheme.errorContainer),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = MaterialTheme.colorScheme.onErrorContainer,
+                                            modifier = Modifier.padding(end = 32.dp)
+                                        )
+                                    }
+                                },
+                                content = {
+                                    MemberCard(
+                                        member = member,
+                                        outdatedCount = outdated,
+                                        onClick = {
+                                            vm.setCurrentMember(member.memberId)
+                                            onMemberSelected(member.memberId)
+                                        }
+                                    )
+                                }
+                            )
+                        } else {
+                            // ----- normal user view -----
+                            MemberCard(
+                                member = member,
+                                outdatedCount = outdated,
+                                onClick = {
+                                    vm.setCurrentMember(member.memberId)
+                                    onMemberSelected(member.memberId)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -71,6 +122,31 @@ fun MemberSelectionScreen(
             onSave = { name, gender, age, birthDate ->
                 vm.createMember(name, gender, age, birthDate)
                 showAddMemberDialog = false
+            }
+        )
+    }
+
+    if (deleteTarget != null) {
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete Member") },
+            text = {
+                Text("Are you sure you want to delete \"${deleteTarget!!.name}\"? All their clothing items will also be deleted.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.deleteMember(deleteTarget!!.memberId)
+                        deleteTarget = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text("Cancel")
+                }
             }
         )
     }
