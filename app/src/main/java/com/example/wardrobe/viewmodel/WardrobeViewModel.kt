@@ -7,7 +7,6 @@ import com.example.wardrobe.data.GrowthSizeTable
 import com.example.wardrobe.data.Location
 import com.example.wardrobe.data.Member
 import com.example.wardrobe.data.Season
-import com.example.wardrobe.data.TagWithCount
 import com.example.wardrobe.data.TransferHistory
 import com.example.wardrobe.data.TransferHistoryDetails
 import com.example.wardrobe.data.WardrobeRepository
@@ -395,10 +394,6 @@ class WardrobeViewModel(
 
     fun deleteItem(itemId: Long) = viewModelScope.launch {
         repo.deleteItem(itemId)
-    }
-
-    fun setAdminMode(isAdmin: Boolean) = viewModelScope.launch {
-        repo.settings.setAdminMode(isAdmin)
     }
 
     // --------------------------------------------------------------------

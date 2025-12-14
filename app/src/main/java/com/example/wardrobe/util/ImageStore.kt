@@ -26,7 +26,7 @@ fun persistImageToAppStorage(context: Context, sourceUri: Uri): Uri {
 
     cr.openInputStream(sourceUri).use { input ->
         FileOutputStream(file).use { output ->
-            if (input != null) input.copyTo(output)
+            input?.copyTo(output)
         }
     }
     return Uri.fromFile(file)

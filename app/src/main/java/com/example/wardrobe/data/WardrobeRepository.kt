@@ -1,9 +1,7 @@
 package com.example.wardrobe.data
 
-import com.example.wardrobe.data.TransferHistoryDetails
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlin.math.max
 
 /**
  * Repository layer that sits between the ViewModel and DAO.
@@ -96,8 +94,6 @@ class WardrobeRepository(
     // ---------------------------------------------------------------------
     // Tag operations
     // ---------------------------------------------------------------------
-
-    fun observeTags() = dao.allTags()
 
     /**
      * Returns tags + usage count for filtering UI.
@@ -270,7 +266,7 @@ class WardrobeRepository(
             } else {
                 member.age
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             member.age
         }
 
@@ -346,14 +342,6 @@ class WardrobeRepository(
     suspend fun getLocationForTag(tagId: String): Location? {
         val record = dao.getNfcTag(tagId) ?: return null
         return dao.getLocationById(record.locationId)
-    }
-
-    /**
-     * Remove an NFC tag binding.
-     * Typically used when a user wants to unbind or rebind a tag.
-     */
-    suspend fun deleteNfcTag(tagId: String) {
-        dao.deleteNfcTag(tagId)
     }
 
     // ---------------------------------------------------------------------

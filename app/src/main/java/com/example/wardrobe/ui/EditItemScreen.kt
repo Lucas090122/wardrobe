@@ -51,6 +51,8 @@ import java.io.File
 import java.util.*
 import kotlin.math.max
 import com.example.wardrobe.R
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.scale
 
 // Globally remember the last automatically-synced tagIds.
 // This allows us to remove previously auto-added tags when new AI suggestions come in.
@@ -79,7 +81,7 @@ fun EditItemScreen(
 
     // Recommendation-related fields (category, warmth, occasions, etc.)
     var category by remember { mutableStateOf("TOP") }
-    var warmthLevel by remember { mutableStateOf(3) }
+    var warmthLevel by remember { mutableIntStateOf(3) }
     val allOccasions = remember { listOf("CASUAL", "SCHOOL", "SPORT", "FORMAL", "WORK") }
     val occasionSet = remember { mutableStateListOf<String>() }
     var isWaterproof by remember { mutableStateOf(false) }
@@ -328,7 +330,7 @@ fun EditItemScreen(
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.season), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Season.values().forEach { s ->
+                Season.entries.forEach { s ->
                     FilterChip(
                         selected = (season == s),
                         onClick = { season = s },
@@ -453,7 +455,7 @@ fun EditItemScreen(
                         modifier = Modifier
                             .size(34.dp)
                             .clip(CircleShape)
-                            .background(Color(android.graphics.Color.parseColor(hex)))
+                            .background(Color(hex.toColorInt()))
                             .border(
                                 width = if (selected) 3.dp else 1.dp,
                                 color = if (selected)
@@ -483,6 +485,7 @@ fun EditItemScreen(
                 }
             }
 
+            @Suppress("DEPRECATION")
             Divider()
 
             // Tag selection & manual tag creation
@@ -754,7 +757,6 @@ private fun localizeSeasonLabel(season: Season): String {
         Season.SPRING_AUTUMN -> stringResource(R.string.season_spring_autumn)
         Season.SUMMER        -> stringResource(R.string.season_summer)
         Season.WINTER        -> stringResource(R.string.season_winter)
-        else -> season.name.replace('_', '/')
     }
 }
 
@@ -850,7 +852,7 @@ private fun ImageAndCameraSection(
     onPendingFile: (File) -> Unit
 ) {
     val context = LocalContext.current
-    var aspect by remember { mutableStateOf(1.6f) }
+    var aspect by remember { mutableFloatStateOf(1.6f) }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -944,7 +946,7 @@ private fun loadScaledBitmapFromUri(
             val scale = maxSize.toFloat() / maxDim.toFloat()
             val newW = (w * scale).roundToInt()
             val newH = (h * scale).roundToInt()
-            Bitmap.createScaledBitmap(raw, newW, newH, true)
+            raw.scale(newW, newH)
         }
     } catch (e: Exception) {
         e.printStackTrace()

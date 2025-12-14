@@ -5,7 +5,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ClothesDao {
+
+    // ------------------------------------------------------------------
     // Member operations
+    // ------------------------------------------------------------------
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMember(member: Member): Long
 
@@ -21,7 +25,10 @@ interface ClothesDao {
     @Update
     suspend fun updateMember(member: Member)
 
+    // ------------------------------------------------------------------
     // Location operations
+    // ------------------------------------------------------------------
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLocation(location: Location): Long
 
@@ -37,7 +44,10 @@ interface ClothesDao {
     @Query("SELECT COUNT(itemId) FROM ClothingItem WHERE locationId = :locationId")
     suspend fun getItemCountForLocation(locationId: Long): Int
 
-    // Item operations
+    // ------------------------------------------------------------------
+    // Clothing item & tag basic operations
+    // ------------------------------------------------------------------
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: ClothingItem): Long
 
@@ -52,6 +62,10 @@ interface ClothesDao {
 
     @Query("DELETE FROM ClothingTagCrossRef WHERE itemId = :itemId")
     suspend fun clearTagsForItem(itemId: Long)
+
+    // ------------------------------------------------------------------
+    // Clothing item queries (search / filter / tag-based)
+    // ------------------------------------------------------------------
 
     @Transaction
     @Query(
@@ -78,6 +92,10 @@ interface ClothesDao {
     @Query("SELECT * FROM ClothingItem WHERE itemId = :itemId")
     fun itemWithTags(itemId: Long): Flow<ClothingWithTags?>
 
+    // ------------------------------------------------------------------
+    // Tag queries & statistics
+    // ------------------------------------------------------------------
+
     @Query("SELECT * FROM Tag ORDER BY tagId ASC")
     fun allTags(): Flow<List<Tag>>
 
@@ -94,11 +112,17 @@ interface ClothesDao {
         SELECT t.tagId, t.name, COUNT(ci.itemId) as count
         FROM Tag t
         LEFT JOIN ClothingTagCrossRef ctc ON t.tagId = ctc.tagId
-        LEFT JOIN ClothingItem ci ON ctc.itemId = ci.itemId AND ci.ownerMemberId = :memberId AND ci.stored = :isStored
+        LEFT JOIN ClothingItem ci ON ctc.itemId = ci.itemId 
+            AND ci.ownerMemberId = :memberId 
+            AND ci.stored = :isStored
         GROUP BY t.tagId, t.name
         ORDER BY t.name ASC
     """)
     fun getTagsWithCounts(memberId: Long, isStored: Boolean): Flow<List<TagWithCount>>
+
+    // ------------------------------------------------------------------
+    // Item maintenance & ownership
+    // ------------------------------------------------------------------
 
     @Query("DELETE FROM ClothingItem WHERE itemId = :itemId")
     suspend fun deleteItemById(itemId: Long)
@@ -114,6 +138,10 @@ interface ClothesDao {
 
     @Query("UPDATE ClothingItem SET ownerMemberId = :newOwnerMemberId WHERE itemId = :itemId")
     suspend fun updateItemOwner(itemId: Long, newOwnerMemberId: Long)
+
+    // ------------------------------------------------------------------
+    // Transfer history
+    // ------------------------------------------------------------------
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransferHistory(transferHistory: TransferHistory)
@@ -133,6 +161,10 @@ interface ClothesDao {
     """)
     fun getAllTransferHistoryDetails(): Flow<List<TransferHistoryDetails>>
 
+    // ------------------------------------------------------------------
+    // Statistics
+    // ------------------------------------------------------------------
+
     @Query("SELECT m.name, COUNT(ci.itemId) as count FROM Member m JOIN ClothingItem ci ON m.memberId = ci.ownerMemberId GROUP BY m.name")
     fun getCountByMember(): Flow<List<NameCount>>
 
@@ -142,7 +174,9 @@ interface ClothesDao {
     @Query("SELECT category, COUNT(itemId) as count FROM ClothingItem GROUP BY category")
     fun getCountByCategory(): Flow<List<CategoryCount>>
 
-    // NFC tag bindings -------------------------------------------
+    // ------------------------------------------------------------------
+    // NFC tag bindings
+    // ------------------------------------------------------------------
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertNfcTag(tag: NfcTagEntity)
@@ -153,7 +187,9 @@ interface ClothesDao {
     @Query("DELETE FROM NfcTag WHERE tagId = :tagId")
     suspend fun deleteNfcTag(tagId: String)
 
-    // --- Location-based item queries for NFC ---
+    // ------------------------------------------------------------------
+    // Location-based item queries (NFC navigation)
+    // ------------------------------------------------------------------
 
     @Query("SELECT * FROM ClothingItem WHERE locationId = :locationId ORDER BY createdAt DESC")
     suspend fun getItemsByLocation(locationId: Long): List<ClothingItem>

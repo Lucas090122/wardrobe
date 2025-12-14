@@ -285,6 +285,7 @@ fun HomeScreen(
             //   ▸ all items, or
             //   ▸ only outdated items (when filtered)
             // ------------------------------------------------------------
+            @Suppress("DEPRECATION")
             LazyColumn {
                 items(itemsToShow) { item ->
                     ClothingCard(
@@ -338,6 +339,5 @@ private fun homeLocalizeSeason(season: Season): String {
         Season.SPRING_AUTUMN -> stringResource(R.string.season_spring_autumn)
         Season.SUMMER        -> stringResource(R.string.season_summer)
         Season.WINTER        -> stringResource(R.string.season_winter)
-        else -> season.name.replace('_', '/')
     }
 }

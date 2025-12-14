@@ -13,13 +13,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.example.wardrobe.R
 import com.example.wardrobe.WardrobeApp
-import com.example.wardrobe.data.WardrobeRepository
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.viewmodel.MemberViewModel
 
 @Composable
 fun Home(
-    repo: WardrobeRepository,
     memberViewModel : MemberViewModel,
     weather: WeatherInfo?
 ){

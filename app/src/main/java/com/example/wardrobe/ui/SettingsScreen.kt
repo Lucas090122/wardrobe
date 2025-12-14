@@ -4,7 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +39,7 @@ fun SettingsScreen(
     var locationDropdownExpanded by remember { mutableStateOf(false) }
     var nfcError by remember { mutableStateOf<String?>(null) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(pendingTagId, locations) {
         if (pendingTagId != null && locations.isNotEmpty() && selectedLocationId == null) {
@@ -52,7 +52,7 @@ fun SettingsScreen(
     val showNfcBindDialog = nfcMode == MainViewModel.NfcMode.BindLocation && pendingTagId != null
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackBarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -85,7 +85,7 @@ fun SettingsScreen(
                         )
                     }
                     if (savedPin != null) {
-                        Icon(Icons.Default.ArrowForward, stringResource(R.string.settings_change_admin_pin))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.settings_change_admin_pin))
                     }
                 }
             }
@@ -124,7 +124,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Icon(Icons.Default.ArrowForward, stringResource(R.string.settings_add_nfc_sticker))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.settings_add_nfc_sticker))
                 }
             }
 
@@ -238,6 +238,7 @@ fun SettingsScreen(
                             expanded = locationDropdownExpanded,
                             onExpandedChange = { locationDropdownExpanded = !locationDropdownExpanded }
                         ) {
+                            @Suppress("DEPRECATION")
                             OutlinedTextField(
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                                 readOnly = true,
@@ -279,13 +280,6 @@ fun SettingsScreen(
                     R.string.settings_snackbar_sticker_bound,
                     selectedLocationName.ifBlank { "" }
                 )
-                /*
-                val boundMsg = remember(selectedLocationName) {
-                    context.getString(
-                        R.string.settings_snackbar_sticker_bound,
-                        selectedLocationName.ifBlank { context.getString(R.string.settings_location_unknown) }
-                    )
-                }*/
 
                 TextButton(onClick = {
                     scope.launch {
@@ -309,7 +303,7 @@ fun SettingsScreen(
 
                         repo.bindNfcTagToLocation(tagId, locId)
 
-                        snackbarHostState.showSnackbar(
+                        snackBarHostState.showSnackbar(
                             message = boundMsg
                         )
                     }

@@ -20,7 +20,7 @@ fun WardrobeTheme(
 ) {
     // Color schemes are defined inside the Composable function
     // so they can use the composable colorResource() function.
-    val LightColors = lightColorScheme(
+    val lightColors = lightColorScheme(
         primary = colorResource(R.color.md_theme_light_primary),
         onPrimary = colorResource(R.color.md_theme_light_onPrimary),
         primaryContainer = colorResource(R.color.md_theme_light_primaryContainer),
@@ -34,7 +34,7 @@ fun WardrobeTheme(
         outline = colorResource(R.color.md_theme_light_outline),
     )
 
-    val DarkColors = darkColorScheme(
+    val darkColors = darkColorScheme(
         primary = colorResource(R.color.md_theme_dark_primary),
         onPrimary = colorResource(R.color.md_theme_dark_onPrimary),
         primaryContainer = colorResource(R.color.md_theme_dark_primaryContainer),
@@ -48,10 +48,11 @@ fun WardrobeTheme(
         outline = colorResource(R.color.md_theme_dark_outline),
     )
 
-    val colorScheme = if (darkTheme) DarkColors else LightColors
+    val colorScheme = if (darkTheme) darkColors else lightColors
 
     val view = LocalView.current
     if (!view.isInEditMode) {
+        @Suppress("DEPRECATION")
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()

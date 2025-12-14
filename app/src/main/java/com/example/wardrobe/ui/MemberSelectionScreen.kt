@@ -23,6 +23,9 @@ import androidx.compose.ui.window.Dialog
 import com.example.wardrobe.R
 import com.example.wardrobe.data.Member
 import com.example.wardrobe.viewmodel.MemberViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +54,7 @@ fun MemberSelectionScreen(
             }
 
             Spacer(Modifier.height(16.dp))
+            @Suppress("DEPRECATION")
             Divider()
             Spacer(Modifier.height(16.dp))
 
@@ -304,8 +308,8 @@ fun AddMemberDialog(
                                 if (birthDateMillis != null)
                                     stringResource(
                                         R.string.selected_birthday,
-                                        java.text.SimpleDateFormat("yyyy-MM-dd")
-                                            .format(java.util.Date(birthDateMillis!!))
+                                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                            .format(Date(birthDateMillis!!))
                                     )
                                 else stringResource(R.string.select_birthday)
                             )
@@ -445,8 +449,8 @@ fun EditMemberDialog(
                                 if (birthDateMillis != null)
                                     stringResource(
                                         R.string.selected_birthday,
-                                        java.text.SimpleDateFormat("yyyy-MM-dd")
-                                            .format(java.util.Date(birthDateMillis!!))
+                                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                            .format(Date(birthDateMillis!!))
                                     )
                                 else stringResource(R.string.select_birthday)
                             )

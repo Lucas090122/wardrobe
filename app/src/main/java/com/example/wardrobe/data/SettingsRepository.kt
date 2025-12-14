@@ -14,10 +14,21 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// At the top level of your kotlin file:
+// ------------------------------------------------------------------
+// DataStore setup
+// ------------------------------------------------------------------
+
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
+// ------------------------------------------------------------------
+// Settings repository
+// ------------------------------------------------------------------
+
 class SettingsRepository(private val context: Context) {
+
+    // --------------------------------------------------------------
+    // Preference keys
+    // --------------------------------------------------------------
 
     private object Keys {
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
@@ -27,11 +38,19 @@ class SettingsRepository(private val context: Context) {
         val CONFIRMED_OUTFIT_IDS = stringSetPreferencesKey("confirmed_outfit_ids")
     }
 
+    // --------------------------------------------------------------
+    // Date helpers (daily outfit confirmation)
+    // --------------------------------------------------------------
+
     private val todayDateString: String
         get() {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             return sdf.format(Date())
         }
+
+    // --------------------------------------------------------------
+    // Daily confirmed outfit
+    // --------------------------------------------------------------
 
     val todaysConfirmedOutfitIds: Flow<Set<Long>?> = context.dataStore.data
         .map { preferences ->
@@ -46,9 +65,14 @@ class SettingsRepository(private val context: Context) {
     suspend fun setConfirmedOutfit(items: List<ClothingItem>) {
         context.dataStore.edit {
             it[Keys.CONFIRMED_OUTFIT_DATE] = todayDateString
-            it[Keys.CONFIRMED_OUTFIT_IDS] = items.map { item -> item.itemId.toString() }.toSet()
+            it[Keys.CONFIRMED_OUTFIT_IDS] =
+                items.map { item -> item.itemId.toString() }.toSet()
         }
     }
+
+    // --------------------------------------------------------------
+    // Admin mode
+    // --------------------------------------------------------------
 
     val isAdminMode: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -61,6 +85,10 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    // --------------------------------------------------------------
+    // AI feature toggle
+    // --------------------------------------------------------------
+
     val isAiEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[Keys.IS_AI_ENABLED] ?: false
@@ -71,6 +99,10 @@ class SettingsRepository(private val context: Context) {
             it[Keys.IS_AI_ENABLED] = enabled
         }
     }
+
+    // --------------------------------------------------------------
+    // Admin PIN
+    // --------------------------------------------------------------
 
     val adminPin: Flow<String?> = context.dataStore.data
         .map { preferences ->

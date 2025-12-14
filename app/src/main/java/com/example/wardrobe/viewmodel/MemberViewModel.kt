@@ -15,18 +15,23 @@ import kotlinx.coroutines.launch
 
 class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
 
-    val members: StateFlow<List<Member>> = repo.getAllMembers()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    // Member list & admin mode
+    val members: StateFlow<List<Member>> =
+        repo.getAllMembers()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val isAdminMode: StateFlow<Boolean> =
         repo.settings.isAdminMode
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
+    // Outdated clothing counts (per member)
     private val _outdatedCounts = MutableStateFlow<Map<Long, Int>>(emptyMap())
     val outdatedCounts: StateFlow<Map<Long, Int>> = _outdatedCounts.asStateFlow()
 
+    // Current selected member
     private val _currentMemberId = MutableStateFlow<Long?>(null)
     val currentMemberId: StateFlow<Long?> = _currentMemberId.asStateFlow()
+
     val currentMemberName: StateFlow<String> =
         members
             .combine(currentMemberId) { list, id ->
@@ -34,6 +39,7 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
 
+    // Initial observers
     init {
         viewModelScope.launch {
             members.collectLatest { list ->
@@ -47,6 +53,7 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
         }
     }
 
+    // Member CRUD operations
     fun createMember(
         name: String,
         gender: String,
@@ -55,20 +62,6 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
     ) {
         viewModelScope.launch {
             repo.createMember(name, gender, age, birthDate)
-        }
-    }
-
-    fun setCurrentMember(id: Long?) {
-        _currentMemberId.value = id
-    }
-
-    fun clearCurrentMember() {
-        _currentMemberId.value = null
-    }
-
-    fun deleteMember(memberId: Long) {
-        viewModelScope.launch {
-            repo.deleteMember(memberId)
         }
     }
 
@@ -82,5 +75,20 @@ class MemberViewModel(private val repo: WardrobeRepository) : ViewModel() {
         viewModelScope.launch {
             repo.updateMember(memberId, name, gender, age, birthDate)
         }
+    }
+
+    fun deleteMember(memberId: Long) {
+        viewModelScope.launch {
+            repo.deleteMember(memberId)
+        }
+    }
+
+    // Current member selection helpers
+    fun setCurrentMember(id: Long?) {
+        _currentMemberId.value = id
+    }
+
+    fun clearCurrentMember() {
+        _currentMemberId.value = null
     }
 }

@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.nfc.tech.Ndef
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.wardrobe.data.WeatherInfo
 import com.example.wardrobe.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
+import androidx.core.content.edit
 
 class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
 
@@ -58,7 +58,6 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
         setContent {
             var theme by remember { mutableStateOf(Theme.LIGHT) }
 
-            val memberViewModel: MemberViewModel = viewModel(factory = memberVmFactory)
             mainVm = viewModel()
 
             // ----- Location Permission State -----
@@ -85,7 +84,7 @@ class MainActivity : ComponentActivity(), NfcAdapter.ReaderCallback {
             LaunchedEffect(hasLocationPermission, askedOnce) {
                 if (!hasLocationPermission && !askedOnce) {
                     askedOnce = true
-                    prefs.edit().putBoolean("askedOnce", true).apply()
+                    prefs.edit { putBoolean("askedOnce", true) }
 
                     // Trigger permission dialog
                     permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -191,7 +190,7 @@ fun WardrobeApp(memberId: Long, weather: WeatherInfo?, onExit: () -> Unit) {
 
     val vmFactory = WardrobeViewModelFactory(repo, memberId)
     val vm: WardrobeViewModel =
-        androidx.lifecycle.viewmodel.compose.viewModel(
+        viewModel(
             key = memberId.toString(),
             factory = vmFactory
         )

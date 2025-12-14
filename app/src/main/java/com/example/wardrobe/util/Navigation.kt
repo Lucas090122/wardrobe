@@ -58,7 +58,7 @@ fun Navigation(
         // HOME SCREEN (default)
         // -------------------------------------------------------------
         composable(Screen.DrawerScreen.Home.route) {
-            Home(repo = repo, vm,weather)
+            Home( vm,weather)
         }
 
         // -------------------------------------------------------------
@@ -90,7 +90,6 @@ fun Navigation(
         // -------------------------------------------------------------
         composable(Screen.DrawerScreen.Statistics.route) {
             StatisticsScreen(
-                repo = repo,
                 navController = navController
             )
         }

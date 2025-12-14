@@ -59,7 +59,7 @@ object WeatherRecommender {
 
         val cutoff = now - RECENT_WINDOW_MS
         val notRecent = byWeather.filter { it.lastWornAt == 0L || it.lastWornAt < cutoff }
-        val baseList = if (notRecent.isNotEmpty()) notRecent else byWeather
+        val baseList = notRecent.ifEmpty { byWeather }
 
         val tops = baseList.filter { it.category == "TOP" }
         val pants = baseList.filter { it.category == "PANTS" }

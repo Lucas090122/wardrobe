@@ -1,7 +1,5 @@
 package com.example.wardrobe
 
-
-
 sealed class Screen(val route: String, val titleId: Int) {
 
     sealed class DrawerScreen(route: String, titleId: Int) :
@@ -15,7 +13,6 @@ sealed class Screen(val route: String, val titleId: Int) {
 
         data object Statistics : DrawerScreen("statistics", R.string.screen_statistics)
         data object Settings : DrawerScreen("settings", R.string.screen_settings)
-        data object Theme : DrawerScreen("theme", R.string.screen_theme)
     }
 
     data object TransferHistory :

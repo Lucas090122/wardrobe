@@ -2,9 +2,7 @@ package com.example.wardrobe.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-//import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -55,6 +53,7 @@ fun ClothingInventoryScreen(vm: StatisticsViewModel, navController: NavControlle
     val countBySeason by vm.countBySeason.collectAsState()
     val countByCategory by vm.countByCategory.collectAsState()
 
+    @Suppress("DEPRECATION")
     Scaffold(
         topBar = {
             TopAppBar(
@@ -164,6 +163,7 @@ fun StatsCard(title: String, data: List<Pair<String, Int>>) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        @Suppress("DEPRECATION")
         item {
             Divider(modifier = Modifier.padding(vertical = 16.dp))
         }
@@ -222,7 +222,6 @@ private fun statsLocalizeSeason(season: Season): String {
         Season.SPRING_AUTUMN -> stringResource(R.string.season_spring_autumn)
         Season.SUMMER        -> stringResource(R.string.season_summer)
         Season.WINTER        -> stringResource(R.string.season_winter)
-        else -> season.name.replace('_', '/')
     }
 }
 

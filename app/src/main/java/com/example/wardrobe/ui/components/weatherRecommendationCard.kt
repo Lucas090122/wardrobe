@@ -61,7 +61,7 @@ fun WeatherRecommendationCard(
     var lastOutfit by remember { mutableStateOf<Outfit?>(null) }
 
     // Changing this value re-triggers the recommendation calculation.
-    var refreshSeed by remember { mutableStateOf(0) }
+    var refreshSeed by remember { mutableIntStateOf(0) }
 
     Card(
         modifier = modifier.fillMaxWidth(),

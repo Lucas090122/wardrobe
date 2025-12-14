@@ -50,6 +50,7 @@ fun ItemDetailScreen(
     onBack: () -> Unit,
     onEdit: () -> Unit
 ) {
+    // Item detail screen with actions: edit, delete, transfer and share
     val itemData by vm.itemFlow(itemId).collectAsState(initial = null)
     val uiState by vm.uiState.collectAsState()
     var showConfirm by remember { mutableStateOf(false) }
@@ -172,6 +173,7 @@ fun ItemDetailScreen(
                         Text(stringResource(R.string.dialog_transfer_select_member))
                         Spacer(Modifier.height(16.dp))
 
+                        @Suppress("DEPRECATION")
                         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                             OutlinedTextField(
                                 value = selectedMember?.name ?: stringResource(R.string.dialog_transfer_placeholder),
@@ -254,6 +256,7 @@ private fun ItemSharePoster(
     sizeLabel: String?,
     showSize: Boolean
 ) {
+    // Poster-style layout used for sharing item details as an image
     val imageUri = imageUriString?.toUri()
 
     Card(
